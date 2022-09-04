@@ -69,6 +69,7 @@ export async function getActiveDeputy(
 
   if (!deputy) {
     ctx.delete("activeDeputy");
+    return null;
     throw new BadRequest("noActiveDeputy");
   }
 
