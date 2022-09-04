@@ -20,84 +20,86 @@ const PLAYER_ICON = leafletIcon({
 });
 
 export function PlayerMarker({ player, handleToggle }: Props) {
-  const map = useMap();
-  const t = useTranslations("Leo");
+  handleToggle(player.id);
+  return null;
+  // const map = useMap();
+  // const t = useTranslations("Leo");
 
-  const pos = React.useMemo(
-    () => player.pos?.x && player.pos.y && convertToMap(player.pos.x, player.pos.y, map),
-    [player.pos, map],
-  );
-  if (!pos) return null;
+  // const pos = React.useMemo(
+  //   () => player.pos?.x && player.pos.y && convertToMap(player.pos.x, player.pos.y, map),
+  //   [player.pos, map],
+  // );
+  // if (!pos) return null;
 
-  const isCADUser = "steamId" in player;
+  // const isCADUser = "steamId" in player;
 
-  const hasLeoPermissions =
-    isCADUser &&
-    hasPermission({
-      userToCheck: player,
-      permissionsToCheck: defaultPermissions.defaultLeoPermissions,
-      fallback: player.isLeo,
-    });
+  // const hasLeoPermissions =
+  //   isCADUser &&
+  //   hasPermission({
+  //     userToCheck: player,
+  //     permissionsToCheck: defaultPermissions.defaultLeoPermissions,
+  //     fallback: player.isLeo,
+  //   });
 
-  const hasEmsFdPermissions =
-    isCADUser &&
-    hasPermission({
-      userToCheck: player,
-      permissionsToCheck: defaultPermissions.defaultEmsFdPermissions,
-      fallback: player.isEmsFd,
-    });
+  // const hasEmsFdPermissions =
+  //   isCADUser &&
+  //   hasPermission({
+  //     userToCheck: player,
+  //     permissionsToCheck: defaultPermissions.defaultEmsFdPermissions,
+  //     fallback: player.isEmsFd,
+  //   });
 
-  return (
-    <Marker icon={PLAYER_ICON} key={player.identifier} position={pos}>
-      <Tooltip direction="top">{player.name}</Tooltip>
+  // return (
+  //   <Marker icon={PLAYER_ICON} key={player.identifier} position={pos}>
+  //     <Tooltip direction="top">{player.name}</Tooltip>
 
-      <Popup minWidth={500}>
-        <p style={{ margin: 2 }}>
-          <strong>{t("player")}:</strong> {player.name}
-        </p>
-        {isCADUser ? (
-          <>
-            <p style={{ margin: 2 }}>
-              <strong>{t("cadUsername")}: </strong> {player.username}
-            </p>
+  //     <Popup minWidth={500}>
+  //       <p style={{ margin: 2 }}>
+  //         <strong>{t("player")}:</strong> {player.name}
+  //       </p>
+  //       {isCADUser ? (
+  //         <>
+  //           <p style={{ margin: 2 }}>
+  //             <strong>{t("cadUsername")}: </strong> {player.username}
+  //           </p>
 
-            <p style={{ margin: 2 }}>
-              <strong>{t("emsFd")}: </strong> {String(hasEmsFdPermissions)}
-            </p>
-            <p style={{ margin: 2 }}>
-              <strong>{t("leo")}: </strong> {String(hasLeoPermissions)}
-            </p>
-          </>
-        ) : null}
+  //           <p style={{ margin: 2 }}>
+  //             <strong>{t("emsFd")}: </strong> {String(hasEmsFdPermissions)}
+  //           </p>
+  //           <p style={{ margin: 2 }}>
+  //             <strong>{t("leo")}: </strong> {String(hasLeoPermissions)}
+  //           </p>
+  //         </>
+  //       ) : null}
 
-        {player.Weapon ? (
-          <p style={{ margin: 2 }}>
-            <strong>{t("weapon")}: </strong> {player.Weapon}
-          </p>
-        ) : null}
-        <p style={{ margin: 2 }}>
-          <strong>{t("location")}: </strong> {player.Location}
-        </p>
-        <p style={{ margin: 2 }}>
-          <strong>{t("vehicle")}: </strong> {player.Vehicle || t("onFoot")}
-        </p>
-        {player["License Plate"] ? (
-          <p style={{ margin: 2 }}>
-            <strong>{t("licensePlate")}: </strong> {player["License Plate"]}
-          </p>
-        ) : null}
-        <p style={{ margin: 2 }}>
-          <strong>{t("identifier")}: </strong> {player.identifier}
-        </p>
+  //       {player.Weapon ? (
+  //         <p style={{ margin: 2 }}>
+  //           <strong>{t("weapon")}: </strong> {player.Weapon}
+  //         </p>
+  //       ) : null}
+  //       <p style={{ margin: 2 }}>
+  //         <strong>{t("location")}: </strong> {player.Location}
+  //       </p>
+  //       <p style={{ margin: 2 }}>
+  //         <strong>{t("vehicle")}: </strong> {player.Vehicle || t("onFoot")}
+  //       </p>
+  //       {player["License Plate"] ? (
+  //         <p style={{ margin: 2 }}>
+  //           <strong>{t("licensePlate")}: </strong> {player["License Plate"]}
+  //         </p>
+  //       ) : null}
+  //       <p style={{ margin: 2 }}>
+  //         <strong>{t("identifier")}: </strong> {player.identifier}
+  //       </p>
 
-        {"id" in player ? (
-          <div className="mt-3">
-            <Button size="xs" className="!text-base" onClick={() => handleToggle(player.id)}>
-              {t("togglePlayer")}
-            </Button>
-          </div>
-        ) : null}
-      </Popup>
-    </Marker>
-  );
+  //       {"id" in player ? (
+  //         <div className="mt-3">
+  //           <Button size="xs" className="!text-base" onClick={() => handleToggle(player.id)}>
+  //             {t("togglePlayer")}
+  //           </Button>
+  //         </div>
+  //       ) : null}
+  //     </Popup>
+  //   </Marker>
+  // );
 }
