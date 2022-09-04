@@ -1,12 +1,12 @@
 import * as React from "react";
 import { ActiveMapUnits } from "./ActiveMapUnits";
-import { PlayerMarker } from "./PlayerMarker";
-import { useMapPlayers } from "hooks/realtime/useMapPlayers";
+// import { PlayerMarker } from "./PlayerMarker";
+// import { useMapPlayers } from "hooks/realtime/useMapPlayers";
 
 export function RenderMapPlayers() {
   const [openItems, setOpenItems] = React.useState<string[]>([]);
 
-  const { players } = useMapPlayers();
+  // const { players } = useMapPlayers();
 
   function handleToggle(playerId: string) {
     setOpenItems((p) => {
@@ -20,9 +20,9 @@ export function RenderMapPlayers() {
 
   return (
     <>
-      {players.map((player) => (
+      {/* {players.map((player) => (
         <PlayerMarker key={player.identifier} handleToggle={handleToggle} player={player} />
-      ))}
+      ))} */}
 
       <ActiveMapUnits setOpenItems={setOpenItems} openItems={openItems} players={players} />
     </>
