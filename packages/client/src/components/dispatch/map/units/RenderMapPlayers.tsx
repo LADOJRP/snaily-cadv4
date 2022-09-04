@@ -1,22 +1,22 @@
 import * as React from "react";
 import { ActiveMapUnits } from "./ActiveMapUnits";
 // import { PlayerMarker } from "./PlayerMarker";
-// import { useMapPlayers } from "hooks/realtime/useMapPlayers";
+import { useMapPlayers } from "hooks/realtime/useMapPlayers";
 
 export function RenderMapPlayers() {
   const [openItems, setOpenItems] = React.useState<string[]>([]);
 
-  // const { players } = useMapPlayers();
+  const { players } = useMapPlayers();
 
-  // function handleToggle(playerId: string) {
-  //   setOpenItems((p) => {
-  //     if (p.includes(playerId)) {
-  //       return p.filter((v) => v !== playerId);
-  //     }
+  function handleToggle(playerId: string) {
+    setOpenItems((p) => {
+      if (p.includes(playerId)) {
+        return p.filter((v) => v !== playerId);
+      }
 
-  //     return [...p, playerId];
-  //   });
-  // }
+      return [...p, playerId];
+    });
+  }
 
   return (
     <>
