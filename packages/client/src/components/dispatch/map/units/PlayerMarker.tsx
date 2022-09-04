@@ -1,23 +1,23 @@
-import { convertToMap } from "lib/map/utils";
-import * as React from "react";
-import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
-import { defaultPermissions, hasPermission } from "@snailycad/permissions";
-import { Button } from "components/Button";
+//import { convertToMap } from "lib/map/utils";
+//import * as React from "react";
+//import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
+//import { defaultPermissions, hasPermission } from "@snailycad/permissions";
+//import { Button } from "components/Button";
 import type { MapPlayer, PlayerDataEventPayload } from "types/Map";
-import { icon as leafletIcon } from "leaflet";
-import { useTranslations } from "next-intl";
+//import { icon as leafletIcon } from "leaflet";
+//import { useTranslations } from "next-intl";
 
 interface Props {
   player: MapPlayer | PlayerDataEventPayload;
   handleToggle(playerId: string): void;
 }
 
-const PLAYER_ICON = leafletIcon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.0/dist/images/marker-icon-2x.png",
-  iconSize: [25, 40],
-  popupAnchor: [0, 0],
-  iconAnchor: [9, 8],
-});
+// const PLAYER_ICON = leafletIcon({
+//   iconUrl: "https://unpkg.com/leaflet@1.7.0/dist/images/marker-icon-2x.png",
+//   iconSize: [25, 40],
+//   popupAnchor: [0, 0],
+//   iconAnchor: [9, 8],
+// });
 
 export function PlayerMarker({ player, handleToggle }: Props) {
   handleToggle(player.id);
