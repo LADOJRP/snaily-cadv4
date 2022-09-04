@@ -20,7 +20,7 @@ interface Props {
 // });
 
 export function PlayerMarker({ player, handleToggle }: Props) {
-  handleToggle(player.id);
+  handleToggle(player.identifier);
   return null;
   // const map = useMap();
   // const t = useTranslations("Leo");
