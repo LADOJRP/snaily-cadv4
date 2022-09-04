@@ -8,15 +8,15 @@ export function RenderMapPlayers() {
 
   const { players } = useMapPlayers();
 
-  function handleToggle(playerId: string) {
-    setOpenItems((p) => {
-      if (p.includes(playerId)) {
-        return p.filter((v) => v !== playerId);
-      }
+  // function handleToggle(playerId: string) {
+  //   setOpenItems((p) => {
+  //     if (p.includes(playerId)) {
+  //       return p.filter((v) => v !== playerId);
+  //     }
 
-      return [...p, playerId];
-    });
-  }
+  //     return [...p, playerId];
+  //   });
+  // }
 
   return (
     <>
