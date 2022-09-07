@@ -115,7 +115,6 @@ export async function getActiveOfficer(
 
   if (!activeOfficerOrCombinedUnit) {
     ctx.delete("activeOfficer");
-    return null;
     throw new BadRequest("noActiveOfficer");
   }
 
