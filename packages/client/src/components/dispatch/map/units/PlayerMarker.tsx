@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { MapItem, useDispatchMapState } from "state/mapState";
 import { useAuth } from "context/AuthContext";
 import { Rank } from "@snailycad/types";
+import { generateMarkerTypes } from "../RenderMapBlips";
 
 interface Props {
   player: MapPlayer | PlayerDataEventPayload;
@@ -29,6 +30,17 @@ export function PlayerMarker({ player, handleToggle }: Props) {
   const t = useTranslations("Leo");
   const { user } = useAuth();
   const { hiddenItems } = useDispatchMapState();
+  const markerTypes = React.useMemo(generateMarkerTypes, []);
+
+  const playerIcon = React.useMemo(() => {
+    const playerIcon = markerTypes[parseInt(player.icon, 10)];
+
+    if (playerIcon) {
+      return leafletIcon(playerIcon);
+    }
+
+    return PLAYER_ICON;
+  }, [player.icon, markerTypes]);
 
   const pos = React.useMemo(
     () => player.pos?.x && player.pos.y && convertToMap(player.pos.x, player.pos.y, map),
@@ -75,7 +87,12 @@ export function PlayerMarker({ player, handleToggle }: Props) {
   }
 
   return (
-    <Marker icon={PLAYER_ICON} key={player.identifier} position={pos}>
+    <Marker
+      ref={(ref) => (player.ref = ref)}
+      icon={playerIcon}
+      key={player.identifier}
+      position={pos}
+    >
       <Tooltip direction="top">{player.name}</Tooltip>
 
       <Popup minWidth={500}>

@@ -20,30 +20,43 @@ export function useMapPlayers() {
     new Map<string, MapPlayer | PlayerDataEventPayload>(),
   );
   const [socket, setSocket] = React.useState<WebSocket | null>(null);
+  const [prevPlayerData, setPrevPlayerData] = React.useState<GetDispatchPlayerBySteamIdData[]>([]);
 
   const { cad } = useAuth();
   const url = getCADURL(cad);
   const { execute } = useFetch();
 
   const getCADUsers = React.useCallback(
-    async (steamIds: (Player & { convertedSteamId?: string | null })[]) => {
-      if (steamIds.length <= 0) return;
+    async (
+      steamIds: (Player & { convertedSteamId?: string | null })[],
+      payload: PlayerDataEventPayload[],
+    ) => {
+      let _prevPlayerData = prevPlayerData;
 
-      const { json } = await execute<GetDispatchPlayerBySteamIdData[]>({
-        path: "/dispatch/players",
-        params: {
-          steamIds: steamIds.map((s) => s.convertedSteamId).join(","),
-        },
-        noToast: true,
-      });
+      const { json } =
+        steamIds.length <= 0
+          ? { json: prevPlayerData }
+          : await execute<GetDispatchPlayerBySteamIdData[]>({
+              path: "/dispatch/players",
+              params: {
+                steamIds: steamIds.map((s) => s.convertedSteamId).join(","),
+              },
+              noToast: true,
+            });
 
-      for (const player of steamIds) {
-        const user = json.find((v) => v.steamId === player.convertedSteamId);
+      if (steamIds.length >= 1) {
+        _prevPlayerData = json;
+        setPrevPlayerData(json);
+      }
 
+      const newMap = new Map();
+
+      for (const player of payload) {
+        const steamId = steamIds.find((v) => v.identifier === player.identifier)?.convertedSteamId;
+        const user = _prevPlayerData.find((v) => v.steamId === steamId);
         const existing = players.get(player.identifier);
-        if (existing) {
-          const copied = new Map(players);
 
+        if (existing) {
           const omittedExisting = omit(existing, [
             "License Plate",
             "Vehicle",
@@ -53,45 +66,39 @@ export function useMapPlayers() {
             "pos",
           ]);
 
-          copied.set(String(player.identifier), {
+          newMap.set(String(player.identifier), {
             ...omittedExisting,
             ...existing,
             ...player,
           });
-          setPlayers(copied);
 
-          return;
+          continue;
         }
 
-        setPlayers((map) => {
-          map.set(player.identifier, { ...player, ...user });
-          return map;
-        });
+        if (!player.identifier) continue;
+        newMap.set(player.identifier, { convertedSteamId: steamId, ...player, ...user });
       }
+
+      setPlayers(newMap);
     },
-    [players], // eslint-disable-line react-hooks/exhaustive-deps
+    [players, prevPlayerData], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const onPlayerData = React.useCallback(
     async (data: PlayerDataEvent) => {
-      const usersToFetch = [];
+      const usersToFetch = data.payload
+        .map((player) => {
+          const steamId = player.identifier?.replace("steam:", "");
+          const convertedSteamId = new BN(steamId, 16).toString();
+          return { ...player, convertedSteamId };
+        })
+        .filter((player) => {
+          if (players.has(player.identifier)) return false;
+          if (player.identifier?.startsWith("steam:")) return true;
+          return false;
+        });
 
-      for (const player of data.payload) {
-        if (players.has(player.identifier)) {
-          continue;
-        }
-
-        if (!player.identifier || !player.identifier.startsWith("steam:")) {
-          players.set(player.identifier, player);
-          continue;
-        }
-
-        const steamId = player.identifier.replace("steam:", "");
-        const convertedSteamId = new BN(steamId, 16).toString();
-        usersToFetch.push({ ...player, convertedSteamId });
-      }
-
-      await getCADUsers(usersToFetch);
+      await getCADUsers(usersToFetch, data.payload);
     },
     [getCADUsers, players],
   );
