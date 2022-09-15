@@ -129,7 +129,19 @@ export function Manage911CallForm({ call, isDisabled, setShowAlert, handleClose 
             </FormField>
           </FormRow>
 
-          {router.pathname.includes("/citizen") ? null : (
+          {router.pathname.includes("/citizen") ? (
+            <FormField
+              className="max-w-[750px]"
+              errorMessage={errors.description}
+              label={common("description")}
+            >
+              <Editor
+                value={values.descriptionData}
+                onChange={(v) => setFieldValue("descriptionData", v)}
+                isReadonly={isDisabled}
+              />
+            </FormField>
+          ) : (
             <>
               <FormRow>
                 <FormField errorMessage={errors.departments as string} label={t("departments")}>
