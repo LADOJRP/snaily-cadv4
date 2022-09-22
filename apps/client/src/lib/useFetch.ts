@@ -88,6 +88,10 @@ export default function useFetch({ overwriteState }: UseFetchOptions = { overwri
         openModal(ModalIds.ReauthorizeSession);
       }
 
+      if (error === "noActiveOfficer") {
+        openModal(ModalIds.SelectOfficer, { includeStatuses: true });
+      }
+
       let hasAddedError = false as boolean; // as boolean because eslint gets upset otherwise.
       for (const error of errors) {
         Object.entries(error).map(([key, value]) => {
@@ -110,9 +114,9 @@ export default function useFetch({ overwriteState }: UseFetchOptions = { overwri
         restOptions.noToast !== error &&
         !hasAddedError
       ) {
-        toastMessage({ message: t(key), title: errorTitle });
+        toastMessage({ message: t(key), title: `${errorTitle} ${error ? `(${error})` : ""}` });
       } else if (!restOptions.noToast && !hasAddedError) {
-        toastMessage({ message: t(key), title: errorTitle });
+        toastMessage({ message: t(key), title: `${errorTitle} ${error ? `(${error})` : ""}` });
       }
 
       setState("error");
