@@ -22,16 +22,26 @@ export async function getCADVersion() {
 }
 
 async function getLocalPackageVersion(): Promise<string | null> {
-  const packageJsonPath = resolve(process.cwd(), "package.json");
-  const packageJson = await readFile(packageJsonPath, "utf-8").catch(() => null);
-  if (!packageJson) return null;
+  console.log({ PROCESS_CWD: process.cwd() });
 
-  const json = JSON.parse(packageJson);
-  return json.version;
+  try {
+    const packageJsonPath = resolve(process.cwd(), "package.json");
+    const packageJson = await readFile(packageJsonPath, "utf-8").catch(() => null);
+    if (!packageJson) return null;
+
+    const json = JSON.parse(packageJson);
+    return json.version;
+  } catch {
+    return null;
+  }
 }
 
 function getCurrentGitHash() {
   try {
+    if (process.env.RAILWAY_GIT_COMMIT_SHA) {
+      return process.env.RAILWAY_GIT_COMMIT_SHA as string;
+    }
+
     const command = "git";
 
     const outputBuffer = spawnSync(command, ["rev-parse", "--short=7", "HEAD"]);
