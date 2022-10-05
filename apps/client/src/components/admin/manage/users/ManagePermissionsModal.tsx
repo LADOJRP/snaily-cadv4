@@ -24,6 +24,13 @@ interface Props {
   onUpdate?(user: PutManageUserPermissionsByIdData): void;
 }
 
+const DEPRECATED_PERMISSIONS = [
+  Permissions.ViewDLExams,
+  Permissions.ManageDLExams,
+  Permissions.ViewWeaponExams,
+  Permissions.ManageWeaponExams,
+];
+
 const groups = [
   {
     name: "Admin",
@@ -151,7 +158,7 @@ export function ManagePermissionsModal({ user, onUpdate, isReadOnly }: Props) {
                         <Button
                           type="button"
                           size="xs"
-                          onClick={() => handleToggleAll(group, values, setValues)}
+                          onPress={() => handleToggleAll(group, values, setValues)}
                         >
                           Toggle all
                         </Button>
@@ -164,6 +171,10 @@ export function ManagePermissionsModal({ user, onUpdate, isReadOnly }: Props) {
                         const isDisabled = user.roles?.some((r) =>
                           r.permissions.includes(permission),
                         );
+
+                        if (DEPRECATED_PERMISSIONS.includes(permission)) {
+                          return null;
+                        }
 
                         return (
                           <FormField key={permission} className="my-1" label={formattedName}>

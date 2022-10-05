@@ -64,7 +64,7 @@ export function AdvancedCitizensTab() {
                   type="button"
                   className="px-1"
                   variant="transparent"
-                  onClick={() => handleRemoveItem(id)}
+                  onPress={() => handleRemoveItem(id)}
                 >
                   <X width={20} height={20} aria-label="Remove item" />
                 </Button>
@@ -79,6 +79,7 @@ export function AdvancedCitizensTab() {
                   onBlur={(e) => handleChange("surname", id, e)}
                 />
               </FormField>
+
               <FormField className="w-full" label="Date of Birth">
                 <Input
                   type="date"
@@ -113,7 +114,7 @@ export function AdvancedCitizensTab() {
         <div className="flex items-center justify-end gap-2 mt-3">
           <Button
             type="button"
-            onClick={() => {
+            onPress={() => {
               setCitizens((p) => ({ ...p, ...createInitialCitizen() }));
             }}
           >

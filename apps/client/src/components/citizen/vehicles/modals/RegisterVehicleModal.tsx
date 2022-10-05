@@ -141,14 +141,6 @@ export function RegisterVehicleModal({ vehicle, onClose, onCreate, onUpdate }: P
               />
             </FormField>
 
-            <FormField optional errorMessage={errors.vinNumber} label={tVehicle("vinNumber")}>
-              <Input
-                value={values.vinNumber.toUpperCase()}
-                name="vinNumber"
-                onChange={handleChange}
-              />
-            </FormField>
-
             {CUSTOM_TEXTFIELD_VALUES ? (
               <FormField errorMessage={errors.model} label={tVehicle("model")}>
                 <Input
@@ -174,7 +166,7 @@ export function RegisterVehicleModal({ vehicle, onClose, onCreate, onUpdate }: P
             ) : (
               <FormField errorMessage={errors.model} label={tVehicle("model")}>
                 <InputSuggestions<VehicleValue>
-                  onSuggestionClick={(suggestion) => {
+                  onSuggestionPress={(suggestion) => {
                     setValues({
                       ...values,
                       modelName: suggestion.value.value,
@@ -205,6 +197,18 @@ export function RegisterVehicleModal({ vehicle, onClose, onCreate, onUpdate }: P
                 labelFieldName="name"
                 valueFieldName="citizenId"
                 isDisabled={isDisabled}
+              />
+            </FormField>
+
+            <FormField errorMessage={errors.color} label={tVehicle("color")}>
+              <Input onChange={handleChange} name="color" value={values.color} />
+            </FormField>
+
+            <FormField optional errorMessage={errors.vinNumber} label={tVehicle("vinNumber")}>
+              <Input
+                value={values.vinNumber.toUpperCase()}
+                name="vinNumber"
+                onChange={handleChange}
               />
             </FormField>
 
@@ -268,10 +272,6 @@ export function RegisterVehicleModal({ vehicle, onClose, onCreate, onUpdate }: P
               </FormField>
             </FormRow>
 
-            <FormField errorMessage={errors.color} label={tVehicle("color")}>
-              <Input onChange={handleChange} name="color" value={values.color} />
-            </FormField>
-
             {vehicle ? (
               <FormRow>
                 <FormField errorMessage={errors.reportedStolen} label={tVehicle("reportAsStolen")}>
@@ -294,7 +294,7 @@ export function RegisterVehicleModal({ vehicle, onClose, onCreate, onUpdate }: P
             ) : null}
 
             <footer className="flex justify-end mt-5">
-              <Button type="reset" onClick={handleClose} variant="cancel">
+              <Button type="reset" onPress={handleClose} variant="cancel">
                 {common("cancel")}
               </Button>
               <Button

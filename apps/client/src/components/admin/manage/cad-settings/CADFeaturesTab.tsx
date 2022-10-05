@@ -36,15 +36,10 @@ const FEATURES_LIST: Record<Feature, FeatureItem> = {
     description:
       "When enabled, this will allow citizens to create truck logs and track their progress.",
   },
-  DL_EXAMS: {
-    name: "Driver's License Exams",
+  LICENSE_EXAMS: {
+    name: "License Exams",
     description:
-      "When enabled, this will require citizens to enter a driving licenses exam to get a driver's license.",
-  },
-  WEAPON_EXAMS: {
-    name: "Weapon's License Exams",
-    description:
-      "When enabled, this will require citizens to enter a weapon licenses exam to get a weapon's license.",
+      "When enabled, this will require citizens to participate in an exam before getting their required licenses.",
   },
   AOP: {
     name: "Area Of Play",
@@ -212,6 +207,16 @@ const FEATURES_LIST: Record<Feature, FeatureItem> = {
   WARRANT_STATUS_APPROVAL: {
     name: "Warrant Status Approval",
     description: "When enabled, this will require supervisors to approve 'active' warrants.",
+  },
+  DIVISIONS: {
+    name: "Divisions",
+    description:
+      "When enabled, this will require officers and EMS-FD deputies to provide their division(s).",
+  },
+  TONES: {
+    name: "Tones",
+    description:
+      "When enabled, this will allow Dispatch to create temporary messages for LEO and EMS/FD.",
   },
 };
 

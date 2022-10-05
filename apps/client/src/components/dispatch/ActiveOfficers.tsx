@@ -53,7 +53,8 @@ function ActiveOfficers({ initialOfficers }: Props) {
   const { user } = useAuth();
 
   const { hasActiveDispatchers } = useActiveDispatchers();
-  const { BADGE_NUMBERS, ACTIVE_INCIDENTS, RADIO_CHANNEL_MANAGEMENT } = useFeatureEnabled();
+  const { BADGE_NUMBERS, ACTIVE_INCIDENTS, RADIO_CHANNEL_MANAGEMENT, DIVISIONS } =
+    useFeatureEnabled();
   const { leoSearch, showLeoFilters, setShowFilters } = useActiveUnitsState();
   const { handleFilter } = useActiveUnitsFilter();
 
@@ -79,7 +80,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
               "px-1.5 dark:border dark:border-quinary dark:bg-tertiary dark:hover:brightness-125 group",
               showLeoFilters && "dark:!bg-secondary !bg-gray-500",
             )}
-            onClick={() => setShowFilters("leo", !showLeoFilters)}
+            onPress={() => setShowFilters("leo", !showLeoFilters)}
             title={common("filters")}
             disabled={activeOfficers.length <= 0}
           >
@@ -159,7 +160,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
                   actions: isDispatch ? (
                     <Button
                       disabled={!hasActiveDispatchers}
-                      onClick={() => handleEditClick(officer)}
+                      onPress={() => handleEditClick(officer)}
                       size="xs"
                       variant="success"
                     >
@@ -172,7 +173,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
               { header: t("officer"), accessorKey: "officer" },
               BADGE_NUMBERS ? { header: t("badgeNumber"), accessorKey: "badgeNumber" } : null,
               { header: t("department"), accessorKey: "department" },
-              { header: t("division"), accessorKey: "division" },
+              DIVISIONS ? { header: t("division"), accessorKey: "division" } : null,
               { header: t("rank"), accessorKey: "rank" },
               { header: t("status"), accessorKey: "status" },
               ACTIVE_INCIDENTS ? { header: t("incident"), accessorKey: "incident" } : null,

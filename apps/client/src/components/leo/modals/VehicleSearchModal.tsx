@@ -23,6 +23,7 @@ import { NotesTab } from "./NameSearchModal/tabs/NotesTab";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { RegisterVehicleModal } from "components/citizen/vehicles/modals/RegisterVehicleModal";
 import type { PostMarkStolenData } from "@snailycad/types/api";
+import { ImpoundVehicleModal } from "./VehicleSearch/ImpoundVehicleModal";
 
 interface Props {
   id?: ModalIds.VehicleSearch | ModalIds.VehicleSearchWithinName;
@@ -42,7 +43,8 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
   const { CREATE_USER_CITIZEN_LEO } = useFeatureEnabled();
 
   const isLeo = router.pathname === "/officer";
-  const showMarkStolen = currentResult && isLeo && !currentResult.reportedStolen;
+  const showMarkVehicleAsStolenButton = currentResult && isLeo && !currentResult.reportedStolen;
+  const showImpoundVehicleButton = currentResult && isLeo && !currentResult.impounded;
 
   const bolo = React.useMemo(() => {
     if (!currentResult) return null;
@@ -113,6 +115,10 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
     }
   }
 
+  async function handleImpoundVehicle() {
+    openModal(ModalIds.ImpoundVehicle);
+  }
+
   const INITIAL_VALUES = {
     plateOrVin: currentResult?.vinNumber ?? "",
   };
@@ -129,7 +135,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
           <Form>
             <FormField errorMessage={errors.plateOrVin} label={t("plateOrVin")}>
               <InputSuggestions<VehicleSearchResult>
-                onSuggestionClick={(suggestion) => {
+                onSuggestionPress={(suggestion) => {
                   setFieldValue("plateOrVin", suggestion.vinNumber);
                   setCurrentResult(suggestion);
                 }}
@@ -199,17 +205,17 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
             >
               <div>
                 {CREATE_USER_CITIZEN_LEO && isLeo ? (
-                  <Button type="button" onClick={() => openModal(ModalIds.RegisterVehicle)}>
+                  <Button type="button" onPress={() => openModal(ModalIds.RegisterVehicle)}>
                     {t("createVehicle")}
                   </Button>
                 ) : null}
 
                 {currentResult && isLeo ? (
                   <>
-                    {showMarkStolen ? (
+                    {showMarkVehicleAsStolenButton ? (
                       <Button
                         type="button"
-                        onClick={() => handleMarkStolen()}
+                        onPress={() => handleMarkStolen()}
                         variant="cancel"
                         className="px-1.5"
                       >
@@ -217,10 +223,21 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
                       </Button>
                     ) : null}
 
+                    {showImpoundVehicleButton ? (
+                      <Button
+                        type="button"
+                        onPress={() => handleImpoundVehicle()}
+                        variant="cancel"
+                        className="px-1.5"
+                      >
+                        {t("impoundVehicle")}
+                      </Button>
+                    ) : null}
+
                     {currentResult ? (
                       <Button
                         type="button"
-                        onClick={() => handleEditLicenses()}
+                        onPress={() => handleEditLicenses()}
                         variant="cancel"
                         className="px-1.5"
                       >
@@ -232,7 +249,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
               </div>
 
               <div className="flex">
-                <Button type="reset" onClick={() => closeModal(id)} variant="cancel">
+                <Button type="reset" onPress={() => closeModal(id)} variant="cancel">
                   {common("cancel")}
                 </Button>
                 <Button
@@ -259,6 +276,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
         )}
       </Formik>
 
+      <ImpoundVehicleModal />
       <ManageVehicleFlagsModal />
       <ManageVehicleLicensesModal />
       {CREATE_USER_CITIZEN_LEO && isLeo ? (
