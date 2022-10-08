@@ -1,6 +1,6 @@
 import { useTranslations } from "use-intl";
 import * as React from "react";
-import { Button } from "components/Button";
+import { Button, TextField } from "@snailycad/ui";
 import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
@@ -11,8 +11,6 @@ import { AdminLayout } from "components/admin/AdminLayout";
 import { requestAll } from "lib/utils";
 import dynamic from "next/dynamic";
 import { Table, useTableState } from "components/shared/Table";
-import { FormField } from "components/form/FormField";
-import { Input } from "components/form/inputs/Input";
 import { ArrowLeft } from "react-bootstrap-icons";
 import { ModalIds } from "types/ModalIds";
 import { ManagePenalCodeGroup } from "components/admin/values/penal-codes/ManagePenalCodeGroup";
@@ -211,9 +209,13 @@ export default function ValuePath({ values: { type, groups: groupData, values: d
         </div>
       </header>
 
-      <FormField label={common("search")} className="my-2">
-        <Input onChange={(e) => setSearch(e.target.value)} value={search} className="" />
-      </FormField>
+      <TextField
+        label={common("search")}
+        className="my-2"
+        name="search"
+        value={search}
+        onChange={(value) => setSearch(value)}
+      />
 
       {values.length <= 0 && !currentGroup ? (
         <p className="mt-5">There are no penal codes yet.</p>

@@ -8,7 +8,7 @@ import "styles/globals.scss";
 import "styles/fonts.scss";
 import { SocketProvider } from "@casper124578/use-socket.io";
 import { getAPIUrl } from "lib/fetch/getAPIUrl";
-import { I18nProvider } from "@react-aria/i18n";
+import { ModalProvider } from "@react-aria/overlays";
 
 import { setTags } from "@sentry/nextjs";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
@@ -43,7 +43,7 @@ export default function App({ Component, router, pageProps }: AppProps<any>) {
 
   return (
     <SSRProvider>
-      <I18nProvider locale={locale}>
+      <ModalProvider>
         <SocketProvider uri={url} options={{ reconnectionDelay: 10_000 }}>
           <AuthProvider initialData={pageProps}>
             <NextIntlProvider onError={console.warn} locale={locale} messages={pageProps.messages}>
@@ -63,7 +63,7 @@ export default function App({ Component, router, pageProps }: AppProps<any>) {
             </NextIntlProvider>
           </AuthProvider>
         </SocketProvider>
-      </I18nProvider>
+      </ModalProvider>
     </SSRProvider>
   );
 }

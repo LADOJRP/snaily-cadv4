@@ -1,8 +1,6 @@
 import { PENAL_CODE_SCHEMA } from "@snailycad/schemas";
-import { Button } from "components/Button";
 import { FormField } from "components/form/FormField";
-import { Input } from "components/form/inputs/Input";
-import { Loader } from "components/Loader";
+import { Input, Loader, Button, SelectField } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { Form, Formik, useFormikContext } from "formik";
 import { handleValidate } from "lib/handleValidate";
@@ -117,17 +115,18 @@ export function ManagePenalCode({ onCreate, onUpdate, groups, type, penalCode }:
               <Input autoFocus name="title" onChange={handleChange} value={values.title} />
             </FormField>
 
-            <FormField errorMessage={errors.type} label="Type" optional>
-              <Select
-                name="type"
-                onChange={handleChange}
-                value={values.type}
-                values={Object.values(PenalCodeType).map((value) => ({
-                  value,
-                  label: value,
-                }))}
-              />
-            </FormField>
+            <SelectField
+              errorMessage={errors.type}
+              label="Type"
+              name="type"
+              options={Object.values(PenalCodeType).map((value) => ({
+                value,
+                label: value.toLowerCase(),
+              }))}
+              onSelectionChange={(key) => setFieldValue("type", key)}
+              isClearable={false}
+              selectedKey={values.type}
+            />
 
             <FormField errorMessage={errors.description} label="Description">
               <Editor

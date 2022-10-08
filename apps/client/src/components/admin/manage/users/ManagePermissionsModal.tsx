@@ -12,10 +12,8 @@ import {
 import { FormField } from "components/form/FormField";
 import { Toggle } from "components/form/Toggle";
 import { Form, Formik } from "formik";
-import { Button } from "components/Button";
 import useFetch from "lib/useFetch";
-import { Loader } from "components/Loader";
-import { Input } from "components/form/inputs/Input";
+import { Loader, Button, TextField } from "@snailycad/ui";
 import type { GetManageUserByIdData, PutManageUserPermissionsByIdData } from "@snailycad/types/api";
 
 interface Props {
@@ -135,9 +133,14 @@ export function ManagePermissionsModal({ user, onUpdate, isReadOnly }: Props) {
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
         {({ handleChange, setValues, values }) => (
           <Form>
-            <FormField label={common("search")} className="my-2">
-              <Input onChange={(e) => setSearch(e.target.value)} value={search} />
-            </FormField>
+            <TextField
+              label={common("search")}
+              className="my-2"
+              name="search"
+              value={search}
+              onChange={(value) => setSearch(value)}
+              placeholder="Find features.."
+            />
 
             <div>
               {groups.map((group) => {
