@@ -20,7 +20,8 @@ export const HASH_SCHEMA_ARR = z.array(HASH_SCHEMA).min(1);
 /**
  * codes_10
  */
-const SHOULD_DO_REGEX = /SET_OFF_DUTY|SET_ON_DUTY|SET_ASSIGNED|SET_STATUS|PANIC_BUTTON/;
+const SHOULD_DO_REGEX =
+  /SET_OFF_DUTY|SET_ON_DUTY|SET_ASSIGNED|SET_STATUS|PANIC_BUTTON|ON_SCENE|EN_ROUTE/;
 const TYPE_REGEX = /STATUS_CODE|SITUATION_CODE/;
 
 export const CODES_10_SCHEMA = BASE_VALUE_SCHEMA.extend({
@@ -101,6 +102,7 @@ export const PENAL_CODE_SCHEMA = z.object({
   bail: z.any().nullable().optional(),
   prisonTerm: z.any().nullable().optional(),
   type: z.string().regex(PENAL_CODE_TYPE_REGEX).optional().nullable(),
+  isPrimary: z.boolean().optional().nullable(),
 });
 
 export const PENAL_CODE_ARR = z.array(PENAL_CODE_SCHEMA).min(1);

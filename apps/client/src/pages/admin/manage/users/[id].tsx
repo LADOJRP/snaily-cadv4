@@ -8,9 +8,16 @@ import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
 import { CustomRole, Rank } from "@snailycad/types";
 import { AdminLayout } from "components/admin/AdminLayout";
-import { FormField } from "components/form/FormField";
 import { useAuth } from "context/AuthContext";
-import { Input, Loader, Button, buttonVariants, SelectField } from "@snailycad/ui";
+import {
+  Loader,
+  Button,
+  buttonVariants,
+  SelectField,
+  TextField,
+  Breadcrumbs,
+  BreadcrumbItem,
+} from "@snailycad/ui";
 import useFetch from "lib/useFetch";
 import { FormRow } from "components/form/FormRow";
 import { handleValidate } from "lib/handleValidate";
@@ -87,26 +94,26 @@ export default function ManageCitizens(props: Props) {
         permissions: [Permissions.BanUsers, Permissions.ManageUsers, Permissions.DeleteUsers],
       }}
     >
-      <header className="mb-3">
-        <Title className="mb-2">{t("editUser")}</Title>
-        <h2 className="text-lg">
-          {t.rich("editing", {
-            span: (children) => <span className="font-semibold">{children}</span>,
-            user: user.username,
-          })}
-        </h2>
-      </header>
+      <Breadcrumbs>
+        <BreadcrumbItem href="/admin/manage/users">{t("MANAGE_USERS")}</BreadcrumbItem>
+        <BreadcrumbItem>{t("editUser")}</BreadcrumbItem>
+        <BreadcrumbItem>{user.username}</BreadcrumbItem>
+      </Breadcrumbs>
+
+      <Title renderLayoutTitle={false} className="mb-2">
+        {t("editUser")}
+      </Title>
 
       <div className="mt-5">
         <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-          {({ handleChange, setFieldValue, isValid, values, errors }) => (
+          {({ setFieldValue, isValid, values, errors }) => (
             <Form className="p-4 rounded-md dark:border card">
               <SelectField
+                isDisabled={isRankDisabled}
                 errorMessage={errors.rank}
                 label="Rank"
                 name="rank"
                 onSelectionChange={(key) => setFieldValue("rank", key)}
-                isClearable
                 selectedKey={values.rank}
                 options={
                   isRankDisabled
@@ -147,13 +154,23 @@ export default function ManageCitizens(props: Props) {
               </SettingsFormField>
 
               <FormRow>
-                <FormField optional errorMessage={errors.steamId} label="Steam ID">
-                  <Input name="steamId" onChange={handleChange} value={values.steamId} />
-                </FormField>
+                <TextField
+                  isOptional
+                  label="Steam ID"
+                  name="steamId"
+                  onChange={(value) => setFieldValue("steamId", value)}
+                  value={values.steamId}
+                  errorMessage={errors.steamId}
+                />
 
-                <FormField optional errorMessage={errors.discordId} label="Discord ID">
-                  <Input name="discordId" onChange={handleChange} value={values.discordId} />
-                </FormField>
+                <TextField
+                  isOptional
+                  label="Discord ID"
+                  name="discordId"
+                  onChange={(value) => setFieldValue("discordId", value)}
+                  value={values.discordId}
+                  errorMessage={errors.discordId}
+                />
               </FormRow>
 
               <div className="flex justify-end mt-3">

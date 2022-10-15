@@ -115,7 +115,7 @@ const weaponsInclude = {
 @Controller("/search")
 @UseBeforeEach(IsAuth)
 @ContentType("application/json")
-export class SearchController {
+export class LeoSearchController {
   @Post("/name")
   @Description("Search citizens by their name, surname or fullname. Returns the first 35 results.")
   async searchName(
@@ -160,6 +160,10 @@ export class SearchController {
             name: { contains: surname, mode: "insensitive" },
             surname: { contains: name, mode: "insensitive" },
           },
+          { driversLicenseNumber: { contains: name, mode: "insensitive" } },
+          { weaponLicenseNumber: { contains: name, mode: "insensitive" } },
+          { waterLicenseNumber: { contains: name, mode: "insensitive" } },
+          { pilotLicenseNumber: { contains: name, mode: "insensitive" } },
           { socialSecurityNumber: name },
         ],
       },
