@@ -50,7 +50,10 @@ export interface PostMyOfficerByIdData {
  * @method GET
  * @route /leo/dmv
  */
-export type GetDMVPendingVehiclesData = Types.RegisteredVehicle[];
+export interface GetDMVPendingVehiclesData {
+  vehicles: Types.RegisteredVehicle[];
+  totalCount: number;
+}
 
 /**
  * @method POST
@@ -113,7 +116,10 @@ export type GetActiveOfficerData = Types.CombinedLeoUnit | Types.Officer;
  * @method GET
  * @route /leo/active-officers
  */
-export type GetActiveOfficersData = (Types.CombinedLeoUnit | Types.Officer)[];
+export interface GetActiveOfficersData {
+  totalCount: number;
+  officers: (Types.CombinedLeoUnit | Types.Officer)[];
+}
 
 /**
  * @method POST

@@ -136,11 +136,14 @@ export default function OfficerDashboard({
     dispatchState.setBolos(bolos);
 
     dispatchState.setActiveDeputies(activeDeputies);
-    dispatchState.setActiveOfficers(activeOfficers);
+    if (dispatchState.activeOfficers.length <= 0) {
+      dispatchState.setActiveOfficers(activeOfficers.officers);
+    }
+
     leoState.setUserOfficers(userOfficers);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bolos, calls, activeOfficers, activeDeputies, activeOfficer]);
+  }, [dispatchState.activeOfficers, bolos, calls, activeOfficers, activeDeputies, activeOfficer]);
 
   return (
     <Layout
@@ -226,9 +229,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ req, local
     ["/admin/values/codes_10", []],
     ["/911-calls", { calls: [], totalCount: 0 }],
     ["/bolos", []],
-    ["/leo/active-officers", []],
+    ["/leo/active-officers?isServer=true", { officers: [], totalCount: 0 }],
     ["/ems-fd/active-deputies", []],
   ]);
+
+  console.log({ activeOfficers });
 
   return {
     props: {

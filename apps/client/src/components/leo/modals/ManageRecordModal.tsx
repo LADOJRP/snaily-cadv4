@@ -1,6 +1,6 @@
 import * as React from "react";
 import { CREATE_TICKET_SCHEMA } from "@snailycad/schemas";
-import { Textarea, Loader, Button, TextField } from "@snailycad/ui";
+import { Loader, Button, TextField } from "@snailycad/ui";
 import { FormField } from "components/form/FormField";
 import type { SelectValue } from "components/form/Select";
 import { Modal } from "components/modal/Modal";
@@ -99,6 +99,7 @@ export function ManageRecordModal({
         bail: LEO_BAIL && value.jailTime?.enabled ? value.bail?.value : null,
         jailTime: value.jailTime?.enabled ? value.jailTime?.value : null,
         fine: value.fine?.enabled ? value.fine?.value : null,
+        counts: value.counts?.value ?? null,
       })),
     };
 
@@ -151,6 +152,7 @@ export function ManageRecordModal({
           key: v.penalCodeId,
           ...v.penalCode,
           fine: { enabled: !!v.fine, value: v.fine },
+          counts: { enabled: true, value: v.counts },
           jailTime: { enabled: !!v.jailTime, value: v.jailTime },
           bail: { enabled: LEO_BAIL ? !!v.jailTime : false, value: v.bail },
         },
@@ -242,14 +244,16 @@ export function ManageRecordModal({
             />
             <SeizedItemsTable isReadOnly={isReadOnly} />
 
-            <FormField optional errorMessage={errors.notes} label={t("notes")}>
-              <Textarea
-                disabled={isReadOnly}
-                value={values.notes}
-                name="notes"
-                onChange={handleChange}
-              />
-            </FormField>
+            <TextField
+              isTextarea
+              isOptional
+              isDisabled={isReadOnly}
+              errorMessage={errors.notes}
+              label={t("notes")}
+              value={values.notes}
+              name="notes"
+              onChange={(value) => setFieldValue("notes", value)}
+            />
 
             <FormField optional errorMessage={errors.paymentStatus} label={t("recordPaid")}>
               <Toggle

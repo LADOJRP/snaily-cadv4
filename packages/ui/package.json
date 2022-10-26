@@ -1,6 +1,6 @@
 {
   "name": "@snailycad/ui",
-  "version": "1.27.4",
+  "version": "1.29.0",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,11 +13,12 @@
     "typecheck": "yarn tsc --noEmit"
   },
   "devDependencies": {
-    "@snailycad/types": "1.27.4",
-    "tailwindcss": "^3.1.8",
+    "@snailycad/types": "1.29.0",
+    "tailwindcss": "^3.2.0",
     "tslib": "^2.4.0",
-    "tsup": "^6.2.3",
-    "typescript": "^4.8.4"
+    "tsup": "^6.3.0",
+    "typescript": "^4.8.4",
+    "vite": "^3.1.8"
   },
   "tsup": {
     "entry": [
@@ -33,14 +34,46 @@
       "esm"
     ],
     "external": [
-      "react"
+      "react",
+      "react-bootstrap-icons",
+      "next-intl",
+      "next/link",
+      "@react-aria/button",
+      "@react-aria/breadcrumbs",
+      "@react-aria/dialog",
+      "@react-aria/focus",
+      "@react-aria/interactions",
+      "@react-aria/label",
+      "@react-aria/listbox",
+      "@react-aria/menu",
+      "@react-aria/overlays",
+      "@react-aria/progress",
+      "@react-aria/radio",
+      "@react-aria/textfield",
+      "@react-aria/utils",
+      "@react-stately/collections",
+      "@react-stately/list",
+      "@react-stately/menu",
+      "@react-stately/radio",
+      "@react-stately/select",
+      "tailwind-merge",
+      "@react-aria/calendar",
+      "@react-stately/calendar",
+      "@react-aria/i18n",
+      "@react-stately/datepicker",
+      "@react-aria/datepicker",
+      "@internationalized/date"
     ]
   },
   "dependencies": {
+    "@internationalized/date": "^3.0.1",
     "@react-aria/breadcrumbs": "^3.3.2",
     "@react-aria/button": "^3.6.2",
+    "@react-aria/calendar": "^3.0.3",
+    "@react-aria/datepicker": "^3.1.2",
     "@react-aria/dialog": "^3.4.0",
     "@react-aria/focus": "^3.9.0",
+    "@react-aria/i18n": "^3.6.1",
     "@react-aria/interactions": "^3.12.0",
     "@react-aria/label": "^3.4.2",
     "@react-aria/listbox": "^3.7.0",
@@ -50,7 +83,9 @@
     "@react-aria/radio": "^3.4.0",
     "@react-aria/textfield": "^3.7.2",
     "@react-aria/utils": "^3.14.0",
+    "@react-stately/calendar": "^3.0.3",
     "@react-stately/collections": "^3.4.4",
+    "@react-stately/datepicker": "^3.1.0",
     "@react-stately/list": "^3.5.4",
     "@react-stately/menu": "^3.4.2",
     "@react-stately/radio": "^3.6.0",
@@ -58,12 +93,14 @@
     "@react-types/overlays": "^3.6.4",
     "@react-types/select": "^3.6.4",
     "@react-types/shared": "^3.15.0",
-    "next-intl": "^2.7.6",
     "react-bootstrap-icons": "^1.9.1",
-    "tailwind-merge": "^1.6.1"
+    "tailwind-merge": "^1.7.0"
   },
   "peerDependencies": {
+    "date-fns": ">=2.29.3",
+    "next-intl": ">=2.8.0",
     "react": ">=18.2.0",
     "react-dom": ">=18.2.0"
-  }
+  },
+  "sideEffects": false
 }

@@ -8,25 +8,21 @@ import "styles/globals.scss";
 import "styles/fonts.scss";
 import { SocketProvider } from "@casper124578/use-socket.io";
 import { getAPIUrl } from "lib/fetch/getAPIUrl";
-import { ModalProvider } from "@react-aria/overlays";
-
 import { setTags } from "@sentry/nextjs";
-import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import type { cad, User } from "@snailycad/types";
 import { useMounted } from "@casper124578/useful/hooks/useMounted";
 import dynamic from "next/dynamic";
+import Head from "next/head";
 
 const ReauthorizeSessionModal = dynamic(
   async () =>
     (await import("components/auth/login/ReauthorizeSessionModal")).ReauthorizeSessionModal,
-  {
-    ssr: false,
-  },
+  { ssr: false },
 );
 
 const Toaster = dynamic(async () => (await import("react-hot-toast")).Toaster, { ssr: false });
 
-export default function App({ Component, router, pageProps }: AppProps<any>) {
+export default function App({ Component, router, pageProps, ...rest }: AppProps<any>) {
   const isMounted = useMounted();
   const { protocol, host } = new URL(getAPIUrl());
   const url = `${protocol}//${host}`;
@@ -43,27 +39,33 @@ export default function App({ Component, router, pageProps }: AppProps<any>) {
 
   return (
     <SSRProvider>
-      <ModalProvider>
-        <SocketProvider uri={url} options={{ reconnectionDelay: 10_000 }}>
-          <AuthProvider initialData={pageProps}>
-            <NextIntlProvider onError={console.warn} locale={locale} messages={pageProps.messages}>
-              <ValuesProvider initialData={pageProps}>
-                <CitizenProvider initialData={pageProps}>
-                  <GoogleReCaptchaProvider
-                    reCaptchaKey={process.env.NEXT_PUBLIC_GOOGLE_CAPTCHA_SITE_KEY as string}
-                    scriptProps={{ async: true, defer: true, appendTo: "body" }}
-                    useRecaptchaNet
-                  >
-                    {isMounted ? <ReauthorizeSessionModal /> : null}
-                    <Component {...pageProps} />
-                  </GoogleReCaptchaProvider>
-                  <Toaster position="top-right" />
-                </CitizenProvider>
-              </ValuesProvider>
-            </NextIntlProvider>
-          </AuthProvider>
-        </SocketProvider>
-      </ModalProvider>
+      <SocketProvider uri={url} options={{ reconnectionDelay: 10_000 }}>
+        <AuthProvider initialData={pageProps}>
+          <NextIntlProvider
+            defaultTranslationValues={{
+              span: (children) => <span className="font-semibold">{children}</span>,
+            }}
+            onError={console.warn}
+            locale={locale}
+            messages={pageProps.messages}
+          >
+            <ValuesProvider router={router} initialData={pageProps}>
+              <CitizenProvider initialData={pageProps}>
+                <Head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                </Head>
+                {isMounted ? (
+                  <>
+                    <ReauthorizeSessionModal />
+                    <Toaster position="top-right" />
+                  </>
+                ) : null}
+                <Component {...pageProps} err={(rest as any).err} />
+              </CitizenProvider>
+            </ValuesProvider>
+          </NextIntlProvider>
+        </AuthProvider>
+      </SocketProvider>
     </SSRProvider>
   );
 }
