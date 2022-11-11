@@ -25,6 +25,8 @@ import { getInactivityFilter } from "lib/leo/utils";
 import { filterInactiveUnits, setInactiveUnitsOffDuty } from "lib/leo/setInactiveUnitsOffDuty";
 import { getActiveDeputy } from "lib/ems-fd";
 import type * as APITypes from "@snailycad/types/api";
+import { IsFeatureEnabled } from "middlewares/is-enabled";
+import { Feature } from "@prisma/client";
 
 @Controller("/dispatch")
 @UseBeforeEach(IsAuth)
@@ -42,7 +44,6 @@ export class DispatchController {
   })
   async getDispatchData(
     @Context("cad") cad: { miscCadSettings: MiscCadSettings | null },
-    @QueryParams("isServer", Boolean) isServer: boolean,
   ): Promise<APITypes.GetDispatchData> {
     const unitsInactivityFilter = getInactivityFilter(
       cad,
@@ -54,18 +55,9 @@ export class DispatchController {
       setInactiveUnitsOffDuty(unitsInactivityFilter.lastStatusChangeTimestamp);
     }
 
-    const [officerCount, combinedUnitsCount, officers, units] = await prisma.$transaction([
-      prisma.officer.count({ orderBy: { updatedAt: "desc" } }),
-      prisma.combinedLeoUnit.count(),
-      prisma.officer.findMany({
-        take: isServer ? 15 : undefined,
-        orderBy: { updatedAt: "desc" },
-        include: leoProperties,
-      }),
-      prisma.combinedLeoUnit.findMany({
-        take: isServer ? 10 : undefined,
-        include: combinedUnitProperties,
-      }),
+    const [officers, units] = await prisma.$transaction([
+      prisma.officer.findMany({ include: leoProperties }),
+      prisma.combinedLeoUnit.findMany({ include: combinedUnitProperties }),
     ]);
 
     const deputies = await prisma.emsFdDeputy.findMany({
@@ -103,10 +95,7 @@ export class DispatchController {
 
     return {
       deputies: deputiesWithUpdatedStatus,
-      officers: {
-        totalCount: officerCount + combinedUnitsCount,
-        officers: [...officersWithUpdatedStatus, ...combinedUnitsWithUpdatedStatus],
-      },
+      officers: [...officersWithUpdatedStatus, ...combinedUnitsWithUpdatedStatus],
       activeIncidents: correctedIncidents,
       activeDispatchers,
     };
@@ -230,6 +219,7 @@ export class DispatchController {
     fallback: (u) => u.isDispatch,
     permissions: [Permissions.Dispatch],
   })
+  @IsFeatureEnabled({ feature: Feature.RADIO_CHANNEL_MANAGEMENT })
   async updateRadioChannel(
     @PathParams("unitId") unitId: string,
     @BodyParams() body: unknown,
@@ -347,6 +337,7 @@ export class DispatchController {
   }
 
   @Post("/tones")
+  @IsFeatureEnabled({ feature: Feature.TONES })
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.Leo, Permissions.EmsFd],
     fallback: (u) => u.isDispatch || u.isLeo || u.isEmsFd,

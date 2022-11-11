@@ -288,6 +288,7 @@ model ToAddDefaultPermissions {
 model UserSoundSettings {
   id           String  @id @default(uuid())
   speech       Boolean @default(true)
+  speechVoice  String?
   panicButton  Boolean @default(true)
   signal100    Boolean @default(true)
   addedToCall  Boolean @default(false)
@@ -517,6 +518,15 @@ model Value {
   CallTypeValue                   CallTypeValue[]               @relation("callTypeValueToValue")
   WeaponExam                      WeaponExam[]                  @relation("weaponExamToLicense")
   LicenseExam                     LicenseExam[]                 @relation("examToLicense")
+  AddressValue                    AddressValue[]                @relation("addressValueToValue")
+}
+
+model AddressValue {
+  id      String  @id @default(uuid())
+  value   Value   @relation("addressValueToValue", fields: [valueId], references: [id], onDelete: Cascade)
+  valueId String
+  county  String?
+  postal  String?
 }
 
 model PenalCode {
@@ -834,6 +844,7 @@ model Officer {
   Note                        Note[]
   callsigns                   IndividualDivisionCallsign[]
   AssignedWarrantOfficer      AssignedWarrantOfficer[]
+  ImpoundedVehicle            ImpoundedVehicle[]
 }
 
 model IndividualDivisionCallsign {
@@ -917,12 +928,15 @@ model OfficerLog {
 
 model ImpoundedVehicle {
   id                  String            @id @default(uuid())
-  vehicle             RegisteredVehicle @relation(fields: [registeredVehicleId], references: [id])
+  vehicle             RegisteredVehicle @relation(fields: [registeredVehicleId], references: [id], onDelete: Cascade)
   registeredVehicleId String
   location            Value             @relation(fields: [valueId], references: [id])
   valueId             String
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @default(now()) @updatedAt
+  officer             Officer?          @relation(fields: [officerId], references: [id])
+  officerId           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model LeoIncident {
@@ -1435,6 +1449,7 @@ enum ValueType {
   CITIZEN_FLAG
   QUALIFICATION
   CALL_TYPE
+  ADDRESS
 }
 
 enum DriversLicenseCategoryType {

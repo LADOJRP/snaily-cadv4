@@ -201,6 +201,8 @@ export type Violation = Prisma.Violation & {
 
 export type SeizedItem = Prisma.SeizedItem;
 
+export type AddressValue = Prisma.AddressValue & { value: Value };
+
 export type DivisionValue = Prisma.DivisionValue & { value: Value };
 
 export type CallTypeValue = Prisma.CallTypeValue & { value: Value };
@@ -280,7 +282,8 @@ export type StatusValue = Prisma.StatusValue & {
 export type OfficerLog = Prisma.OfficerLog;
 
 export type ImpoundedVehicle = Prisma.ImpoundedVehicle & {
-  vehicle: Prisma.RegisteredVehicle & { model: VehicleValue };
+  officer?: Officer | null;
+  vehicle: Prisma.RegisteredVehicle & { citizen: BaseCitizen; model: VehicleValue };
   location: Prisma.Value;
 };
 
@@ -397,6 +400,7 @@ export type CourthousePost = Prisma.CourthousePost & {
 };
 
 export type ValueWithValueObj = (
+  | AddressValue
   | VehicleValue
   | WeaponValue
   | StatusValue

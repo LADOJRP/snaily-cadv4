@@ -1,14 +1,14 @@
 import { Controller, UseBeforeEach, UseBefore } from "@tsed/common";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
 import { SWITCH_CALLSIGN_SCHEMA } from "@snailycad/schemas";
-import { QueryParams, BodyParams, Context, PathParams } from "@tsed/platform-params";
+import { BodyParams, Context, PathParams } from "@tsed/platform-params";
 import { BadRequest, NotFound } from "@tsed/exceptions";
 import { prisma } from "lib/prisma";
 import { IsAuth } from "middlewares/IsAuth";
 import { ActiveOfficer } from "middlewares/ActiveOfficer";
 import { Socket } from "services/SocketService";
 import { combinedUnitProperties, leoProperties } from "lib/leo/activeOfficer";
-import { ShouldDoType, User } from "@prisma/client";
+import { Feature, ShouldDoType, User } from "@prisma/client";
 import { validateSchema } from "lib/validateSchema";
 import { Permissions, UsePermissions } from "middlewares/UsePermissions";
 import { getInactivityFilter } from "lib/leo/utils";
@@ -16,6 +16,7 @@ import { findUnit } from "lib/leo/findUnit";
 import { filterInactiveUnits, setInactiveUnitsOffDuty } from "lib/leo/setInactiveUnitsOffDuty";
 import type { CombinedLeoUnit, Officer, MiscCadSettings } from "@snailycad/types";
 import type * as APITypes from "@snailycad/types/api";
+import { IsFeatureEnabled } from "middlewares/is-enabled";
 
 @Controller("/leo")
 @UseBeforeEach(IsAuth)
@@ -46,7 +47,6 @@ export class LeoController {
   })
   async getActiveOfficers(
     @Context("cad") cad: { miscCadSettings: MiscCadSettings },
-    @QueryParams("isServer", Boolean) isServer: boolean,
   ): Promise<APITypes.GetActiveOfficersData> {
     const unitsInactivityFilter = getInactivityFilter(
       cad,
@@ -58,21 +58,13 @@ export class LeoController {
       setInactiveUnitsOffDuty(unitsInactivityFilter.lastStatusChangeTimestamp);
     }
 
-    const [officerCount, combinedUnitCount, officers, units] = await prisma.$transaction([
-      prisma.officer.count({
-        orderBy: { updatedAt: "desc" },
-        where: { status: { NOT: { shouldDo: ShouldDoType.SET_OFF_DUTY } } },
-      }),
-      prisma.combinedLeoUnit.count(),
+    const [officers, units] = await prisma.$transaction([
       prisma.officer.findMany({
-        orderBy: { updatedAt: "desc" },
         where: { status: { NOT: { shouldDo: ShouldDoType.SET_OFF_DUTY } } },
         include: leoProperties,
-        take: isServer ? 15 : undefined,
       }),
       prisma.combinedLeoUnit.findMany({
         include: combinedUnitProperties,
-        take: isServer ? 10 : undefined,
       }),
     ]);
 
@@ -83,13 +75,11 @@ export class LeoController {
       filterInactiveUnits({ unit: u, unitsInactivityFilter }),
     );
 
-    return {
-      totalCount: officerCount + combinedUnitCount,
-      officers: [...officersWithUpdatedStatus, ...combinedUnitsWithUpdatedStatus],
-    };
+    return [...officersWithUpdatedStatus, ...combinedUnitsWithUpdatedStatus];
   }
 
   @Post("/panic-button")
+  @IsFeatureEnabled({ feature: Feature.PANIC_BUTTON })
   @Description("Set the panic button for an officer by their id")
   @UsePermissions({
     fallback: (u) => u.isLeo,
@@ -190,8 +180,9 @@ export class LeoController {
     const vehicles = await prisma.impoundedVehicle.findMany({
       include: {
         location: true,
+        officer: { include: leoProperties },
         vehicle: {
-          include: { model: { include: { value: true } } },
+          include: { citizen: true, model: { include: { value: true } } },
         },
       },
     });
@@ -208,18 +199,16 @@ export class LeoController {
   async checkoutImpoundedVehicle(
     @PathParams("id") id: string,
   ): Promise<APITypes.DeleteLeoCheckoutImpoundedVehicleData> {
-    const vehicle = await prisma.impoundedVehicle.findUnique({
-      where: { id },
+    const vehicle = await prisma.impoundedVehicle.findFirst({
+      where: { OR: [{ id }, { registeredVehicleId: id }] },
     });
 
     if (!vehicle) {
       throw new NotFound("vehicleNotFound");
     }
 
-    await prisma.impoundedVehicle.delete({
-      where: {
-        id,
-      },
+    await prisma.impoundedVehicle.deleteMany({
+      where: { OR: [{ id }, { registeredVehicleId: id }] },
     });
 
     await prisma.registeredVehicle.update({

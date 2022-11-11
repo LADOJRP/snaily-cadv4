@@ -66,7 +66,7 @@ export function ManageUnitTab({ unit: data }: Props) {
     rank: unit.rankId,
     position: unit.position ?? "",
     suspended: unit.suspended,
-    badgeNumber: unit.badgeNumber ?? 0,
+    badgeNumber: BADGE_NUMBERS ? unit.badgeNumber ?? undefined : undefined,
   };
 
   return (
@@ -162,7 +162,6 @@ export function ManageUnitTab({ unit: data }: Props) {
               <TextField
                 errorMessage={errors.position}
                 label={t("position")}
-                autoFocus
                 name="position"
                 onChange={(value) => setFieldValue("position", value)}
                 value={values.position}
@@ -173,9 +172,12 @@ export function ManageUnitTab({ unit: data }: Props) {
               <TextField
                 errorMessage={errors.badgeNumber}
                 label={t("badgeNumber")}
-                autoFocus
                 name="badgeNumber"
-                onChange={(value) => setFieldValue("badgeNumber", parseInt(value))}
+                onChange={(value) => {
+                  isNaN(Number(value))
+                    ? setFieldValue("badgeNumber", value)
+                    : setFieldValue("badgeNumber", parseInt(value));
+                }}
                 value={String(values.badgeNumber)}
               />
             ) : null}
@@ -184,7 +186,6 @@ export function ManageUnitTab({ unit: data }: Props) {
               <TextField
                 errorMessage={errors.callsign}
                 label={t("callsign1")}
-                autoFocus
                 name="callsign"
                 onChange={(value) => setFieldValue("callsign", value)}
                 value={values.callsign}
@@ -204,13 +205,11 @@ export function ManageUnitTab({ unit: data }: Props) {
             </FormField>
 
             <footer className="flex justify-end">
-              <Link href="/admin/manage/units">
-                <a
-                  href="/admin/manage/units"
-                  className={classNames(buttonVariants.cancel, "p-1 px-4 rounded-md")}
-                >
-                  {common("cancel")}
-                </a>
+              <Link
+                href="/admin/manage/units"
+                className={classNames(buttonVariants.cancel, "p-1 px-4 rounded-md")}
+              >
+                {common("cancel")}
               </Link>
 
               <Button type="submit" className="flex items-center">

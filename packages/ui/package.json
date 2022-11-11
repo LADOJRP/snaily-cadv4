@@ -1,6 +1,6 @@
 {
   "name": "@snailycad/ui",
-  "version": "1.29.0",
+  "version": "1.32.0",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,12 +13,12 @@
     "typecheck": "yarn tsc --noEmit"
   },
   "devDependencies": {
-    "@snailycad/types": "1.29.0",
-    "tailwindcss": "^3.2.0",
-    "tslib": "^2.4.0",
+    "@snailycad/types": "1.32.0",
+    "tailwindcss": "^3.2.1",
+    "tslib": "^2.4.1",
     "tsup": "^6.3.0",
     "typescript": "^4.8.4",
-    "vite": "^3.1.8"
+    "vite": "^3.2.2"
   },
   "tsup": {
     "entry": [

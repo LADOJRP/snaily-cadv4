@@ -54,7 +54,9 @@
     "user": "User",
     "savedSettingsSuccess": "Settings successfully saved.",
     "select": "Select...",
-    "item": "Item"
+    "item": "Item",
+    "address": "Address",
+    "location": "Location"
   },
   "Nav": {
     "citizen": "Citizen",
@@ -158,6 +160,8 @@
     "alreadyHasPrimaryUnit": "This call already has a primary unit.",
     "noActiveOfficer": "You don't have any active officer at this moment, please get back on-duty first.",
     "socialSecurityNumberTaken": "This social security number is already in use.",
-    "citizenNotAllowedToEditLicenses": "You as a citizen are not allowed to edit your own licenses. Please contact an officer to manage your licenses."
+    "citizenNotAllowedToEditLicenses": "You as a citizen are not allowed to edit your own licenses. Please contact an officer to manage your licenses.",
+    "vehicleIsImpounded": "This vehicle is impounded, you cannot edit or delete until it's released from the impound lot.",
+    "featureNotEnabled": "This feature is not enabled. ({feature})"
   }
 }
