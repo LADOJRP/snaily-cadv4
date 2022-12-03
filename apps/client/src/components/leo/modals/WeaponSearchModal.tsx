@@ -1,6 +1,5 @@
 import * as React from "react";
-import { Input, Loader, Button } from "@snailycad/ui";
-import { FormField } from "components/form/FormField";
+import { Loader, Button, AsyncListSearchField, Item } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
 import { Form, Formik } from "formik";
@@ -8,7 +7,7 @@ import useFetch from "lib/useFetch";
 import { ModalIds } from "types/ModalIds";
 import { useTranslations } from "use-intl";
 import { Infofield } from "components/shared/Infofield";
-import { useWeaponSearch, WeaponSearchResult } from "state/search/weaponSearchState";
+import { useWeaponSearch, WeaponSearchResult } from "state/search/weapon-search-state";
 import { CustomFieldsArea } from "./CustomFieldsArea";
 import { useRouter } from "next/router";
 import { ManageCustomFieldsModal } from "./NameSearchModal/ManageCustomFieldsModal";
@@ -60,6 +59,7 @@ export function WeaponSearchModal({ id = ModalIds.WeaponSearch }: Props) {
   }
 
   const INITIAL_VALUES = {
+    searchValue: currentResult?.serialNumber ?? "",
     serialNumber: currentResult?.serialNumber ?? "",
   };
 
@@ -71,11 +71,39 @@ export function WeaponSearchModal({ id = ModalIds.WeaponSearch }: Props) {
       className="w-[750px]"
     >
       <Formik initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
-        {({ handleChange, errors, values, isValid }) => (
+        {({ setValues, errors, values, isValid }) => (
           <Form>
-            <FormField errorMessage={errors.serialNumber} label={t("serialNumber")}>
-              <Input value={values.serialNumber} name="serialNumber" onChange={handleChange} />
-            </FormField>
+            <AsyncListSearchField<NonNullable<WeaponSearchResult>>
+              allowsCustomValue
+              autoFocus
+              setValues={({ localValue, node }) => {
+                const searchValue =
+                  typeof localValue !== "undefined" ? { searchValue: localValue } : {};
+                const serialNumber = node ? { serialNumber: node.key as string } : {};
+
+                if (node) {
+                  setCurrentResult(node.value);
+                }
+
+                setValues({ ...values, ...searchValue, ...serialNumber });
+              }}
+              localValue={values.searchValue}
+              errorMessage={errors.serialNumber}
+              label={t("serialNumber")}
+              selectedKey={values.serialNumber}
+              fetchOptions={{
+                apiPath: "/search/weapon?includeMany=true",
+                method: "POST",
+                bodyKey: "serialNumber",
+                filterTextRequired: true,
+              }}
+            >
+              {(item) => (
+                <Item key={item.serialNumber} textValue={item.serialNumber}>
+                  {item.serialNumber} ({item.model.value.value})
+                </Item>
+              )}
+            </AsyncListSearchField>
 
             {!currentResult ? (
               typeof currentResult === "undefined" ? null : (
