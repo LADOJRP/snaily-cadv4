@@ -20,12 +20,13 @@ interface Options<T> {
   initialData?: T[];
   scrollToTopOnDataChange?: boolean;
   fetchOptions: FetchOptions;
+  getKey?(item: T): React.Key;
 }
 
 export function useAsyncTable<T>(options: Options<T>) {
   const scrollToTopOnDataChange = options.scrollToTopOnDataChange ?? true;
 
-  const list = useList<T>({ initialData: options.initialData ?? [] });
+  const list = useList<T>({ getKey: options.getKey, initialData: options.initialData ?? [] });
   const { state: loadingState, execute } = useFetch();
 
   const [debouncedSearch, setDebouncedSearch] = React.useState(options.search);
@@ -41,6 +42,15 @@ export function useAsyncTable<T>(options: Options<T>) {
     queryFn: fetchData,
     queryKey: [paginationOptions.pageIndex, debouncedSearch, filters],
   });
+
+  React.useEffect(() => {
+    setTotalCount(options.totalCount);
+    setPagination({
+      pageSize: options.fetchOptions.pageSize ?? 35,
+      pageIndex: options.fetchOptions.pageIndex ?? 0,
+    });
+    list.setItems(options.initialData ?? []);
+  }, [options.initialData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchData(context: QueryFunctionContext<any>) {
     const [pageIndex, search, _filters] = context.queryKey;
@@ -73,7 +83,11 @@ export function useAsyncTable<T>(options: Options<T>) {
       window.scrollTo({ behavior: "smooth", top: 0 });
     }
 
-    return list.setItems(toReturnData.data);
+    if (Array.isArray(toReturnData.data)) {
+      return list.setItems(toReturnData.data);
+    }
+
+    return list.setItems([]);
   }
 
   useDebounce(() => setDebouncedSearch(options.search), 200, [options.search]);

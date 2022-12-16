@@ -8,7 +8,7 @@ import { ModalIds } from "types/ModalIds";
 import { useTranslations } from "use-intl";
 import { CustomFieldCategory, Citizen, BoloType } from "@snailycad/types";
 import format from "date-fns/format";
-import { NameSearchTabsContainer } from "./tabs/TabsContainer";
+import { NameSearchTabsContainer } from "./tabs/tabs-container";
 import { NameSearchResult, useNameSearch } from "state/search/name-search-state";
 import { useRouter } from "next/router";
 import { ArrowLeft, PersonFill } from "react-bootstrap-icons";
@@ -37,7 +37,7 @@ const VehicleSearchModal = dynamic(
 );
 
 const WeaponSearchModal = dynamic(
-  async () => (await import("components/leo/modals/WeaponSearchModal")).WeaponSearchModal,
+  async () => (await import("components/leo/modals/weapon-search-modal")).WeaponSearchModal,
 );
 
 const CreateCitizenModal = dynamic(
@@ -177,14 +177,18 @@ export function NameSearchModal() {
               allowsCustomValue
               setValues={({ localValue, node }) => {
                 // when the menu closes, it will set the `searchValue` to `""`. We want to keep the value of the search
-                if (!node && !localValue) {
+                if (typeof node === "undefined" && typeof localValue === "undefined") {
                   setValues({ ...values, name: values.searchValue });
                   return;
                 }
 
                 const searchValue =
                   typeof localValue !== "undefined" ? { searchValue: localValue } : {};
-                const name = node ? { name: node.textValue as string } : {};
+                let name = node ? { name: node.textValue as string } : {};
+
+                if (typeof node === "undefined" && localValue !== "") {
+                  name = { name: localValue };
+                }
 
                 if (node) {
                   setCurrentResult(node.value);
@@ -195,7 +199,7 @@ export function NameSearchModal() {
               localValue={values.searchValue}
               errorMessage={errors.name}
               label={cT("fullName")}
-              selectedKey={values.name}
+              selectedKey={values.id}
               fetchOptions={{
                 apiPath: "/search/name?includeMany=true",
                 method: "POST",
