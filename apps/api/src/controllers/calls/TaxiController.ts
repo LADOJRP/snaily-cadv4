@@ -11,7 +11,7 @@ import { prisma } from "lib/prisma";
 import { TOW_SCHEMA, UPDATE_TOW_SCHEMA } from "@snailycad/schemas";
 import { NotFound } from "@tsed/exceptions";
 import { IsAuth } from "middlewares/IsAuth";
-import { Socket } from "services/SocketService";
+import { Socket } from "services/socket-service";
 import { validateSchema } from "lib/validateSchema";
 import { Feature, User } from "@prisma/client";
 import { canManageInvariant } from "lib/auth/getSessionUser";
@@ -65,7 +65,7 @@ export class TaxiController {
       data: {
         creatorId: data.creatorId || null,
         description: data.description,
-        descriptionData: data.descriptionData,
+        descriptionData: data.descriptionData || undefined,
         location: data.location,
         postal: data.postal ? String(data.postal) : null,
         name: data.name ?? null,
@@ -113,7 +113,7 @@ export class TaxiController {
       },
       data: {
         description: data.description,
-        descriptionData: data.descriptionData,
+        descriptionData: data.descriptionData || undefined,
         location: data.location,
         postal: data.postal ? String(data.postal) : null,
         assignedUnit: assignedUnitId,

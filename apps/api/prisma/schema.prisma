@@ -25,6 +25,7 @@ model cad {
   maxPlateLength          Int                    @default(8)
   liveMapSocketURl        String?                @db.VarChar(255)
   logoId                  String?
+  logoBlurData            String?
   registrationCode        String?
   features                CadFeature[]
   disabledFeatures        Feature[]
@@ -265,6 +266,7 @@ model User {
   User2FA              User2FA[]
   NameChangeRequest    NameChangeRequest[]
   CourthousePost       CourthousePost[]
+  ActiveTone           ActiveTone[]
 }
 
 model UserSession {
@@ -340,11 +342,14 @@ model Citizen {
   ccw                  Value?                        @relation("ccwToValue", fields: [ccwId], references: [id])
   ccwId                String?
   imageId              String?                       @db.Text
+  imageBlurData        String?                       @db.Text
   note                 String?                       @db.Text
   dead                 Boolean?                      @default(false)
+  dateOfDead           DateTime?
+  missing              Boolean?                      @default(false)
+  dateOfMissing        DateTime?
   arrested             Boolean?                      @default(false)
   phoneNumber          String?
-  dateOfDead           DateTime?
   occupation           String?                       @db.Text
   additionalInfo       String?                       @db.Text
   flags                Value[]                       @relation("citizenFlags")
@@ -435,6 +440,7 @@ model RegisteredVehicle {
   TruckLog         TruckLog[]
   ImpoundedVehicle ImpoundedVehicle[]
   Business         Business[]         @relation("registeredBusinessVehicles")
+  Record           Record[]
 }
 
 model Weapon {
@@ -486,8 +492,9 @@ model Value {
   licenseType ValueLicenseType?
 
   /// OFFICER_RANK only
-  officerRankImageId     String?
-  officerRankDepartments DepartmentValue[] @relation("officerRankDepartments")
+  officerRankImageId       String?
+  officerRankImageBlurData String?
+  officerRankDepartments   DepartmentValue[] @relation("officerRankDepartments")
 
   // how to clean this up?!
   ethnicityToValue                Citizen[]                     @relation("ethnicityToValue")
@@ -700,13 +707,15 @@ model Notification {
 
 // bleeter
 model BleeterPost {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  title     String   @db.VarChar(255)
-  body      String?  @db.Text
-  bodyData  Json?
-  imageId   String?  @db.VarChar(255)
+  id            String  @id @default(uuid())
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  title         String  @db.VarChar(255)
+  body          String? @db.Text
+  bodyData      Json?
+  imageId       String? @db.VarChar(255)
+  imageBlurData String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -834,6 +843,7 @@ model Officer {
   suspended                   Boolean                      @default(false)
   badgeNumber                 Int?
   imageId                     String?                      @db.VarChar(255)
+  imageBlurData               String?                      @db.Text
   citizen                     Citizen                      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   citizenId                   String
   user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -896,6 +906,7 @@ model UnitQualification {
 model QualificationValue {
   id                String                 @id @default(uuid())
   imageId           String?
+  imageBlurData     String?                @db.Text
   /// name of the qualification
   valueId           String
   value             Value                  @relation(fields: [valueId], references: [id], onDelete: Cascade)
@@ -1155,15 +1166,23 @@ model Record {
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @default(now()) @updatedAt
   postal               String              @db.VarChar(255)
+  address              String?             @db.Text
   notes                String?             @db.Text
   release              RecordRelease?      @relation(fields: [releaseId], references: [id])
   releaseId            String?
+  courtEntry           CourtEntry?         @relation(fields: [CourtEntryId], references: [id])
+  CourtEntryId         String?
   RecordLog            RecordLog[]
   ExpungementRequest   ExpungementRequest? @relation(fields: [expungementRequestId], references: [id])
   expungementRequestId String?
   seizedItems          SeizedItem[]
   status               WhitelistStatus?    @default(ACCEPTED)
   paymentStatus        PaymentStatus?
+  vehicle              RegisteredVehicle?  @relation(fields: [vehicleId], references: [id])
+  vehicleId            String?
+  vehiclePlate         String?
+  vehicleModel         String?
+  vehicleColor         String?
 }
 
 model RecordRelease {
@@ -1238,6 +1257,7 @@ model CourtEntry {
   dates           CourtDate[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @default(now()) @updatedAt
+  records         Record[]
 }
 
 model CourtDate {
@@ -1266,6 +1286,7 @@ model EmsFdDeputy {
   suspended                 Boolean                @default(false)
   badgeNumber               Int?
   imageId                   String?                @db.VarChar(255)
+  imageBlurData             String?                @db.Text
   citizen                   Citizen                @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   citizenId                 String
   user                      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1389,6 +1410,21 @@ model CourthousePost {
   descriptionData Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model ActiveTone {
+  id          String         @id @default(uuid())
+  type        ActiveToneType @unique
+  description String?
+  createdAt   DateTime       @default(now())
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+}
+
+enum ActiveToneType {
+  LEO
+  EMS_FD
+  SHARED
 }
 
 enum LicenseExamType {

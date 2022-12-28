@@ -22,7 +22,7 @@ import {
   PERMISSIONS_SCHEMA,
   ROLES_SCHEMA,
 } from "@snailycad/schemas";
-import { Socket } from "services/SocketService";
+import { Socket } from "services/socket-service";
 import { nanoid } from "nanoid";
 import { genSaltSync, hashSync } from "bcrypt";
 import { citizenInclude } from "controllers/citizen/CitizenController";
@@ -297,6 +297,7 @@ export class ManageUsersController {
         id: user.id,
       },
       data: {
+        username: data.username,
         isLeo: data.isLeo,
         isSupervisor: data.isSupervisor,
         isDispatch: data.isDispatch,

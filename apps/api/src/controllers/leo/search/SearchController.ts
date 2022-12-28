@@ -77,6 +77,8 @@ export const citizenSearchIncludeOrSelect = (
               include: leoProperties,
             },
             seizedItems: true,
+            courtEntry: { include: { dates: true } },
+            vehicle: { include: { model: { include: { value: true } } } },
             violations: {
               include: {
                 penalCode: {
@@ -99,6 +101,7 @@ export const citizenSearchIncludeOrSelect = (
       name: true,
       surname: true,
       imageId: true,
+      imageBlurData: true,
       officers: { select: { department: { select: { isConfidential: true } } } },
       id: true,
       socialSecurityNumber: true,

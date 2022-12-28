@@ -377,7 +377,7 @@ export class SearchActionsController {
     const defaultLicenseValueId = defaultLicenseValue?.id ?? null;
 
     const citizen = await prisma.citizen.create({
-      data: citizenObjectFromData({
+      data: await citizenObjectFromData({
         data,
         defaultLicenseValueId,
         cad,
@@ -395,6 +395,7 @@ export class SearchActionsController {
     @BodyParams() body: unknown,
     @PathParams("vehicleId") vehicleId: string,
     @Context("activeOfficer") activeOfficer: (CombinedLeoUnit & { officers: Officer[] }) | Officer,
+    @Context("user") user: User,
   ): Promise<APITypes.PostSearchActionsCreateVehicle> {
     const data = validateSchema(IMPOUND_VEHICLE_SCHEMA, body);
     const officer = getFirstOfficerFromActiveOfficer({ allowDispatch: true, activeOfficer });
@@ -426,7 +427,7 @@ export class SearchActionsController {
     });
 
     try {
-      const data = createVehicleImpoundedWebhookData(impoundedVehicle);
+      const data = await createVehicleImpoundedWebhookData(impoundedVehicle, user.locale);
       await sendDiscordWebhook({ type: DiscordWebhookType.VEHICLE_IMPOUNDED, data });
     } catch (error) {
       console.error("Could not send Discord webhook.", error);
@@ -517,5 +518,34 @@ export class SearchActionsController {
     });
 
     return appendCustomFields(vehicle, CustomFieldCategory.VEHICLE);
+  }
+
+  @Post("/missing/:citizenId")
+  @UsePermissions({
+    fallback: (u) => u.isEmsFd || u.isLeo || u.isDispatch,
+    permissions: [Permissions.EmsFd, Permissions.Leo, Permissions.Dispatch],
+  })
+  async declareCitizenMissing(
+    @PathParams("citizenId") citizenId: string,
+  ): Promise<APITypes.PostLEODeclareCitizenMissing> {
+    const citizen = await prisma.citizen.findUnique({
+      where: { id: citizenId },
+    });
+
+    if (!citizen) {
+      throw new NotFound("notFound");
+    }
+
+    const updated = await prisma.citizen.update({
+      where: {
+        id: citizen.id,
+      },
+      data: {
+        missing: !citizen.missing,
+        dateOfMissing: citizen.missing ? null : new Date(),
+      },
+    });
+
+    return updated;
   }
 }

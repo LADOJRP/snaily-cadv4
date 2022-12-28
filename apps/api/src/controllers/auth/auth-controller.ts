@@ -1,10 +1,9 @@
-import process from "node:process";
 import { Controller, BodyParams, Post, Res, Response } from "@tsed/common";
 import { hashSync, genSaltSync, compareSync } from "bcrypt";
 import { BadRequest } from "@tsed/exceptions";
 import { prisma } from "lib/prisma";
 import { findOrCreateCAD, isFeatureEnabled } from "lib/cad";
-import { AUTH_SCHEMA } from "@snailycad/schemas";
+import { REGISTER_SCHEMA, AUTH_SCHEMA } from "@snailycad/schemas";
 import { validateSchema } from "lib/validateSchema";
 import { ExtendedNotFound } from "src/exceptions/ExtendedNotFound";
 import { ExtendedBadRequest } from "src/exceptions/ExtendedBadRequest";
@@ -14,15 +13,9 @@ import { User, WhitelistStatus, Rank, AutoSetUserProperties, cad, Feature } from
 import { defaultPermissions, Permissions } from "@snailycad/permissions";
 import { setUserPreferencesCookies } from "lib/auth/setUserPreferencesCookies";
 import type * as APITypes from "@snailycad/types/api";
-import { request } from "undici";
 import { setUserTokenCookies } from "lib/auth/setUserTokenCookies";
-
-const GOOGLE_CAPTCHA_SECRET = process.env.GOOGLE_CAPTCHA_SECRET;
-const GOOGLE_CAPTCHA_URL = "https://www.google.com/recaptcha/api/siteverify";
-interface PartialGoogleCaptchaResponse {
-  success: boolean;
-  score: number;
-}
+import { validateGoogleCaptcha } from "lib/auth/validate-google-captcha";
+import { validateDiscordAndSteamId } from "lib/auth/validate-discord-steam-id";
 
 @Controller("/auth")
 @ContentType("application/json")
@@ -112,28 +105,14 @@ export class AuthController {
     @BodyParams() body: unknown,
     @Res() res: Response,
   ): Promise<APITypes.PostRegisterUserData> {
-    const data = validateSchema(AUTH_SCHEMA, body);
+    const data = validateSchema(REGISTER_SCHEMA, body);
 
-    const hasGoogleCaptchaSecret =
-      typeof GOOGLE_CAPTCHA_SECRET === "string" && GOOGLE_CAPTCHA_SECRET.length > 0;
+    await validateGoogleCaptcha(data);
+    await validateDiscordAndSteamId(data);
 
-    if (hasGoogleCaptchaSecret) {
-      if (!data.captchaResult) {
-        throw new ExtendedBadRequest({ username: "captchaRequired" });
-      }
-
-      const googleCaptchaAPIResponse = await request(GOOGLE_CAPTCHA_URL, {
-        query: {
-          secret: GOOGLE_CAPTCHA_SECRET,
-          response: data.captchaResult,
-        },
-      });
-
-      const googleCaptchaJSON =
-        (await googleCaptchaAPIResponse.body.json()) as PartialGoogleCaptchaResponse;
-      if (googleCaptchaJSON.score <= 0 || !googleCaptchaJSON.success) {
-        throw new ExtendedBadRequest({ username: "invalidCaptcha" });
-      }
+    const nonDiscordUserUsernameRegex = /^([a-z_.\d]+)*[a-z\d]+$/i;
+    if (!nonDiscordUserUsernameRegex.test(data.username)) {
+      throw new ExtendedBadRequest({ username: "Invalid" });
     }
 
     const existing = await prisma.user.findFirst({
@@ -171,12 +150,14 @@ export class AuthController {
     const userCount = await prisma.user.count();
     const salt = genSaltSync();
 
-    const password = hashSync(data.password, salt);
+    const password = data.password ? hashSync(data.password, salt) : undefined;
 
     const user = await prisma.user.create({
       data: {
         username: data.username,
-        password,
+        password: password ?? "",
+        steamId: data.steamId ?? null,
+        discordId: data.discordId ?? null,
       },
     });
 
@@ -205,15 +186,9 @@ export class AuthController {
           };
 
     await prisma.user.update({
-      where: {
-        id: user.id,
-      },
+      where: { id: user.id },
       data: extraUserData,
     });
-
-    if (extraUserData.rank === Rank.USER && cad.whitelisted) {
-      throw new BadRequest("whitelistPending");
-    }
 
     await setUserTokenCookies({ user, res });
     setUserPreferencesCookies({
@@ -222,7 +197,11 @@ export class AuthController {
       res,
     });
 
-    return { userId: user.id, isOwner: extraUserData.rank === Rank.OWNER };
+    return {
+      userId: user.id,
+      isOwner: extraUserData.rank === Rank.OWNER,
+      whitelistStatus: extraUserData.whitelistStatus,
+    };
   }
 }
 

@@ -1,4 +1,4 @@
-import type { Officer, SeizedItem, Violation } from "@prisma/client";
+import type { CourtDate, CourtEntry, Officer, SeizedItem, Violation } from "@prisma/client";
 import type { CREATE_TICKET_SCHEMA } from "@snailycad/schemas";
 import { cad, Feature, PaymentStatus, RecordType, WhitelistStatus } from "@snailycad/types";
 import { NotFound } from "@tsed/exceptions";
@@ -39,6 +39,16 @@ export async function upsertRecord(options: UpsertRecordOptions) {
     throw new ExtendedNotFound({ citizenId: "citizenNotFound" });
   }
 
+  if (options.data.vehicleId) {
+    const vehicle = await prisma.registeredVehicle.findUnique({
+      where: { id: options.data.vehicleId },
+    });
+
+    if (!vehicle) {
+      throw new ExtendedNotFound({ plateOrVin: "vehicleNotFound" });
+    }
+  }
+
   const isApprovalEnabled = isFeatureEnabled({
     defaultReturn: false,
     feature: Feature.CITIZEN_RECORD_APPROVAL,
@@ -55,18 +65,54 @@ export async function upsertRecord(options: UpsertRecordOptions) {
       notes: options.data.notes,
       postal: String(options.data.postal),
       status: recordStatus,
+      address: options.data.address,
       paymentStatus: (options.data.paymentStatus ?? null) as PaymentStatus | null,
+      vehicleId: options.data.vehicleId || null,
+      vehicleColor: options.data.vehicleColor || null,
+      vehicleModel: options.data.vehicleModel || null,
+      vehiclePlate: options.data.plateOrVin || options.data.plateOrVinSearch,
     },
     update: {
       notes: options.data.notes,
       postal: options.data.postal,
       paymentStatus: (options.data.paymentStatus ?? null) as PaymentStatus | null,
+      address: options.data.address,
+      vehicleId: options.data.vehicleId || null,
+      vehicleColor: options.data.vehicleColor || null,
+      vehicleModel: options.data.vehicleModel || null,
+      vehiclePlate: options.data.plateOrVin || options.data.plateOrVinSearch,
     },
     include: {
       officer: { include: leoProperties },
       citizen: { include: { user: { select: userProperties } } },
     },
   });
+
+  let courtEntry: CourtEntry & { dates?: CourtDate[] } = null!;
+  if (ticket.type !== "WRITTEN_WARNING" && options.data.courtEntry) {
+    courtEntry = await prisma.courtEntry.create({
+      data: {
+        caseNumber: String(options.data.courtEntry.caseNumber || ticket.caseNumber),
+        title: options.data.courtEntry.title,
+        descriptionData: options.data.courtEntry.descriptionData,
+      },
+    });
+
+    const dates = await prisma.$transaction(
+      options.data.courtEntry.dates.map((date) =>
+        prisma.courtDate.create({
+          data: { date: new Date(date.date), note: date.note, courtEntryId: courtEntry.id },
+        }),
+      ),
+    );
+
+    await prisma.record.update({
+      where: { id: ticket.id },
+      data: { CourtEntryId: courtEntry.id },
+    });
+
+    courtEntry = { ...courtEntry, dates };
+  }
 
   if (ticket.type === "ARREST_REPORT" && !options.recordId) {
     await prisma.citizen.update({
@@ -112,7 +158,7 @@ export async function upsertRecord(options: UpsertRecordOptions) {
     }),
   );
 
-  return { ...ticket, violations, seizedItems };
+  return { ...ticket, violations, seizedItems, courtEntry };
 }
 
 async function unlinkViolations(violations: Pick<Violation, "id">[]) {

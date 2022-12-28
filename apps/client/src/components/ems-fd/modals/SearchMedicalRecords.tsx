@@ -128,6 +128,8 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                     <div className="flex items-center">
                       {item.imageId ? (
                         <Image
+                          placeholder={item.imageBlurData ? "blur" : "empty"}
+                          blurDataURL={item.imageBlurData ?? undefined}
                           alt={`${item.name} ${item.surname}`}
                           className="rounded-md w-[30px] h-[30px] object-cover mr-2"
                           draggable={false}
@@ -163,6 +165,14 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                   </div>
                 ) : null}
 
+                {results.missing && results.dateOfMissing ? (
+                  <div className="p-2 my-2 font-semibold text-black rounded-md bg-amber-500">
+                    {t("Leo.citizenMissing", {
+                      date: format(new Date(results.dateOfMissing), "MMMM do yyyy"),
+                    })}
+                  </div>
+                ) : null}
+
                 <div className="flex w-full">
                   <div className="mr-2 min-w-[100px]">
                     {results.imageId ? (
@@ -172,6 +182,8 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                         className="cursor-pointer"
                       >
                         <Image
+                          placeholder={results.imageBlurData ? "blur" : "empty"}
+                          blurDataURL={results.imageBlurData ?? undefined}
                           className="rounded-md w-[100px] h-[100px] object-cover"
                           draggable={false}
                           src={makeImageUrl("citizens", results.imageId)!}

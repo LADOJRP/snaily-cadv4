@@ -11,15 +11,18 @@ import useFetch from "lib/useFetch";
 import { ModalIds } from "types/ModalIds";
 import { useTranslations } from "use-intl";
 import { RecordType, type PenalCode, type Record, PaymentStatus } from "@snailycad/types";
-import { PenalCodesTable } from "./ManageRecord/PenalCodesTable";
-import { SelectPenalCode } from "./ManageRecord/select-penal-code";
-import { SeizedItemsTable } from "./ManageRecord/seized-items/SeizedItemsTable";
 import { toastMessage } from "lib/toastMessage";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import type { PostRecordsData, PutRecordsByIdData } from "@snailycad/types/api";
 import { Toggle } from "components/form/Toggle";
 import { AddressPostalSelect } from "components/form/select/PostalSelect";
 import { CitizenSuggestionsField } from "components/shared/CitizenSuggestionsField";
+import { ManageCourtEntry } from "components/courthouse/court-entries/manage-court-entry-modal";
+import { FullDate } from "components/shared/FullDate";
+import { TabList, TabsContent } from "components/shared/TabList";
+import { SeizedItemsTab } from "./tabs/seized-items-tab/seized-items-tab";
+import { ViolationsTab } from "./tabs/violations-tab/violations-tab";
+import { VehicleTab } from "./tabs/vehicle-tab/vehicle-tab";
 
 interface Props {
   hideCitizenField?: boolean;
@@ -39,9 +42,10 @@ interface Props {
 }
 
 export function ManageRecordModal(props: Props) {
-  const { isOpen, closeModal, getPayload } = useModal();
+  const { isOpen, closeModal, openModal, getPayload } = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Leo");
+  const tCourt = useTranslations("Courthouse");
   const { LEO_BAIL } = useFeatureEnabled();
 
   const data = {
@@ -165,10 +169,18 @@ export function ManageRecordModal(props: Props) {
           },
         };
       }) ?? ([] as SelectValue<PenalCode>[]),
+    address: props.record?.address ?? "",
     postal: props.record?.postal ?? "",
     notes: props.record?.notes ?? "",
     seizedItems: props.record?.seizedItems ?? [],
     paymentStatus: props.record?.paymentStatus ?? null,
+    courtEntry: props.record?.courtEntry ?? null,
+
+    plateOrVin: props.record?.vehicle?.plate ?? props.record?.vehiclePlate ?? "",
+    plateOrVinSearch: props.record?.vehicle?.plate ?? props.record?.vehiclePlate ?? "",
+    vehicleId: props.record?.vehicleId ?? null,
+    vehicleModel: props.record?.vehicle?.model.value.value ?? props.record?.vehicleModel ?? null,
+    vehicleColor: props.record?.vehicle?.color ?? props.record?.vehicleColor ?? null,
   };
 
   return (
@@ -179,60 +191,79 @@ export function ManageRecordModal(props: Props) {
       className="w-[800px]"
     >
       <Formik validate={validate} initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
-        {({ handleChange, setFieldValue, errors, values, isValid }) => (
+        {({ setFieldValue, errors, values, isValid }) => (
           <Form autoComplete="off">
-            {props.hideCitizenField ? null : (
-              <CitizenSuggestionsField
-                autoFocus
-                fromAuthUserOnly={false}
-                label={t("citizen")}
-                isDisabled={props.isReadOnly || !!props.record}
-                labelFieldName="citizenName"
-                valueFieldName="citizenId"
-              />
-            )}
+            <TabList
+              tabs={[
+                { name: "General Information", value: "general-information-tab" },
+                { name: "Violations", value: "violations-tab" },
+                { name: "Seized Items", value: "seized-items-tab" },
+                { name: "Vehicle Tab", value: "vehicle-tab" },
+              ]}
+            >
+              <TabsContent value="general-information-tab">
+                {props.hideCitizenField ? null : (
+                  <CitizenSuggestionsField
+                    autoFocus
+                    fromAuthUserOnly={false}
+                    label={t("citizen")}
+                    isDisabled={props.isReadOnly || !!props.record}
+                    labelFieldName="citizenName"
+                    valueFieldName="citizenId"
+                  />
+                )}
 
-            <AddressPostalSelect isDisabled={props.isReadOnly} postalOptional={false} postalOnly />
+                <AddressPostalSelect isDisabled={props.isReadOnly} postalOptional={false} />
 
-            <FormField label={t("violations")}>
-              <SelectPenalCode
-                isReadOnly={props.isReadOnly}
-                penalCodes={penalCodes}
-                value={values.violations}
-                handleChange={handleChange}
-              />
-            </FormField>
+                {/* todo: custom component for this */}
+                <FormField className="relative mt-3 mb-2" label={tCourt("courtEntries")}>
+                  <Button
+                    className="absolute right-0 top-0"
+                    type="button"
+                    onPress={() => openModal(ModalIds.ManageCourtEntry)}
+                  >
+                    {tCourt("manageCourtEntry")}
+                  </Button>
 
-            <PenalCodesTable
-              isReadOnly={props.isReadOnly}
-              penalCodes={values.violations.map((v) => v.value)}
-            />
-            <SeizedItemsTable isReadOnly={props.isReadOnly} />
+                  {values.courtEntry?.dates
+                    ? values.courtEntry.dates.map((date, idx) => (
+                        <FullDate onlyDate key={idx}>
+                          {date.date}
+                        </FullDate>
+                      ))
+                    : "None"}
+                </FormField>
 
-            <TextField
-              isTextarea
-              isOptional
-              isDisabled={props.isReadOnly}
-              errorMessage={errors.notes}
-              label={t("notes")}
-              value={values.notes}
-              name="notes"
-              onChange={(value) => setFieldValue("notes", value)}
-            />
+                <TextField
+                  isTextarea
+                  isOptional
+                  isDisabled={props.isReadOnly}
+                  errorMessage={errors.notes}
+                  label={t("notes")}
+                  value={values.notes}
+                  name="notes"
+                  onChange={(value) => setFieldValue("notes", value)}
+                />
 
-            <FormField optional errorMessage={errors.paymentStatus} label={t("recordPaid")}>
-              <Toggle
-                disabled={props.isReadOnly}
-                value={values.paymentStatus === PaymentStatus.PAID}
-                name="paymentStatus"
-                onCheckedChange={(event) => {
-                  setFieldValue(
-                    "paymentStatus",
-                    event.target.value ? PaymentStatus.PAID : PaymentStatus.UNPAID,
-                  );
-                }}
-              />
-            </FormField>
+                <FormField optional errorMessage={errors.paymentStatus} label={t("recordPaid")}>
+                  <Toggle
+                    disabled={props.isReadOnly}
+                    value={values.paymentStatus === PaymentStatus.PAID}
+                    name="paymentStatus"
+                    onCheckedChange={(event) => {
+                      setFieldValue(
+                        "paymentStatus",
+                        event.target.value ? PaymentStatus.PAID : PaymentStatus.UNPAID,
+                      );
+                    }}
+                  />
+                </FormField>
+              </TabsContent>
+
+              <SeizedItemsTab isReadOnly={props.isReadOnly} />
+              <ViolationsTab penalCodes={penalCodes} isReadOnly={props.isReadOnly} />
+              <VehicleTab isReadOnly={props.isReadOnly} />
+            </TabList>
 
             <footer className="flex justify-end mt-5">
               <Button type="reset" onPress={handleClose} variant="cancel">
@@ -249,6 +280,14 @@ export function ManageRecordModal(props: Props) {
                 </Button>
               )}
             </footer>
+
+            <ManageCourtEntry
+              submitHandler={(values) => {
+                closeModal(ModalIds.ManageCourtEntry);
+                setFieldValue("courtEntry", values);
+              }}
+              courtEntry={values.courtEntry}
+            />
           </Form>
         )}
       </Formik>

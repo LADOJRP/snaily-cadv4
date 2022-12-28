@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "importHelpers": true,
+    "resolveJsonModule": true,
 
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

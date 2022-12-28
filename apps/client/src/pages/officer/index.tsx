@@ -7,7 +7,7 @@ import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
 import { useLeoState } from "state/leo-state";
-import { Rank, Record, RecordType, ValueType } from "@snailycad/types";
+import { ActiveToneType, Rank, Record, RecordType, ValueType } from "@snailycad/types";
 import { ActiveCalls } from "components/dispatch/active-calls/active-calls";
 import { useDispatchState } from "state/dispatch/dispatch-state";
 import { ModalButtons } from "components/leo/ModalButtons";
@@ -25,7 +25,7 @@ import { ModalIds } from "types/ModalIds";
 import { defaultPermissions, Permissions } from "@snailycad/permissions";
 import { useNameSearch } from "state/search/name-search-state";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
-import { useTones } from "hooks/global/useTones";
+import { useTones } from "hooks/global/use-tones";
 import { useLoadValuesClientSide } from "hooks/useLoadValuesClientSide";
 import type {
   Get911CallsData,
@@ -88,7 +88,8 @@ const Modals = {
   ),
   ManageRecordModal: dynamic(
     async () => {
-      return (await import("components/leo/modals/ManageRecordModal")).ManageRecordModal;
+      return (await import("components/leo/modals/manage-record/manage-record-modal"))
+        .ManageRecordModal;
     },
     { ssr: false },
   ),
@@ -134,7 +135,7 @@ export default function OfficerDashboard({
   const set911Calls = useCall911State((state) => state.setCalls);
   const t = useTranslations("Leo");
   const signal100 = useSignal100();
-  const tones = useTones("leo");
+  const tones = useTones(ActiveToneType.LEO);
   const panic = usePanicButton();
   const { isOpen } = useModal();
   const { LEO_TICKETS, ACTIVE_WARRANTS, CALLS_911 } = useFeatureEnabled();
@@ -274,7 +275,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ req, local
       values,
       messages: {
         ...(await getTranslations(
-          ["citizen", "leo", "truck-logs", "ems-fd", "calls", "common"],
+          ["citizen", "leo", "truck-logs", "ems-fd", "calls", "common", "courthouse"],
           user?.locale ?? locale,
         )),
       },

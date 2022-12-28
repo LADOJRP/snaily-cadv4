@@ -21,7 +21,7 @@ import { ContentType, Description, Put } from "@tsed/schema";
 import { prisma } from "lib/prisma";
 import { combinedUnitProperties, leoProperties, unitProperties } from "lib/leo/activeOfficer";
 import { sendDiscordWebhook } from "lib/discord/webhooks";
-import { Socket } from "services/SocketService";
+import { Socket } from "services/socket-service";
 import { IsAuth } from "middlewares/IsAuth";
 import { validateSchema } from "lib/validateSchema";
 import { handleStartEndOfficerLog } from "lib/leo/handleStartEndOfficerLog";
@@ -160,6 +160,7 @@ export class StatusController {
       }
 
       await handlePanicButtonPressed({
+        locale: user.locale,
         socket: this.socket,
         cad,
         status: code,
@@ -169,6 +170,7 @@ export class StatusController {
 
     if (type === "combined") {
       await handlePanicButtonPressed({
+        locale: user.locale,
         socket: this.socket,
         cad,
         status: code,
@@ -181,6 +183,7 @@ export class StatusController {
       });
 
       await handlePanicButtonPressed({
+        locale: user.locale,
         socket: this.socket,
         cad,
         status: code,
@@ -279,6 +282,10 @@ export class StatusController {
       }
     }
 
+    if (code.shouldDo === ShouldDoType.SET_OFF_DUTY) {
+      this.socket.emitSetUnitOffDuty(unit.id);
+    }
+
     if (["leo", "combined"].includes(type)) {
       await this.socket.emitUpdateOfficerStatus();
     } else {
@@ -286,8 +293,12 @@ export class StatusController {
     }
 
     try {
-      // @ts-expect-error type mismatch. the types are correct.
-      const data = createWebhookData(cad, updatedUnit);
+      const data = await createWebhookData({
+        cad,
+        // @ts-expect-error type mismatch. the types are correct.
+        unit: updatedUnit,
+        locale: user.locale,
+      });
       await sendDiscordWebhook({ type: DiscordWebhookType.UNIT_STATUS, data });
     } catch (error) {
       console.error("Could not send Discord webhook.", error);

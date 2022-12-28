@@ -8,9 +8,9 @@ import { Rank, User, WhitelistStatus } from "@prisma/client";
 import { IsAuth } from "middlewares/IsAuth";
 import { ContentType, Description } from "@tsed/schema";
 import { request } from "undici";
-import { findRedirectURL } from "./Discord";
+import { findRedirectURL } from "./discord-auth-controller";
 import { getSessionUser } from "lib/auth/getSessionUser";
-import { getDefaultPermissionsForNewUser } from "./Auth";
+import { getDefaultPermissionsForNewUser } from "./auth-controller";
 import { setUserTokenCookies } from "lib/auth/setUserTokenCookies";
 import { getAPIUrl } from "@snailycad/utils/api-url";
 import { Feature, IsFeatureEnabled } from "middlewares/is-enabled";
@@ -75,10 +75,10 @@ export class SteamOAuthController {
      * -> log the user in and set the cookie
      */
     if (!authUser && user) {
-      validateUser(user);
-
       // authenticate user with cookie
       await setUserTokenCookies({ user, res });
+
+      validateUser(user);
 
       return res.redirect(`${redirectURL}/citizen`);
     }
@@ -107,10 +107,10 @@ export class SteamOAuthController {
         },
       });
 
-      validateUser(user);
-
       // authenticate user with cookie
       await setUserTokenCookies({ user, res });
+
+      validateUser(user);
 
       return res.redirect(`${redirectURL}/citizen`);
     }
@@ -150,7 +150,7 @@ export class SteamOAuthController {
         }
 
         if (user.whitelistStatus === WhitelistStatus.PENDING) {
-          return res.redirect(`${redirectURL}/auth/login?error=whitelistPending`);
+          return res.redirect(`${redirectURL}/auth/pending?success=steam`);
         }
 
         if (user.whitelistStatus === WhitelistStatus.DECLINED) {

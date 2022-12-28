@@ -12,7 +12,10 @@ export type PostEmsFdMedicalRecordsSearchData =
       medicalRecords: Types.MedicalRecord[];
       isConfidential: false;
     })
-  | (Pick<Prisma.Citizen, "id" | "name" | "surname" | "imageId" | "socialSecurityNumber"> & {
+  | (Pick<
+      Prisma.Citizen,
+      "id" | "name" | "surname" | "imageId" | "imageBlurData" | "socialSecurityNumber"
+    > & {
       isConfidential: true;
     });
 
@@ -42,7 +45,10 @@ export type PostLeoSearchCitizenData = (
       notes: Types.Note[];
       Record: Types.Record[];
     })
-  | (Pick<Types.Citizen, "id" | "name" | "surname" | "imageId" | "socialSecurityNumber"> & {
+  | (Pick<
+      Types.Citizen,
+      "id" | "name" | "surname" | "imageId" | "imageBlurData" | "socialSecurityNumber"
+    > & {
       isConfidential: true;
     })
 )[];
@@ -149,3 +155,9 @@ export type PostSearchActionsCreateCitizen = PostLeoSearchCitizenData[number];
  * @route /search/actions/vehicle
  */
 export type PostSearchActionsCreateVehicle = PostLeoSearchVehicleData;
+
+/**
+ * @method POST
+ * @route /search/actions/vehicle
+ */
+export type PostLEODeclareCitizenMissing = Prisma.Citizen;

@@ -18,7 +18,7 @@ import { IsAuth } from "middlewares/IsAuth";
 import { ActiveDeputy } from "middlewares/ActiveDeputy";
 import fs from "node:fs/promises";
 import { unitProperties } from "lib/leo/activeOfficer";
-import { getImageWebPPath, validateImgurURL } from "utils/image";
+import { getImageWebPPath, validateImgurURL } from "utils/images/image";
 import { validateSchema } from "lib/validateSchema";
 import { ExtendedBadRequest } from "src/exceptions/ExtendedBadRequest";
 import { UsePermissions, Permissions } from "middlewares/UsePermissions";
@@ -28,11 +28,12 @@ import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncrement
 import { handleWhitelistStatus } from "lib/leo/handleWhitelistStatus";
 import { filterInactiveUnits, setInactiveUnitsOffDuty } from "lib/leo/setInactiveUnitsOffDuty";
 import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
-import { Socket } from "services/SocketService";
+import { Socket } from "services/socket-service";
 import type * as APITypes from "@snailycad/types/api";
 import { isFeatureEnabled } from "lib/cad";
 import { IsFeatureEnabled } from "middlewares/is-enabled";
 import { handlePanicButtonPressed } from "lib/leo/send-panic-button-webhook";
+import generateBlurPlaceholder from "utils/images/generate-image-blur-data";
 
 @Controller("/ems-fd")
 @UseBeforeEach(IsAuth)
@@ -158,6 +159,8 @@ export class EmsFdController {
     );
 
     const incremental = await findNextAvailableIncremental({ type: "ems-fd" });
+    const validatedImageURL = validateImgurURL(data.image);
+
     const deputy = await prisma.emsFdDeputy.create({
       data: {
         callsign: data.callsign,
@@ -171,7 +174,8 @@ export class EmsFdController {
         divisionId: data.division || null,
         badgeNumber: data.badgeNumber,
         citizenId: citizen.id,
-        imageId: validateImgurURL(data.image),
+        imageId: validatedImageURL,
+        imageBlurData: await generateBlurPlaceholder(validatedImageURL),
         incremental,
         whitelistStatusId,
       },
@@ -527,6 +531,7 @@ export class EmsFdController {
 
     await this.socket.emitUpdateDeputyStatus();
     handlePanicButtonPressed({
+      locale: user.locale,
       force: panicType === "ON",
       cad,
       socket: this.socket,
@@ -569,13 +574,24 @@ export class EmsFdController {
     const image = await getImageWebPPath({
       buffer: file.buffer,
       pathType: "units",
-      id: deputy.id,
+      id: `${deputy.id}-${file.originalname.split(".")[0]}`,
     });
+
+    const previousImage = deputy.imageId
+      ? `${process.cwd()}/public/units/${deputy.imageId}`
+      : undefined;
+
+    if (previousImage) {
+      await fs.rm(previousImage, { force: true });
+    }
 
     const [data] = await Promise.all([
       prisma.emsFdDeputy.update({
         where: { id: deputy.id },
-        data: { imageId: image.fileName },
+        data: {
+          imageId: image.fileName,
+          imageBlurData: await generateBlurPlaceholder(image),
+        },
         select: { imageId: true },
       }),
       fs.writeFile(image.path, image.buffer),

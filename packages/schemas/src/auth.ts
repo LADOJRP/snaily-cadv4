@@ -1,11 +1,17 @@
 import { z } from "zod";
 
 export const AUTH_SCHEMA = z.object({
-  captchaResult: z.string().nullable().optional(),
+  captchaResult: z.string().nullish(),
   username: z.string().min(3).max(255),
   password: z.string().min(8).max(255),
   registrationCode: z.string().optional(),
   totpCode: z.string().optional(),
+});
+
+export const REGISTER_SCHEMA = AUTH_SCHEMA.omit({ password: true }).extend({
+  discordId: z.string().nullish(),
+  steamId: z.string().nullish(),
+  password: z.string().min(8).max(255).nullish(),
 });
 
 export const CHANGE_USER_SCHEMA = z.object({
@@ -13,7 +19,7 @@ export const CHANGE_USER_SCHEMA = z.object({
   isDarkTheme: z.boolean(),
   statusViewMode: z.string(),
   tableActionsAlignment: z.string(),
-  locale: z.string().nullable().optional(),
+  locale: z.string().nullish(),
   username: z
     .string()
     .min(3)
