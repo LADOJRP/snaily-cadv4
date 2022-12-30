@@ -18,11 +18,11 @@ import { io, Socket } from "socket.io-client";
 import create from "zustand";
 
 export const useMapPlayersStore = create<{
-  players: Map<number, MapPlayer | PlayerDataEventPayload>;
-  setPlayers(players: Map<number, MapPlayer | PlayerDataEventPayload>): void;
+  players: Map<string, MapPlayer | PlayerDataEventPayload>;
+  setPlayers(players: Map<string, MapPlayer | PlayerDataEventPayload>): void;
 }>((set) => ({
-  players: new Map<number, MapPlayer | PlayerDataEventPayload>(),
-  setPlayers: (players: Map<number, MapPlayer | PlayerDataEventPayload>) => set({ players }),
+  players: new Map<string, MapPlayer | PlayerDataEventPayload>(),
+  setPlayers: (players: Map<string, MapPlayer | PlayerDataEventPayload>) => set({ players }),
 }));
 
 export function useMapPlayers() {
@@ -75,7 +75,7 @@ export function useMapPlayers() {
         const user = _prevPlayerData.find(
           (v) => v.steamId === steamId || v.discordId === discordId,
         );
-        const existing = players.get(player.playerId);
+        const existing = players.get(player.name);
 
         if (existing) {
           const omittedExisting = omit(existing, [
@@ -87,7 +87,7 @@ export function useMapPlayers() {
             "pos",
           ]);
 
-          newMap.set(player.playerId, {
+          newMap.set(player.name, {
             ...omittedExisting,
             ...existing,
             ...player,
@@ -96,8 +96,8 @@ export function useMapPlayers() {
           continue;
         }
 
-        if (!player.playerId) continue;
-        newMap.set(player.playerId, {
+        if (!player.name) continue;
+        newMap.set(player.name, {
           convertedSteamId: currentPlayer?.convertedSteamId,
           ...player,
           ...user,
@@ -125,8 +125,7 @@ export function useMapPlayers() {
           };
         })
         .filter(
-          (player) =>
-            (player.convertedSteamId || player.discordId) && !players.get(player.playerId),
+          (player) => (player.convertedSteamId || player.discordId) && !players.get(player.name),
         );
 
       await getCADUsers(usersToFetch, data.payload);
@@ -140,7 +139,7 @@ export function useMapPlayers() {
       const player = Array.from(players.values()).find((player) => player.name === data.payload);
       if (!player) return;
 
-      players.delete(player?.playerId);
+      players.delete(player?.name);
       setPlayers(newPlayers);
     },
     [players], // eslint-disable-line react-hooks/exhaustive-deps

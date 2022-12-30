@@ -10,7 +10,7 @@ import { isUnitCombined, isUnitOfficer } from "@snailycad/utils";
 import type { GetActiveOfficersData } from "@snailycad/types/api";
 import { useCall911State } from "state/dispatch/call-911-state";
 import shallow from "zustand/shallow";
-import { useMapPlayersStore } from "./useMapPlayers";
+import { useMapPlayersStore } from "./use-map-players";
 
 let ran = false;
 export function useActiveOfficers() {
@@ -36,7 +36,7 @@ export function useActiveOfficers() {
 
       if (player) {
         const newPlayers = playerState.players;
-        newPlayers.set(player.playerId, { ...player, unit: null });
+        newPlayers.set(player.name, { ...player, unit: null });
         playerState.setPlayers(newPlayers);
       }
     },
@@ -98,7 +98,7 @@ export function useActiveOfficers() {
         );
 
         if (officer && isUnitOfficer(officer)) {
-          newPlayers.set(player.playerId, { ...player, unit: officer });
+          newPlayers.set(player.name, { ...player, unit: officer });
         }
       }
 
