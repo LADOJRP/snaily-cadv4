@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PenalCodeGroup, Rank } from "@snailycad/types";
+import { PenalCodeGroup, Rank, ValueType } from "@snailycad/types";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
@@ -20,6 +20,8 @@ import { classNames } from "lib/classNames";
 import type { DeletePenalCodeGroupsData, PutValuePositionsData } from "@snailycad/types/api";
 import useFetch from "lib/useFetch";
 import { hasTableDataChanged } from "lib/admin/values/utils";
+import { OptionsDropdown } from "components/admin/values/import/options-dropdown";
+import { useRouter } from "next/router";
 
 const ManagePenalCodeGroup = dynamic(
   async () =>
@@ -32,6 +34,12 @@ const AlertModal = dynamic(async () => (await import("components/modal/AlertModa
   ssr: false,
 });
 
+const ImportValuesModal = dynamic(
+  async () =>
+    (await import("components/admin/values/import/import-values-modal")).ImportValuesModal,
+  { ssr: false },
+);
+
 interface Props {
   groups: { groups: PenalCodeGroup[]; totalCount: number };
 }
@@ -41,6 +49,7 @@ export default function PenalCodeGroupsPage(props: Props) {
   const common = useTranslations("Common");
   const { openModal, closeModal } = useModal();
   const { execute, state } = useFetch();
+  const router = useRouter();
 
   const ungroupedGroup = {
     id: "ungrouped",
@@ -57,13 +66,13 @@ export default function PenalCodeGroupsPage(props: Props) {
     fetchOptions: {
       onResponse: (json: Props["groups"]) => ({
         data: [ungroupedGroup, ...json.groups],
-        totalCount: json.totalCount,
+        totalCount: json.totalCount + 1,
       }),
       path: "/admin/penal-code-group",
       requireFilterText: true,
     },
     initialData: initialGroups,
-    totalCount: props.groups.totalCount,
+    totalCount: props.groups.totalCount + 1,
     search,
   });
 
@@ -132,6 +141,8 @@ export default function PenalCodeGroupsPage(props: Props) {
 
         <div className="flex gap-2">
           <Button onPress={() => openModal(ModalIds.ManagePenalCodeGroup)}>{t("ADD")}</Button>
+          {/* values is set to non-empty array */}
+          <OptionsDropdown type={ValueType.PENAL_CODE} values={[{}] as any} />
         </div>
       </header>
 
@@ -206,6 +217,11 @@ export default function PenalCodeGroupsPage(props: Props) {
         onDeleteClick={handleDeleteGroup}
         title={t("deleteGroup")}
         state={state}
+      />
+
+      <ImportValuesModal
+        onImport={() => router.replace("/admin/values/penal-code", undefined, { shallow: true })}
+        type={ValueType.PENAL_CODE}
       />
     </AdminLayout>
   );

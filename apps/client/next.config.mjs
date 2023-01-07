@@ -1,5 +1,3 @@
-// const analyze = require("@next/bundle-analyzer");
-
 import { withSentryConfig } from "@sentry/nextjs";
 import { i18n } from "./i18n.config.mjs";
 import { createRequire } from "node:module";
@@ -20,7 +18,7 @@ const nextConfig = {
   // prettier-ignore
   images: { // start images
     formats: ["image/avif", "image/webp"],
-    domains: ["i.imgur.com", "cdn.discordapp.com", "localhost", "localhost"]
+    domains: ["i.imgur.com", "cdn.discordapp.com", "localhost", "localhost", "localhost"]
   }, // end images
   // prettier-enable
   webpack(config, { webpack }) {

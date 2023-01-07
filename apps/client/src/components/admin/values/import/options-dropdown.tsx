@@ -65,7 +65,7 @@ function omitUnnecessaryProperties(values: readonly any[]) {
   return [...values].map((v) => {
     delete v.id;
 
-    if ("createdAt" in v) {
+    if ("createdAt" in v && !isPenalCodeValue(v)) {
       delete v.createdAt;
       delete v.updatedAt;
       delete v.type;

@@ -38,7 +38,7 @@ export class CADSettingsController {
     const version = await getCADVersion();
 
     const cad = await prisma.cad.findFirst({
-      select: { ...CAD_SELECT(user, !!user), registrationCode: true },
+      select: { ...CAD_SELECT(user, true), registrationCode: true },
     });
 
     const registrationCode =
@@ -146,6 +146,7 @@ export class CADSettingsController {
         maxDivisionsPerOfficer: data.maxDivisionsPerOfficer,
         pairedUnitTemplate: data.pairedUnitTemplate,
         callsignTemplate: data.callsignTemplate,
+        caseNumberTemplate: data.caseNumberTemplate,
         liveMapURL: data.liveMapURL,
         authScreenBgImageId: data.authScreenBgImageId,
         authScreenHeaderImageId: data.authScreenHeaderImageId,
