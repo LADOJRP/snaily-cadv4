@@ -224,8 +224,6 @@ export type VehicleValue = Prisma.VehicleValue & { value: Value };
 
 export type WeaponValue = Prisma.WeaponValue & { value: Value };
 
-export type Notification = Prisma.Notification;
-
 export type BleeterPost = Prisma.BleeterPost;
 
 export type TowCall = Prisma.TowCall & {
@@ -431,4 +429,9 @@ export type AnyValue = Value | PenalCode | ValueWithValueObj;
 
 export type ActiveTone = Prisma.ActiveTone & {
   createdBy: { username: string };
+};
+
+export type AuditLog = Prisma.AuditLog & {
+  executor?: User | null;
+  action: { previous: any; new: any; type: any };
 };

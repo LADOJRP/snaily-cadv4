@@ -89,6 +89,8 @@ model MiscCadSettings {
   weaponLicenseNumberLength  Int? @default(8)
   waterLicenseNumberLength   Int? @default(8)
 
+  lastInactivitySyncTimestamp DateTime?
+
   /// deprecated, use `webhooks` instead
   call911WebhookId     String?
   statusesWebhookId    String?
@@ -213,6 +215,16 @@ model DiscordRole {
   CustomRole            CustomRole[]
 }
 
+// audit logs
+model AuditLog {
+  id             String   @id @default(uuid())
+  executor       User?    @relation(fields: [executorId], references: [id])
+  executorId     String?
+  action         Json
+  createdAt      DateTime @default(now())
+  translationKey String?
+}
+
 model User {
   id                       String                    @id @default(cuid())
   username                 String                    @unique @db.VarChar(255)
@@ -269,6 +281,7 @@ model User {
   NameChangeRequest    NameChangeRequest[]
   CourthousePost       CourthousePost[]
   ActiveTone           ActiveTone[]
+  AuditLog             AuditLog[]
 }
 
 model UserSession {
@@ -355,6 +368,7 @@ model Citizen {
   occupation           String?                       @db.Text
   additionalInfo       String?                       @db.Text
   flags                Value[]                       @relation("citizenFlags")
+  addressFlags         Value[]                       @relation("citizenAddressFlags")
   customFields         CustomFieldValue[]
   vehicles             RegisteredVehicle[]
   weapons              Weapon[]
@@ -531,6 +545,7 @@ model Value {
   LicenseExam                     LicenseExam[]                 @relation("examToLicense")
   AddressValue                    AddressValue[]                @relation("addressValueToValue")
   EmergencyVehicleValue           EmergencyVehicleValue[]       @relation("emergencyVehicleToValue")
+  CitizenAddressFlags             Citizen[]                     @relation("citizenAddressFlags")
 }
 
 model AddressValue {
@@ -700,8 +715,8 @@ model Notification {
   id          String   @id @default(uuid())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
-  executor    User     @relation("executor", fields: [executorId], references: [id], onDelete: Cascade)
-  executorId  String
+  executor    User?    @relation("executor", fields: [executorId], references: [id], onDelete: Cascade)
+  executorId  String?
   title       String
   description String
   createdAt   DateTime @default(now())
@@ -1072,6 +1087,7 @@ model Call911 {
   gtaMapPosition   GTAMapPosition?   @relation(fields: [gtaMapPositionId], references: [id])
   gtaMapPositionId String?
   isSignal100      Boolean?          @default(false)
+  extraFields      Json?
 }
 
 model GTAMapPosition {
@@ -1514,6 +1530,7 @@ enum ValueType {
   CALL_TYPE
   ADDRESS
   EMERGENCY_VEHICLE
+  ADDRESS_FLAG
 }
 
 enum DriversLicenseCategoryType {
@@ -1553,6 +1570,7 @@ enum ShouldDoType {
   PANIC_BUTTON
   EN_ROUTE
   ON_SCENE
+  UNAVAILABLE
 }
 
 enum BoloType {

@@ -1,10 +1,10 @@
-import { Middleware, MiddlewareMethods, Context } from "@tsed/common";
+import { Middleware, MiddlewareMethods, Context, Next } from "@tsed/common";
 import { UseBefore } from "@tsed/platform-middlewares";
 import { StoreSet, useDecorators } from "@tsed/core";
 import type { Feature as DatabaseFeature } from "@prisma/client";
 import { Feature as TypesFeature } from "@snailycad/types";
-import { setDiscordAuth } from "./IsAuth";
-import { prisma } from "lib/prisma";
+import { setDiscordAuth } from "./is-auth";
+import { prisma } from "lib/data/prisma";
 import { FeatureNotEnabled } from "src/exceptions/feature-not-enabled";
 
 export interface IsFeatureEnabledOptions {
@@ -30,7 +30,7 @@ export const DEFAULT_DISABLED_FEATURES: Partial<
 
 @Middleware()
 class IsFeatureEnabledMiddleware implements MiddlewareMethods {
-  async use(@Context() ctx: Context) {
+  async use(@Context() ctx: Context, @Next() next: Next) {
     const options = ctx.endpoint.get<IsFeatureEnabledOptions>(IsFeatureEnabledMiddleware);
 
     const cad = setDiscordAuth(
@@ -52,6 +52,8 @@ class IsFeatureEnabledMiddleware implements MiddlewareMethods {
     if (!isEnabled) {
       throw new FeatureNotEnabled(options);
     }
+
+    next();
   }
 }
 

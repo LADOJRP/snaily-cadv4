@@ -1,6 +1,6 @@
 import type { REGISTER_SCHEMA } from "@snailycad/schemas";
 import process from "node:process";
-import { ExtendedBadRequest } from "src/exceptions/ExtendedBadRequest";
+import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { request } from "undici";
 import type { z } from "zod";
 
@@ -25,7 +25,11 @@ export async function validateGoogleCaptcha(data: z.infer<typeof REGISTER_SCHEMA
         secret: GOOGLE_CAPTCHA_SECRET,
         response: data.captchaResult,
       },
-    });
+    }).catch(() => null);
+
+    if (!googleCaptchaAPIResponse) {
+      throw new ExtendedBadRequest({ username: "invalidCaptcha" });
+    }
 
     const googleCaptchaJSON =
       (await googleCaptchaAPIResponse.body.json()) as PartialGoogleCaptchaResponse;

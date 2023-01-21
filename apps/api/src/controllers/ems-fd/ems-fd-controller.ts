@@ -1,9 +1,16 @@
-import { Controller, UseBeforeEach, Use, MultipartFile, PlatformMulterFile } from "@tsed/common";
+import {
+  Controller,
+  UseBeforeEach,
+  Use,
+  MultipartFile,
+  PlatformMulterFile,
+  UseAfter,
+} from "@tsed/common";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
 import { EMS_FD_DEPUTY_SCHEMA, MEDICAL_RECORD_SCHEMA } from "@snailycad/schemas";
 import { QueryParams, BodyParams, Context, PathParams } from "@tsed/platform-params";
 import { BadRequest, NotFound } from "@tsed/exceptions";
-import { prisma } from "lib/prisma";
+import { prisma } from "lib/data/prisma";
 import {
   type cad as DBCad,
   type MiscCadSettings,
@@ -15,27 +22,28 @@ import {
 } from "@prisma/client";
 import type { cad, EmsFdDeputy } from "@snailycad/types";
 import { AllowedFileExtension, allowedFileExtensions } from "@snailycad/config";
-import { IsAuth } from "middlewares/IsAuth";
-import { ActiveDeputy } from "middlewares/ActiveDeputy";
+import { IsAuth } from "middlewares/is-auth";
+import { ActiveDeputy } from "middlewares/active-deputy";
 import fs from "node:fs/promises";
 import { unitProperties } from "lib/leo/activeOfficer";
-import { getImageWebPPath, validateImgurURL } from "utils/images/image";
-import { validateSchema } from "lib/validateSchema";
-import { ExtendedBadRequest } from "src/exceptions/ExtendedBadRequest";
-import { UsePermissions, Permissions } from "middlewares/UsePermissions";
+import { validateImageURL } from "lib/images/validate-image-url";
+import { validateSchema } from "lib/data/validate-schema";
+import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
+import { UsePermissions, Permissions } from "middlewares/use-permissions";
 import { getInactivityFilter, validateMaxDepartmentsEachPerUser } from "lib/leo/utils";
 import { validateDuplicateCallsigns } from "lib/leo/validateDuplicateCallsigns";
 import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncremental";
 import { handleWhitelistStatus } from "lib/leo/handleWhitelistStatus";
-import { filterInactiveUnits, setInactiveUnitsOffDuty } from "lib/leo/setInactiveUnitsOffDuty";
 import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
 import { Socket } from "services/socket-service";
 import type * as APITypes from "@snailycad/types/api";
 import { isFeatureEnabled } from "lib/cad";
 import { IsFeatureEnabled } from "middlewares/is-enabled";
 import { handlePanicButtonPressed } from "lib/leo/send-panic-button-webhook";
-import generateBlurPlaceholder from "utils/images/generate-image-blur-data";
+import generateBlurPlaceholder from "lib/images/generate-image-blur-data";
 import { hasPermission } from "@snailycad/permissions";
+import { getImageWebPPath } from "lib/images/get-image-webp-path";
+import { HandleInactivity } from "middlewares/handle-inactivity";
 
 @Controller("/ems-fd")
 @UseBeforeEach(IsAuth)
@@ -168,7 +176,7 @@ export class EmsFdController {
     );
 
     const incremental = await findNextAvailableIncremental({ type: "ems-fd" });
-    const validatedImageURL = validateImgurURL(data.image);
+    const validatedImageURL = validateImageURL(data.image);
 
     const deputy = await prisma.emsFdDeputy.create({
       data: {
@@ -300,10 +308,10 @@ export class EmsFdController {
         callsign: data.callsign,
         callsign2: data.callsign2,
         departmentId: defaultDepartment ? defaultDepartment.id : data.department,
-        divisionId: data.division!,
+        divisionId: data.division || null,
         badgeNumber: data.badgeNumber,
         citizenId: citizen.id,
-        imageId: validateImgurURL(data.image),
+        imageId: validateImageURL(data.image),
         incremental,
         whitelistStatusId,
         rankId: rank,
@@ -364,6 +372,7 @@ export class EmsFdController {
     fallback: (u) => u.isEmsFd || u.isLeo || u.isDispatch,
     permissions: [Permissions.EmsFd, Permissions.Leo, Permissions.Dispatch],
   })
+  @UseAfter(HandleInactivity)
   async getActiveDeputies(
     @Context("cad") cad: { miscCadSettings: MiscCadSettings },
   ): Promise<APITypes.GetEmsFdActiveDeputies> {
@@ -373,26 +382,15 @@ export class EmsFdController {
       "lastStatusChangeTimestamp",
     );
 
-    if (unitsInactivityFilter) {
-      setInactiveUnitsOffDuty(unitsInactivityFilter.lastStatusChangeTimestamp);
-    }
-
     const deputies = await prisma.emsFdDeputy.findMany({
       where: {
-        status: {
-          NOT: {
-            shouldDo: ShouldDoType.SET_OFF_DUTY,
-          },
-        },
+        status: { NOT: { shouldDo: ShouldDoType.SET_OFF_DUTY } },
+        ...(unitsInactivityFilter?.filter ?? {}),
       },
       include: unitProperties,
     });
 
-    const deputiesWithUpdatedStatus = deputies.map((u) =>
-      filterInactiveUnits({ unit: u, unitsInactivityFilter }),
-    );
-
-    return deputiesWithUpdatedStatus;
+    return deputies;
   }
   @Use(ActiveDeputy)
   @Post("/medical-record")
