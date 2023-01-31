@@ -41,6 +41,13 @@ const AlertModal = dynamic(async () => (await import("components/modal/AlertModa
   ssr: false,
 });
 
+const PruneUnitsModal = dynamic(
+  async () => (await import("./all-units-tab/prune-units-modal")).PruneUnitsModal,
+  {
+    ssr: false,
+  },
+);
+
 interface Props {
   units: GetManageUnitsData;
 }
@@ -152,6 +159,12 @@ export function AllUnitsTab({ units }: Props) {
         </Button>
       ) : null}
 
+      {hasManagePermissions && asyncTable.items.length >= 1 ? (
+        <Button onPress={() => openModal(ModalIds.PruneUnits)} className="mt-3 ml-2">
+          {t("Management.pruneUnits")}
+        </Button>
+      ) : null}
+
       <SearchArea
         search={{ search, setSearch }}
         asyncTable={asyncTable}
@@ -180,9 +193,6 @@ export function AllUnitsTab({ units }: Props) {
           features={{ rowSelection: hasManagePermissions }}
           data={asyncTable.items.map((unit) => {
             const departmentStatus = unit.whitelistStatus?.status;
-            const departmentStatusFormatted = departmentStatus
-              ? departmentStatus.toLowerCase()
-              : "—";
 
             return {
               id: unit.id,
@@ -203,22 +213,22 @@ export function AllUnitsTab({ units }: Props) {
                   <p className="inline-block">{makeUnitName(unit)}</p>
                 </div>
               ),
-              user: hasViewUsersPermissions ? (
-                <Link
-                  href={`/admin/manage/users/${unit.userId}`}
-                  className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
-                >
-                  {unit.user.username}
-                </Link>
-              ) : (
-                unit.user.username
-              ),
+              user:
+                hasViewUsersPermissions && unit.user ? (
+                  <Link
+                    href={`/admin/manage/users/${unit.userId}`}
+                    className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
+                  >
+                    {unit.user.username}
+                  </Link>
+                ) : (
+                  // todo: add information about temporary unit here
+                  unit.user?.username ?? t("Leo.temporaryUnit")
+                ),
               callsign: generateCallsign(unit),
               badgeNumber: unit.badgeNumber,
               department: formatOfficerDepartment(unit) ?? common("none"),
-              departmentStatus: (
-                <Status state={departmentStatus}>{departmentStatusFormatted}</Status>
-              ),
+              departmentStatus: <Status>{departmentStatus}</Status>,
               division: formatUnitDivisions(unit),
               rank: <OfficerRank unit={unit} />,
               position: unit.position ?? common("none"),
@@ -281,6 +291,8 @@ export function AllUnitsTab({ units }: Props) {
           onClose={() => unitState.setTempId(null)}
         />
       ) : null}
+
+      {hasManagePermissions && asyncTable.items.length >= 1 ? <PruneUnitsModal /> : null}
     </TabsContent>
   );
 }

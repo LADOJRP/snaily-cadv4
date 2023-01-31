@@ -1,30 +1,51 @@
-import { combinedUnitProperties } from "lib/leo/activeOfficer";
-import type { CombinedLeoUnit, Officer, EmsFdDeputy, StatusValue } from "@prisma/client";
+import { combinedEmsFdUnitProperties, combinedUnitProperties } from "lib/leo/activeOfficer";
+import type {
+  CombinedLeoUnit,
+  CombinedEmsFdUnit,
+  Officer,
+  EmsFdDeputy,
+  StatusValue,
+} from "@prisma/client";
 import { prisma } from "lib/data/prisma";
+
+interface Includes {
+  officer?: any;
+  emsFdDeputy?: any;
+}
 
 export async function findUnit(
   id: string,
   extraFind?: any,
-): Promise<OfficerReturn | EmsFdReturn | CombinedUnitReturn> {
-  let type: "leo" | "ems-fd" = "leo";
+  includes?: Includes,
+): Promise<OfficerReturn | EmsFdReturn | CombinedLeoUnitReturn | CombinedEmsFdUnitReturn> {
+  let type: "leo" | "ems-fd" | "combined-leo" | "combined-ems-fd" = "leo";
   let unit: any = await prisma.officer.findFirst({
     where: { id, ...extraFind },
+    include: includes?.officer,
   });
 
   if (!unit) {
     type = "ems-fd";
-    unit = await prisma.emsFdDeputy.findFirst({ where: { id, ...extraFind } });
+    unit = await prisma.emsFdDeputy.findFirst({
+      where: { id, ...extraFind },
+      include: includes?.emsFdDeputy,
+    });
   }
 
   if (!unit) {
+    type = "combined-leo";
     unit = await prisma.combinedLeoUnit.findFirst({
-      where: {
-        id,
-      },
+      where: { id },
       include: combinedUnitProperties,
     });
+  }
 
-    return { type: "combined", unit: unit ?? null };
+  if (!unit) {
+    type = "combined-ems-fd";
+    unit = await prisma.combinedEmsFdUnit.findFirst({
+      where: { id },
+      include: combinedEmsFdUnitProperties,
+    });
   }
 
   return { type, unit: unit ?? null };
@@ -40,7 +61,12 @@ interface EmsFdReturn {
   unit: EmsFdDeputy | null;
 }
 
-interface CombinedUnitReturn {
-  type: "combined";
+interface CombinedLeoUnitReturn {
+  type: "combined-leo";
   unit: (CombinedLeoUnit & { status: StatusValue }) | null;
+}
+
+interface CombinedEmsFdUnitReturn {
+  type: "combined-ems-fd";
+  unit: (CombinedEmsFdUnit & { status: StatusValue }) | null;
 }

@@ -70,7 +70,7 @@ export class LeoController {
       }),
     ]);
 
-    return [...officers, ...combinedUnits];
+    return [...combinedUnits, ...officers];
   }
 
   @Post("/panic-button")
@@ -231,7 +231,7 @@ export class LeoController {
   ): Promise<APITypes.GetUnitQualificationsByUnitIdData> {
     const { type, unit } = await findUnit(unitId);
 
-    if (type === "combined") {
+    if (type === "combined-leo" || type === "combined-ems-fd") {
       throw new BadRequest("combinedNotSupported");
     }
 

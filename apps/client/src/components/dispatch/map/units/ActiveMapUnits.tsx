@@ -1,6 +1,12 @@
 import * as React from "react";
-import { CombinedLeoUnit, EmsFdDeputy, Officer, ShouldDoType } from "@snailycad/types";
-import { isUnitCombined } from "@snailycad/utils";
+import {
+  CombinedEmsFdUnit,
+  CombinedLeoUnit,
+  EmsFdDeputy,
+  Officer,
+  ShouldDoType,
+} from "@snailycad/types";
+import { isUnitCombined, isUnitCombinedEmsFd } from "@snailycad/utils";
 import { useActiveDeputies } from "hooks/realtime/useActiveDeputies";
 import { useActiveOfficers } from "hooks/realtime/useActiveOfficers";
 import type { MapPlayer, PlayerDataEventPayload } from "types/Map";
@@ -45,8 +51,14 @@ export function ActiveMapUnits({ openItems, setOpenItems }: Props) {
           <p className="text-base mt-2 text-neutral-700 dark:text-gray-300">{t("noActiveUnits")}</p>
         ) : (
           <AccordionRoot value={openItems} onValueChange={setOpenItems} type="multiple">
-            {units.map((player) => {
-              return <UnitItem setTempUnit={setTempUnit} key={player.name} player={player} />;
+            {units.map((player, idx) => {
+              return (
+                <UnitItem
+                  setTempUnit={setTempUnit}
+                  key={`${player.identifier}-${idx}`}
+                  player={player}
+                />
+              );
             })}
           </AccordionRoot>
         )}
@@ -61,7 +73,7 @@ export function ActiveMapUnits({ openItems, setOpenItems }: Props) {
 interface ActiveUnitsOptions {
   players: (MapPlayer | PlayerDataEventPayload)[];
   activeOfficers: (Officer | CombinedLeoUnit)[];
-  activeDeputies: EmsFdDeputy[];
+  activeDeputies: (EmsFdDeputy | CombinedEmsFdUnit)[];
 }
 
 function makeActiveUnits({ players, activeOfficers, activeDeputies }: ActiveUnitsOptions) {
@@ -70,20 +82,27 @@ function makeActiveUnits({ players, activeOfficers, activeDeputies }: ActiveUnit
     if (isUnitCombined(officer)) return officer.officers;
     return officer;
   });
+  const _activeDeputies = activeDeputies.flatMap((deputy) => {
+    if (isUnitCombinedEmsFd(deputy)) return deputy.deputies;
+    return deputy;
+  });
 
-  for (const activeUnit of [..._activeOfficers, ...activeDeputies]) {
+  for (const activeUnit of [..._activeOfficers, ..._activeDeputies]) {
     if (!activeUnit.status || activeUnit.status.shouldDo === ShouldDoType.SET_OFF_DUTY) continue;
+    if (!activeUnit.user) continue;
 
     const steamId = activeUnit.user.steamId;
-    const player = players.find(
-      (v) =>
-        ("steamId" in v && v.steamId === steamId) ||
-        ("convertedSteamId" in v && v.convertedSteamId === steamId),
-    );
+    const discordId = activeUnit.user.discordId;
 
-    if (!player || !("steamId" in player)) continue;
+    const player = players.find((player) => {
+      return player.discordId === discordId || player.convertedSteamId === steamId;
+    });
 
-    const existing = activeUnits.some((v) => v.steamId === player.convertedSteamId);
+    if (!player || !("steamId" in player) || !("discordId" in player)) continue;
+
+    const existing = activeUnits.some((unit) => {
+      return unit.discordId === discordId || unit.convertedSteamId === steamId;
+    });
 
     if (player && !existing) {
       activeUnits.push({ ...player, unit: activeUnit });

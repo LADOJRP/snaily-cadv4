@@ -13,7 +13,13 @@ import { BadRequest, NotFound } from "@tsed/exceptions";
 import { UseBeforeEach } from "@tsed/platform-middlewares";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
 import { validateMaxDivisionsPerUnit } from "controllers/leo/my-officers/MyOfficersController";
-import { combinedUnitProperties, leoProperties, unitProperties } from "lib/leo/activeOfficer";
+import {
+  combinedUnitProperties,
+  leoProperties,
+  _leoProperties,
+  unitProperties,
+  combinedEmsFdUnitProperties,
+} from "lib/leo/activeOfficer";
 import { findUnit } from "lib/leo/findUnit";
 import { updateOfficerDivisionsCallsigns } from "lib/leo/utils";
 import { validateDuplicateCallsigns } from "lib/leo/validateDuplicateCallsigns";
@@ -105,6 +111,109 @@ export class AdminManageUnitsController {
     };
   }
 
+  @Get("/prune")
+  @UsePermissions({
+    fallback: (u) => u.rank !== Rank.USER,
+    permissions: [Permissions.ManageUnits, Permissions.DeleteUnits],
+  })
+  @Description("Get inactive units by days and departmentId")
+  async getInactiveUnits(
+    @QueryParams("departmentId") departmentId: string | undefined = undefined,
+    @QueryParams("days", Number) days = 2,
+  ) {
+    const where = {
+      lastStatusChangeTimestamp: {
+        not: null,
+        lte: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * days),
+      },
+      departmentId,
+    };
+
+    const [officers, deputies] = await prisma.$transaction([
+      prisma.officer.findMany({
+        where,
+        include: _leoProperties,
+        orderBy: { lastStatusChangeTimestamp: "desc" },
+      }),
+      prisma.emsFdDeputy.findMany({
+        where,
+        include: unitProperties,
+        orderBy: { lastStatusChangeTimestamp: "desc" },
+      }),
+    ]);
+
+    const units = [...officers, ...deputies];
+
+    return units;
+  }
+
+  @Delete("/prune")
+  @UsePermissions({
+    fallback: (u) => u.rank !== Rank.USER,
+    permissions: [Permissions.ManageUnits, Permissions.DeleteUnits],
+  })
+  async pruneInactiveUnits(
+    @Context("sessionUserId") sessionUserId: string,
+    @BodyParams("unitIds", String) unitIds: `${"OFFICER" | "EMS_FD"}-${string}`[],
+    @BodyParams("days", Number) days = 30,
+    @BodyParams("action", String) action = "SET_DEPARTMENT_DEFAULT",
+  ) {
+    const ALLOWED_ACTIONS = ["SET_DEPARTMENT_DEFAULT", "SET_DEPARTMENT_NULL", "DELETE_UNIT"];
+
+    if (!ALLOWED_ACTIONS.includes(action)) {
+      throw new ExtendedBadRequest({ action: "Invalid action" });
+    }
+
+    const defaultDepartment = await prisma.departmentValue.findFirst({
+      where: { isDefaultDepartment: true },
+    });
+
+    if (!defaultDepartment && action === "SET_DEPARTMENT_DEFAULT") {
+      throw new BadRequest("noDefaultDepartmentSet");
+    }
+
+    const arr = await prisma.$transaction(
+      unitIds.map((id) => {
+        const [type, unitId] = id.split("-");
+        const prismaName = type === "OFFICER" ? "officer" : "emsFdDeputy";
+
+        if (action === "SET_DEPARTMENT_NULL") {
+          // @ts-expect-error method properties are the same
+          return prisma[prismaName].updateMany({
+            where: { id: unitId },
+            data: { departmentId: null },
+          });
+        }
+
+        if (action === "SET_DEPARTMENT_DEFAULT") {
+          // @ts-expect-error method properties are the same
+          return prisma[prismaName].updateMany({
+            where: { id: unitId },
+            data: { departmentId: defaultDepartment?.id },
+          });
+        }
+
+        // @ts-expect-error method properties are the same
+        return prisma[prismaName].deleteMany({
+          where: {
+            id: unitId,
+            lastStatusChangeTimestamp: {
+              lte: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * days),
+            },
+          },
+        });
+      }),
+    );
+
+    await createAuditLogEntry({
+      action: { type: AuditLogActionType.UnitsPruned },
+      prisma,
+      executorId: sessionUserId,
+    });
+
+    return { count: arr.length };
+  }
+
   @Get("/:id")
   @Description(
     "Get a unit by the `id` or get all units from a user by the `discordId` or `steamId`",
@@ -147,6 +256,13 @@ export class AdminManageUnitsController {
       }
 
       if (!unit) {
+        unit = await prisma.combinedEmsFdUnit.findUnique({
+          where: { id },
+          include: combinedEmsFdUnitProperties,
+        });
+      }
+
+      if (!unit) {
         throw new NotFound("unitNotFound");
       }
 
@@ -157,25 +273,30 @@ export class AdminManageUnitsController {
       OR: [{ user: { discordId: id } }, { user: { steamId: id } }],
     };
 
-    const [userOfficers, userDeputies, userCombinedUnits] = await prisma.$transaction([
-      prisma.officer.findMany({
-        where,
-        include: { ...unitProperties, ...extraInclude },
-      }),
-      prisma.emsFdDeputy.findMany({
-        where,
-        include: { ...unitProperties, ...extraInclude },
-      }),
-      prisma.combinedLeoUnit.findMany({
-        where: { officers: { some: where } },
-        include: combinedUnitProperties,
-      }),
-    ]);
+    const [userOfficers, userDeputies, userCombinedOfficers, userCombinedDeputies] =
+      await prisma.$transaction([
+        prisma.officer.findMany({
+          where,
+          include: { ...unitProperties, ...extraInclude },
+        }),
+        prisma.emsFdDeputy.findMany({
+          where,
+          include: { ...unitProperties, ...extraInclude },
+        }),
+        prisma.combinedLeoUnit.findMany({
+          where: { officers: { some: where } },
+          include: combinedUnitProperties,
+        }),
+        prisma.combinedEmsFdUnit.findMany({
+          where: { deputies: { some: where } },
+          include: combinedUnitProperties,
+        }),
+      ]);
 
     return {
       userOfficers,
       userDeputies,
-      userCombinedUnits,
+      userCombinedUnits: [...userCombinedOfficers, ...userCombinedDeputies],
     } as any;
   }
 
@@ -240,14 +361,18 @@ export class AdminManageUnitsController {
   })
   @Description("Update a unit's callsign by its id")
   async updateCallsignUnit(
+    @Context("sessionUserId") sessionUserId: string,
     @PathParams("unitId") unitId: string,
     @BodyParams() body: unknown,
   ): Promise<APITypes.PutManageUnitCallsignData> {
     const data = validateSchema(UPDATE_UNIT_CALLSIGN_SCHEMA.partial(), body);
 
-    const { type, unit } = await findUnit(unitId);
+    const { type, unit } = await findUnit(unitId, undefined, {
+      officer: leoProperties,
+      emsFdDeputy: unitProperties,
+    });
 
-    if (!unit || type === "combined") {
+    if (!unit || type === "combined-ems-fd" || type === "combined-leo") {
       throw new NotFound("unitNotFound");
     }
 
@@ -282,6 +407,12 @@ export class AdminManageUnitsController {
         callsign: data.callsign,
       },
       include: type === "leo" ? leoProperties : unitProperties,
+    });
+
+    await createAuditLogEntry({
+      action: { type: AuditLogActionType.UnitUpdate, new: updated, previous: unit as any },
+      prisma,
+      executorId: sessionUserId,
     });
 
     return updated;
@@ -373,6 +504,8 @@ export class AdminManageUnitsController {
         badgeNumber: data.badgeNumber,
         imageId: validatedImageURL,
         imageBlurData: await generateBlurPlaceholder(validatedImageURL),
+        userId: data.userId,
+        isTemporary: !!data.userId,
       },
       include: type === "officer" ? leoProperties : unitProperties,
     });
@@ -389,6 +522,7 @@ export class AdminManageUnitsController {
   @Post("/:id/image")
   @Description("Update an image of an officer or EMS/FD deputy")
   async updateUnitImage(
+    @Context("sessionUserId") sessionUserId: string,
     @PathParams("id") unitId: string,
     @MultipartFile("image") file?: PlatformMulterFile,
   ): Promise<APITypes.PostCitizenImageByIdData> {
@@ -431,10 +565,15 @@ export class AdminManageUnitsController {
         prisma[prismaName].update({
           where: { id: unit.id },
           data: { imageId: image.fileName, imageBlurData: await generateBlurPlaceholder(image) },
-          select: { imageId: true },
         }),
         fs.writeFile(image.path, image.buffer),
       ]);
+
+      await createAuditLogEntry({
+        action: { type: AuditLogActionType.UnitUpdate, new: data, previous: unit as any },
+        prisma,
+        executorId: sessionUserId,
+      });
 
       return data;
     } catch {
@@ -578,7 +717,7 @@ export class AdminManageUnitsController {
   ): Promise<APITypes.PostManageUnitAddQualificationData> {
     const unit = await findUnit(unitId);
 
-    if (unit.type === "combined") {
+    if (unit.type === "combined-ems-fd" || unit.type === "combined-leo") {
       throw new BadRequest("Cannot add qualifications to combined units");
     }
 
@@ -624,7 +763,7 @@ export class AdminManageUnitsController {
   ): Promise<APITypes.DeleteManageUnitQualificationData> {
     const unit = await findUnit(unitId);
 
-    if (unit.type === "combined") {
+    if (unit.type === "combined-ems-fd" || unit.type === "combined-leo") {
       throw new BadRequest("Cannot add qualifications to combined units");
     }
 
@@ -640,6 +779,7 @@ export class AdminManageUnitsController {
   }
 
   @Put("/:unitId/qualifications/:qualificationId")
+  @Description("Suspend or unsuspend a unit's qualification")
   @UsePermissions({
     fallback: (u) => u.isSupervisor || u.rank !== Rank.USER,
     permissions: [Permissions.ManageUnits, Permissions.ManageAwardsAndQualifications],
@@ -655,7 +795,7 @@ export class AdminManageUnitsController {
 
     const unit = await findUnit(unitId);
 
-    if (unit.type === "combined") {
+    if (unit.type === "combined-ems-fd" || unit.type === "combined-leo") {
       throw new BadRequest("Cannot add qualifications to combined units");
     }
 
@@ -695,7 +835,7 @@ export class AdminManageUnitsController {
   ): Promise<APITypes.DeleteManageUnitByIdData> {
     const unit = await findUnit(unitId);
 
-    if (unit.type === "combined") {
+    if (unit.type === "combined-ems-fd" || unit.type === "combined-leo") {
       throw new BadRequest("Cannot delete combined units");
     }
 
@@ -716,7 +856,7 @@ export class AdminManageUnitsController {
 
     await createAuditLogEntry({
       translationKey: "deletedEntry",
-      action: { type: AuditLogActionType.UnitDelete, new: unit.unit },
+      action: { type: AuditLogActionType.UnitDelete, new: unit.unit as any },
       prisma,
       executorId: sessionUserId,
     });

@@ -50,7 +50,7 @@ export function CallsignsTab({ units }: Props) {
   const common = useTranslations("Common");
   const { generateCallsign } = useGenerateCallsign();
   const { openModal } = useModal();
-  const tableState = useTableState({ search: { value: search } });
+  const tableState = useTableState();
   const hasViewUsersPermissions = hasPermissions([Permissions.ViewUsers], true);
   const { department } = useValues();
 
@@ -96,16 +96,17 @@ export function CallsignsTab({ units }: Props) {
               id: unit.id,
               unit: LABELS[unit.type],
               name: makeUnitName(unit),
-              user: hasViewUsersPermissions ? (
-                <Link
-                  href={`/admin/manage/users/${unit.userId}`}
-                  className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
-                >
-                  {unit.user.username}
-                </Link>
-              ) : (
-                unit.user.username
-              ),
+              user:
+                hasViewUsersPermissions && unit.user ? (
+                  <Link
+                    href={`/admin/manage/users/${unit.userId}`}
+                    className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
+                  >
+                    {unit.user.username}
+                  </Link>
+                ) : (
+                  unit.user?.username ?? t("Leo.temporaryUnit")
+                ),
               callsign1: unit.callsign,
               callsign2: unit.callsign2,
               callsign: generateCallsign(unit),

@@ -9,6 +9,8 @@ export enum AuditLogActionType {
   UserRolesUpdate = "UserRolesUpdate",
   UserApiTokenDelete = "UserApiTokenDelete",
   User2FADelete = "User2FADelete",
+  UserWhitelistStatusChange = "UserWhitelistStatusChange",
+
   CadAPITokenRegenerated = "CadAPITokenRegenerated",
   CADFeaturesUpdate = "CADFeaturesUpdate",
 
@@ -18,9 +20,14 @@ export enum AuditLogActionType {
   UnitUpdate = "UnitUpdate",
   UnitDelete = "UnitDelete",
   UnitsSetOffDuty = "UnitsSetOffDuty",
+  TemporaryUnitCreate = "TemporaryUnitCreate",
+  TemporaryUnitUpdate = "TemporaryUnitUpdate",
+  UnitsPruned = "UnitsPruned",
 
   BusinessUpdate = "BusinessUpdate",
   BusinessDelete = "BusinessDelete",
+  BusinessEmployeeUpdate = "BusinessEmployeeUpdate",
+  BusinessEmployeeFire = "BusinessEmployeeFire",
 
   CustomFieldCreate = "CustomFieldCreate",
   CustomFieldUpdate = "CustomFieldUpdate",
@@ -32,6 +39,8 @@ export enum AuditLogActionType {
 
   CadSettingsUpdate = "CadSettingsUpdate",
   MiscCadSettingsUpdate = "MiscCadSettingsUpdate",
+  UpdateDiscordRoles = "UpdateDiscordRoles",
+  UpdateDiscordWebhooks = "UpdateDiscordWebhooks",
 
   Calls911Purge = "Calls911Purge",
 }

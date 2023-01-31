@@ -46,7 +46,7 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
   const common = useTranslations("Common");
   const { generateCallsign } = useGenerateCallsign();
   const { state, execute } = useFetch();
-  const tableState = useTableState({ search: { value: search } });
+  const tableState = useTableState();
   const { DIVISIONS } = useFeatureEnabled();
   const hasViewUsersPermissions = hasPermissions([Permissions.ViewUsers], true);
 
@@ -99,16 +99,17 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
               badgeNumber: officer.badgeNumber,
               department: formatOfficerDepartment(officer) ?? common("none"),
               division: formatUnitDivisions(officer),
-              user: hasViewUsersPermissions ? (
-                <Link
-                  href={`/admin/manage/users/${officer.userId}`}
-                  className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
-                >
-                  {officer.user.username}
-                </Link>
-              ) : (
-                officer.user.username
-              ),
+              user:
+                hasViewUsersPermissions && officer.user ? (
+                  <Link
+                    href={`/admin/manage/users/${officer.userId}`}
+                    className={`rounded-md transition-all p-1 px-1.5 ${buttonVariants.default}`}
+                  >
+                    {officer.user.username}
+                  </Link>
+                ) : (
+                  officer.user?.username ?? common("Leo.temporaryUnit")
+                ),
               actions: (
                 <>
                   <Button

@@ -26,10 +26,10 @@ const AlertModal = dynamic(async () => (await import("components/modal/AlertModa
 });
 
 const ManageEmployeeModal = dynamic(
-  async () => (await import("components/business/manage/ManageEmployeeModal")).ManageEmployeeModal,
-  {
-    ssr: false,
-  },
+  async () =>
+    (await import("components/business/manage/tabs/employees-tab/manage-employee-modal"))
+      .ManageEmployeeModal,
+  { ssr: false },
 );
 
 interface Props {
@@ -104,11 +104,7 @@ export default function ManageBusinesses({ business, businessId }: Props) {
           role: employee.role?.value.value ?? common("none"),
           canCreatePosts: common(yesOrNoText(employee.canCreatePosts)),
           employeeOfTheMonth: common(yesOrNoText(employee.employeeOfTheMonth)),
-          whitelistStatus: (
-            <Status state={employee.whitelistStatus}>
-              {employee.whitelistStatus.toLowerCase()}
-            </Status>
-          ),
+          whitelistStatus: <Status>{employee.whitelistStatus}</Status>,
           actions: (
             <>
               <Button

@@ -26,6 +26,7 @@ export const enum ModalIds {
   ManageRoles = "ManageRolesModal",
   PruneUsers = "PruneUsersModal",
   ViewAuditLogData = "ViewAuditLogDataModal",
+  PruneUnits = "PruneUnitsModal",
 
   ManageTowCall = "ManageTowCallModal",
   AssignToTowCall = "AssignToTowCallModal",
@@ -41,6 +42,7 @@ export const enum ModalIds {
   CreateBusinessPost = "CreateBusinessPostModal",
   ManageEmployee = "ManageEmployeeModal",
   AlertDeleteBusiness = "AlertDeleteBusinessModal",
+  ManageBusinessRole = "ManageBusinessRoleModal",
 
   ManageOfficer = "ManageOfficerModal",
   SelectOfficer = "SelectOfficerModal",
@@ -78,6 +80,7 @@ export const enum ModalIds {
   AddAssignedUnit = "AddAssignedUnitModal",
   ImpoundVehicle = "ImpoundVehicleModal",
   AddInvolvedUnit = "AddInvolvedUnitModal",
+  CreateTemporaryUnit = "CreateTemporaryUnit",
 
   SearchMedicalRecord = "SearchMedicalRecordModal",
   CreateMedicalRecord = "CreateMedicalRecordModal",
@@ -136,5 +139,6 @@ export const enum ModalIds {
   AlertDeleteCustomRole = "AlertDeleteCustomRoleModal",
   AlertDeleteCourthousePost = "AlertDeleteCourthousePostModal",
   AlertDisableUser2FA = "AlertDisableUser2FAModal",
-  AlertCancelExpungementRequest = "AlertCancelExpungementRequest",
+  AlertCancelExpungementRequest = "AlertCancelExpungementRequestModal",
+  AlertDeleteBusinessRole = "AlertDeleteBusinessRoleModal",
 }

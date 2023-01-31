@@ -30,7 +30,15 @@ export type AuditLogActions =
   | User2FADelete
   | Calls911Purge
   | CadAPITokenRegenerated
-  | CADFeaturesUpdate;
+  | CADFeaturesUpdate
+  | TemporaryUnitCreate
+  | TemporaryUnitUpdate
+  | UnitsPruned
+  | UserWhitelistStatusChange
+  | BusinessEmployeeUpdate
+  | BusinessEmployeeFire
+  | UpdateDiscordRoles
+  | UpdateDiscordWebhooks;
 
 type BaseAuditLogAction<ActionType extends AuditLogActionType, Previous, New> = {
   type: ActionType;
@@ -123,6 +131,16 @@ export type BusinessUpdate = BaseAuditLogAction<
   Types.Business,
   Types.Business
 >;
+export type BusinessEmployeeUpdate = BaseAuditLogAction<
+  AuditLogActionType.BusinessEmployeeUpdate,
+  Types.Employee,
+  Types.Employee
+>;
+export type BusinessEmployeeFire = BaseAuditLogAction<
+  AuditLogActionType.BusinessEmployeeFire,
+  undefined,
+  Partial<Types.Employee>
+>;
 
 export type CustomFieldCreate = BaseAuditLogAction<
   AuditLogActionType.CustomFieldCreate,
@@ -179,4 +197,30 @@ export type CADFeaturesUpdate = BaseAuditLogAction<
   AuditLogActionType.CADFeaturesUpdate,
   (Types.Feature | Feature)[],
   (Types.Feature | Feature)[]
+>;
+export type TemporaryUnitCreate = BaseAuditLogAction<
+  AuditLogActionType.TemporaryUnitCreate,
+  undefined,
+  Types.Officer | Officer | Types.EmsFdDeputy | EmsFdDeputy
+>;
+export type TemporaryUnitUpdate = BaseAuditLogAction<
+  AuditLogActionType.TemporaryUnitUpdate,
+  Types.Officer | Officer | Types.EmsFdDeputy | EmsFdDeputy,
+  Types.Officer | Officer | Types.EmsFdDeputy | EmsFdDeputy
+>;
+export type UnitsPruned = BaseAuditLogAction<AuditLogActionType.UnitsPruned, undefined, undefined>;
+export type UserWhitelistStatusChange = BaseAuditLogAction<
+  AuditLogActionType.UserWhitelistStatusChange,
+  Partial<Types.User>,
+  Partial<Types.User>
+>;
+export type UpdateDiscordRoles = BaseAuditLogAction<
+  AuditLogActionType.UpdateDiscordRoles,
+  any,
+  any
+>;
+export type UpdateDiscordWebhooks = BaseAuditLogAction<
+  AuditLogActionType.UpdateDiscordWebhooks,
+  any[],
+  any[]
 >;

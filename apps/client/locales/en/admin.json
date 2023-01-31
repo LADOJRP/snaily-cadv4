@@ -89,6 +89,17 @@
     "executor": "Executor",
     "auditLogDiff": "Audit Log Diff",
     "noAuditLogDiff": "There is no diff for this action.",
+    "connectToUser": "Connect To User",
+    "pruneUnits": "Prune Units",
+    "inactiveUnits": "Inactive Units",
+    "findInactiveUnits": "Find inactive units",
+    "departmentTimeLogs": "Department/Unit Time Logs",
+    "startDate": "Start Date (First Seen)",
+    "endDate": "End Date (First Seen)",
+    "departments": "Departments",
+    "units": "Units",
+    "groupBy": "Group By",
+    "pruneUnitsDescription": "This will allow you to prune units that have not been active for a certain amount of time. You can either delete the unit or set a different department.",
     "manageCourthouseDescription": " Here you can manage expungement requests, name change requests and pending warrants.",
     "manageCustomFieldsDescription": "Here you can manage custom fields. These are fields can be added by any officers to citizens in name-search.",
     "manageCustomRolesDescription": "Here you can manage custom roles. These roles can be assigned to users instead of giving permissions one by one.",
@@ -108,7 +119,15 @@
     "caseNumberTemplate": "Case Number Template",
     "caseNumberTemplateInfo": "This is the template for record case numbers. You can use the following variables: {variables}",
     "pairedUnitTemplate": "Paired Unit Template",
-    "pairedUnitTemplateInfo": "This is the template for paired units. You can use the following variables: {variables}"
+    "pairedUnitTemplateInfo": "This is the template for paired units. You can use the following variables: {variables}. Note: this will only apply to newly created citizens.",
+    "driversLicenseTemplate": "Drivers license number template",
+    "driversLicenseTemplateInfo": "This is the template for drivers license numbers. You can use the following variables: {variables}. Note: this will only apply to newly created citizens.",
+    "pilotLicenseTemplate": "Pilot license number template",
+    "pilotLicenseTemplateInfo": "This is the template for pilot license numbers. You can use the following variables: {variables}. Note: this will only apply to newly created citizens.",
+    "weaponLicenseTemplate": "Weapon license number template",
+    "weaponLicenseTemplateInfo": "This is the template for weapon license numbers. You can use the following variables: {variables}. Note: this will only apply to newly created citizens.",
+    "waterLicenseTemplate": "Water license number template",
+    "waterLicenseTemplateInfo": "This is the template for water license numbers. You can use the following variables: {variables}. Note: this will only apply to newly created citizens."
   },
   "DiscordRolesTab": {
     "discordRoles": "Discord Roles",
@@ -164,7 +183,8 @@
     "tempPasswordGiven": "User: <span>{value}</span> has been given a temporary password.",
     "unitsSetOffDuty": "Selected units have been set off-duty: <span>{value}</span>",
     "calls911Purged": "Selected calls have been purged. These calls cannot be recovered and were deleted permanently: <span>{value}</span>. ",
-    "cadAPITokenRegenerated": "The CAD API token has been regenerated."
+    "cadAPITokenRegenerated": "The CAD API token has been regenerated.",
+    "temporaryUnitCreate": "A temporary unit has been created with id: <span>{value}</span>."
   },
   "ApiTokenTab": {
     "apiToken": "API Token",

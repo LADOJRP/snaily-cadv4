@@ -72,12 +72,12 @@ export default function Dmv({ data }: Props) {
               id: vehicle.id,
               citizen: (
                 <span className="capitalize">
-                  {vehicle.citizen.name} {vehicle.citizen.surname}
+                  {vehicle.citizen
+                    ? `${vehicle.citizen.name} ${vehicle.citizen.surname}}`
+                    : common("unknown")}
                 </span>
               ),
-              dmvStatus: (
-                <Status state={vehicle.dmvStatus}>{vehicle.dmvStatus?.toLowerCase()}</Status>
-              ),
+              dmvStatus: <Status>{vehicle.dmvStatus}</Status>,
               createdAt: <FullDate>{vehicle.createdAt}</FullDate>,
               plate: vehicle.plate,
               model: vehicle.model.value.value,

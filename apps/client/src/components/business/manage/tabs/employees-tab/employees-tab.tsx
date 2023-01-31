@@ -4,7 +4,7 @@ import { Button } from "@snailycad/ui";
 import { FullEmployee, useBusinessState } from "state/business-state";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/ModalIds";
-import { ManageEmployeeModal } from "./ManageEmployeeModal";
+import { ManageEmployeeModal } from "./manage-employee-modal";
 import { Employee, EmployeeAsEnum, WhitelistStatus } from "@snailycad/types";
 import { AlertModal } from "components/modal/AlertModal";
 import useFetch from "lib/useFetch";
@@ -92,11 +92,7 @@ export function EmployeesTab() {
           role: employee.role?.value.value ?? common("none"),
           canCreatePosts: common(yesOrNoText(employee.canCreatePosts)),
           employeeOfTheMonth: common(yesOrNoText(employee.employeeOfTheMonth)),
-          whitelistStatus: (
-            <Status state={employee.whitelistStatus}>
-              {employee.whitelistStatus.toLowerCase()}
-            </Status>
-          ),
+          whitelistStatus: <Status>{employee.whitelistStatus}</Status>,
           actions: (
             <>
               <Button

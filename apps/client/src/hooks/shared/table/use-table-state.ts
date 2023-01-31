@@ -1,20 +1,56 @@
 import * as React from "react";
-import type { RowSelectionState, SortingState } from "@tanstack/react-table";
+import type { RowSelectionState, SortingState, VisibilityState } from "@tanstack/react-table";
 import type { useAsyncTable } from "./use-async-table";
+import { useMounted } from "@casper124578/useful";
 
 interface TableStateOptions {
-  search?: {
-    value: string;
-    setValue?(value: string): void;
-  };
   dragDrop?: {
     onListChange(list: any[]): void;
     disabledIndices?: number[];
   };
   pagination?: Partial<ReturnType<typeof useAsyncTable>["pagination"]>;
+  defaultHiddenColumns?: string[];
+  tableId?: string;
 }
 
-export function useTableState({ pagination, search, dragDrop }: TableStateOptions = {}) {
+export function useTableState({
+  pagination,
+  dragDrop,
+  tableId,
+  defaultHiddenColumns,
+}: TableStateOptions = {}) {
+  const isMounted = useMounted();
+
+  const _defaultHiddenColumns = React.useMemo(() => {
+    return defaultHiddenColumns?.reduce((acc, columnId) => {
+      acc[columnId] = false;
+      return acc;
+    }, {} as VisibilityState);
+  }, [defaultHiddenColumns]);
+
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
+    _defaultHiddenColumns || {},
+  );
+
+  React.useEffect(() => {
+    const json = localStorage.getItem(`tableVisibilityState_${tableId}`);
+
+    if (json) {
+      try {
+        const parsed = JSON.parse(json);
+        setColumnVisibility(parsed);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [tableId]);
+
+  React.useEffect(() => {
+    if (tableId) {
+      localStorage.setItem(`tableVisibilityState_${tableId}`, JSON.stringify(columnVisibility));
+    }
+  }, [columnVisibility, tableId]);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
@@ -27,15 +63,17 @@ export function useTableState({ pagination, search, dragDrop }: TableStateOption
   };
 
   return {
+    tableId,
     sorting,
     setSorting,
     rowSelection,
     setRowSelection,
     pagination: _pagination,
     setPagination: pagination?.setPagination,
-    globalFilter: search?.value,
-    setGlobalFilter: search?.setValue,
     dragDrop,
+    columnVisibility: isMounted ? columnVisibility : _defaultHiddenColumns,
+    setColumnVisibility,
+    defaultHiddenColumns,
   };
 }
 

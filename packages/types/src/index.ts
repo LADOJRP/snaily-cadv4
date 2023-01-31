@@ -136,8 +136,8 @@ export type UserSoundSettings = Prisma.UserSoundSettings;
 
 export type BaseCitizen = Prisma.Citizen;
 export type Citizen = Prisma.Citizen & {
-  gender: Prisma.Value;
-  ethnicity: Prisma.Value;
+  gender?: Prisma.Value | null;
+  ethnicity?: Prisma.Value | null;
   driversLicense: Prisma.Value | null;
   weaponLicense: Prisma.Value | null;
   pilotLicense: Prisma.Value | null;
@@ -155,7 +155,7 @@ export type Note = Prisma.Note & {
 };
 
 export type RegisteredVehicle = Prisma.RegisteredVehicle & {
-  citizen: Prisma.Citizen;
+  citizen?: Prisma.Citizen | null;
   model: VehicleValue;
   registrationStatus: Prisma.Value;
   insuranceStatus?: Prisma.Value | null;
@@ -257,7 +257,7 @@ export type Officer = Prisma.Officer & {
   status: StatusValue | null;
   citizen: Pick<Prisma.Citizen, "name" | "surname" | "id">;
   whitelistStatus?: (Prisma.LeoWhitelistStatus & { department: Officer["department"] }) | null;
-  user: User;
+  user?: User | null;
   rank: Prisma.Value | null;
   activeIncident?: Prisma.LeoIncident | null;
   callsigns?: IndividualDivisionCallsign[];
@@ -289,7 +289,7 @@ export type OfficerLog = Prisma.OfficerLog;
 
 export type ImpoundedVehicle = Prisma.ImpoundedVehicle & {
   officer?: Officer | null;
-  vehicle: Prisma.RegisteredVehicle & { citizen: BaseCitizen; model: VehicleValue };
+  vehicle: Prisma.RegisteredVehicle & { citizen?: BaseCitizen | null; model: VehicleValue };
   location: Prisma.Value;
 };
 
@@ -381,9 +381,16 @@ export type EmsFdDeputy = Prisma.EmsFdDeputy & {
   rank: Officer["rank"];
   status: Officer["status"];
   citizen: Officer["citizen"];
-  user: Officer["user"];
+  user?: Officer["user"] | null;
   whitelistStatus?: Officer["whitelistStatus"];
   activeVehicle: EmergencyVehicleValue | null;
+};
+
+export type CombinedEmsFdUnit = Prisma.CombinedEmsFdUnit & {
+  status: EmsFdDeputy["status"];
+  department: EmsFdDeputy["department"];
+  deputies: Omit<EmsFdDeputy, "activeIncident">[];
+  activeVehicle?: EmsFdDeputy["activeVehicle"];
 };
 
 export type TruckLog = Prisma.TruckLog & {
