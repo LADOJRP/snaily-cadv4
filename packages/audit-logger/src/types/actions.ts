@@ -1,6 +1,14 @@
 import type * as Types from "@snailycad/types";
 import type { AuditLogActionType } from "./action-types";
-import type { Citizen, User, Officer, EmsFdDeputy, Feature } from "@prisma/client";
+import type {
+  NameChangeRequest,
+  Citizen,
+  User,
+  Officer,
+  EmsFdDeputy,
+  Feature,
+  Warrant,
+} from "@prisma/client";
 
 export type AuditLogActions =
   | UserBanAction
@@ -38,7 +46,25 @@ export type AuditLogActions =
   | BusinessEmployeeUpdate
   | BusinessEmployeeFire
   | UpdateDiscordRoles
-  | UpdateDiscordWebhooks;
+  | UpdateDiscordWebhooks
+  | CadAPITokenRemoved
+  | CadAPITokenEnabled
+  | CadAutoSetPropertiesUpdate
+  | ExpungementRequestAccepted
+  | ExpungementRequestDeclined
+  | NameChangeRequestAccepted
+  | NameChangeRequestDeclined
+  | ActiveWarrantAccepted
+  | ActiveWarrantDeclined
+  | UnitQualificationSuspended
+  | UnitQualificationAdd
+  | UnitQualificationRemove
+  | UnitDepartmentDeclined
+  | UnitDepartmentAccepted
+  | ValueAdd
+  | ValueUpdate
+  | ValueRemove
+  | ValueBulkRemove;
 
 type BaseAuditLogAction<ActionType extends AuditLogActionType, Previous, New> = {
   type: ActionType;
@@ -223,4 +249,84 @@ export type UpdateDiscordWebhooks = BaseAuditLogAction<
   AuditLogActionType.UpdateDiscordWebhooks,
   any[],
   any[]
+>;
+export type CadAPITokenRemoved = BaseAuditLogAction<
+  AuditLogActionType.CadAPITokenRemoved,
+  undefined,
+  undefined
+>;
+export type CadAPITokenEnabled = BaseAuditLogAction<
+  AuditLogActionType.CadAPITokenEnabled,
+  undefined,
+  undefined
+>;
+export type CadAutoSetPropertiesUpdate = BaseAuditLogAction<
+  AuditLogActionType.CadAutoSetPropertiesUpdate,
+  Types.AutoSetUserProperties | null,
+  Types.AutoSetUserProperties
+>;
+
+export type ExpungementRequestAccepted = BaseAuditLogAction<
+  AuditLogActionType.ExpungementRequestAccepted,
+  undefined,
+  Types.ExpungementRequest
+>;
+export type ExpungementRequestDeclined = BaseAuditLogAction<
+  AuditLogActionType.ExpungementRequestDeclined,
+  undefined,
+  Types.ExpungementRequest
+>;
+export type NameChangeRequestAccepted = BaseAuditLogAction<
+  AuditLogActionType.NameChangeRequestAccepted,
+  undefined,
+  NameChangeRequest
+>;
+export type NameChangeRequestDeclined = BaseAuditLogAction<
+  AuditLogActionType.NameChangeRequestDeclined,
+  undefined,
+  NameChangeRequest
+>;
+export type ActiveWarrantAccepted = BaseAuditLogAction<
+  AuditLogActionType.ActiveWarrantAccepted,
+  undefined,
+  Warrant
+>;
+export type ActiveWarrantDeclined = BaseAuditLogAction<
+  AuditLogActionType.ActiveWarrantDeclined,
+  undefined,
+  Warrant
+>;
+
+export type UnitQualificationSuspended = BaseAuditLogAction<
+  AuditLogActionType.UnitQualificationSuspended,
+  undefined,
+  { unitId: string; qualification: Types.UnitQualification }
+>;
+export type UnitQualificationAdd = BaseAuditLogAction<
+  AuditLogActionType.UnitQualificationAdd,
+  undefined,
+  { unitId: string; qualification: Types.UnitQualification }
+>;
+export type UnitQualificationRemove = BaseAuditLogAction<
+  AuditLogActionType.UnitQualificationRemove,
+  undefined,
+  { unitId: string; qualification: Types.UnitQualification }
+>;
+export type UnitDepartmentDeclined = BaseAuditLogAction<
+  AuditLogActionType.UnitDepartmentDeclined,
+  undefined,
+  Officer | EmsFdDeputy
+>;
+export type UnitDepartmentAccepted = BaseAuditLogAction<
+  AuditLogActionType.UnitDepartmentAccepted,
+  undefined,
+  Officer | EmsFdDeputy
+>;
+export type ValueAdd = BaseAuditLogAction<AuditLogActionType.ValueAdd, undefined, any>;
+export type ValueUpdate = BaseAuditLogAction<AuditLogActionType.ValueUpdate, any, any>;
+export type ValueRemove = BaseAuditLogAction<AuditLogActionType.ValueRemove, undefined, any>;
+export type ValueBulkRemove = BaseAuditLogAction<
+  AuditLogActionType.ValueBulkRemove,
+  undefined,
+  string[]
 >;

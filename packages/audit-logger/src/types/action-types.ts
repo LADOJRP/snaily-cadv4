@@ -23,6 +23,11 @@ export enum AuditLogActionType {
   TemporaryUnitCreate = "TemporaryUnitCreate",
   TemporaryUnitUpdate = "TemporaryUnitUpdate",
   UnitsPruned = "UnitsPruned",
+  UnitQualificationSuspended = "UnitQualificationSuspended",
+  UnitQualificationAdd = "UnitQualificationAdd",
+  UnitQualificationRemove = "UnitQualificationRemove",
+  UnitDepartmentDeclined = "UnitDepartmentDeclined",
+  UnitDepartmentAccepted = "UnitDepartmentAccepted",
 
   BusinessUpdate = "BusinessUpdate",
   BusinessDelete = "BusinessDelete",
@@ -41,6 +46,23 @@ export enum AuditLogActionType {
   MiscCadSettingsUpdate = "MiscCadSettingsUpdate",
   UpdateDiscordRoles = "UpdateDiscordRoles",
   UpdateDiscordWebhooks = "UpdateDiscordWebhooks",
+  CadAPITokenRemoved = "CadAPITokenRemoved",
+  CadAPITokenEnabled = "CadAPITokenEnabled",
+  CadAutoSetPropertiesUpdate = "CadAutoSetPropertiesUpdate",
+
+  ExpungementRequestAccepted = "ExpungementRequestAccepted",
+  ExpungementRequestDeclined = "ExpungementRequestDeclined",
+
+  NameChangeRequestAccepted = "NameChangeRequestAccepted",
+  NameChangeRequestDeclined = "NameChangeRequestDeclined",
+
+  ActiveWarrantAccepted = "ActiveWarrantAccepted",
+  ActiveWarrantDeclined = "ActiveWarrantDeclined",
+
+  ValueAdd = "ValueAdd",
+  ValueUpdate = "ValueUpdate",
+  ValueRemove = "ValueRemove",
+  ValueBulkRemove = "ValueBulkRemove",
 
   Calls911Purge = "Calls911Purge",
 }
