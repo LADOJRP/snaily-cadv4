@@ -4,8 +4,9 @@
 
 | Version     | Supported          |
 | ----------- | ------------------ |
-| >= 1.x.x    | :white_check_mark: |
-| 0.x.x-alpha | Partial            |
+| > 1.30.x    | :white_check_mark: |
+| <= 1.30.x   | Partial            |
+| 0.x.x-alpha | ❌                 |
 
 ## Reporting a Vulnerability
 
