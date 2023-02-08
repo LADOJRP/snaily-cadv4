@@ -16,9 +16,8 @@ import { useMounted } from "@casper124578/useful/hooks/useMounted";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import NProgress from "nprogress";
-import { getErrorMap } from "lib/validation/zod-error-map";
-import { setErrorMap } from "zod";
+
+import type { GetErrorMapOptions } from "lib/validation/zod-error-map";
 
 const ReauthorizeSessionModal = dynamic(
   async () =>
@@ -40,8 +39,14 @@ export default function App({ Component, router, pageProps, ...rest }: AppProps)
   trySetUserTimezone();
 
   React.useEffect(() => {
-    const handleRouteStart = () => NProgress.start();
-    const handleRouteDone = () => NProgress.done();
+    const handleRouteStart = async () => {
+      const NProgress = await import("nprogress");
+      NProgress.start();
+    };
+    const handleRouteDone = async () => {
+      const NProgress = await import("nprogress");
+      NProgress.done();
+    };
 
     router.events.on("routeChangeStart", handleRouteStart);
     router.events.on("routeChangeComplete", handleRouteDone);
@@ -56,12 +61,7 @@ export default function App({ Component, router, pageProps, ...rest }: AppProps)
 
   React.useEffect(() => {
     // set error map for localized form error messages
-    const errorMap = getErrorMap({
-      messages: pageProps.messages,
-      locale,
-    });
-
-    setErrorMap(errorMap);
+    setErrorMap({ messages: pageProps.messages, locale });
   }, [locale, pageProps.messages]);
 
   const cad = pageProps?.cad as cad | null;
@@ -109,6 +109,13 @@ export default function App({ Component, router, pageProps, ...rest }: AppProps)
       </SSRProvider>
     </QueryClientProvider>
   );
+}
+
+async function setErrorMap(options: GetErrorMapOptions) {
+  const getErrorMap = await import("lib/validation/zod-error-map").then((mod) => mod.getErrorMap);
+  const setZodErrorMap = await import("zod").then((mod) => mod.setErrorMap);
+
+  setZodErrorMap(getErrorMap(options));
 }
 
 function trySetUserTimezone() {

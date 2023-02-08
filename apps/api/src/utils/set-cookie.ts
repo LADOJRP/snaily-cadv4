@@ -1,4 +1,3 @@
-import process from "node:process";
 import type { Response } from "@tsed/common";
 import type { CookieSerializeOptions } from "cookie";
 
