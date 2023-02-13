@@ -31,8 +31,11 @@ export function DiscordRolesTab() {
   const [roles, setRoles] = React.useState<Omit<DiscordRole, "discordRolesId">[]>(
     discordRoles.roles ?? [],
   );
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
+
   const { state, execute } = useFetch();
   const common = useTranslations("Common");
+  const tErrors = useTranslations("Errors");
 
   React.useEffect(() => {
     refreshRoles();
@@ -59,10 +62,15 @@ export function DiscordRolesTab() {
   };
 
   async function refreshRoles() {
-    const { json } = await execute<GetCADDiscordRolesData>({
+    const { json, error } = await execute<GetCADDiscordRolesData>({
       path: "/admin/manage/cad-settings/discord/roles",
       method: "GET",
+      noToast: true,
     });
+
+    if (error) {
+      setFetchError(error);
+    }
 
     if (Array.isArray(json)) {
       setRoles(json);
@@ -123,7 +131,13 @@ export function DiscordRolesTab() {
         </p>
       </header>
 
-      <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
+      {fetchError ? (
+        <div role="alert" className="p-2 px-4 my-2 mb-5 text-black rounded-md shadow bg-red-400">
+          <p>{tErrors(fetchError)}</p>
+        </div>
+      ) : null}
+
+      <Formik enableReinitialize onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
         {({ handleChange, errors, values }) => (
           <Form className="mt-5 space-y-5">
             <SettingsFormField

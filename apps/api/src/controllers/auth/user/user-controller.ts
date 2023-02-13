@@ -34,7 +34,9 @@ export class UserController {
     @Context("cad") cad: cad,
     @Context("user") user: User,
   ): Promise<APITypes.GetUserData> {
-    return { ...user, cad };
+    const cadWithoutDiscordRoles = { ...cad, discordRoles: undefined };
+
+    return { ...user, cad: cadWithoutDiscordRoles };
   }
 
   @Patch("/")
@@ -134,9 +136,10 @@ export class UserController {
       value: "",
     });
 
-    await prisma.activeDispatchers.deleteMany({
-      where: { userId },
-    });
+    await Promise.all([
+      prisma.activeDispatchers.deleteMany({ where: { userId } }),
+      prisma.userSession.deleteMany({ where: { userId } }),
+    ]);
 
     const officer = await prisma.officer.findFirst({
       where: {

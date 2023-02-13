@@ -1,32 +1,28 @@
-import { CadFeature, Feature, User } from "@snailycad/types";
+import { Feature, Rank, User } from "@snailycad/types";
 import { DEFAULT_DISABLED_FEATURES } from "hooks/useFeatureEnabled";
 
 interface VerifyUserConnectionsOptions {
   user: User;
-  features: CadFeature[] | undefined | null;
+  features: Record<Feature, boolean> | undefined | null;
 }
 
 export function doesUserHaveAllRequiredConnections(options: VerifyUserConnectionsOptions) {
   const steamId = options.user.steamId;
   const discordId = options.user.discordId;
+  const isOwner = options.user.rank === Rank.OWNER;
 
-  const steamAuthEnabled =
-    options.features?.find((v) => v.feature === Feature.STEAM_OAUTH)?.isEnabled ??
-    DEFAULT_DISABLED_FEATURES.STEAM_OAUTH.isEnabled;
-
-  const discordAuthEnabled =
-    options.features?.find((v) => v.feature === Feature.DISCORD_AUTH)?.isEnabled ??
-    DEFAULT_DISABLED_FEATURES.DISCORD_AUTH.isEnabled;
+  if (isOwner) {
+    // owner does not require to have all connections
+    return true;
+  }
 
   const steamRequired =
-    steamAuthEnabled &&
-    (options.features?.find((v) => v.feature === Feature.FORCE_STEAM_AUTH)?.isEnabled ??
-      DEFAULT_DISABLED_FEATURES.FORCE_STEAM_AUTH.isEnabled);
+    options.features?.[Feature.FORCE_STEAM_AUTH] ??
+    DEFAULT_DISABLED_FEATURES.FORCE_STEAM_AUTH.isEnabled;
 
   const discordRequired =
-    discordAuthEnabled &&
-    (options.features?.find((v) => v.feature === Feature.FORCE_DISCORD_AUTH)?.isEnabled ??
-      DEFAULT_DISABLED_FEATURES.FORCE_DISCORD_AUTH.isEnabled);
+    options.features?.[Feature.FORCE_DISCORD_AUTH] ??
+    DEFAULT_DISABLED_FEATURES.FORCE_DISCORD_AUTH.isEnabled;
 
   const isFeatureEnabled = steamRequired || discordRequired;
 
