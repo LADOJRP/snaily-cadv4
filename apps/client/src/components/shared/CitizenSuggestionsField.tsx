@@ -2,10 +2,11 @@ import { AsyncListSearchField, Item } from "@snailycad/ui";
 import { useFormikContext } from "formik";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { useImageUrl } from "hooks/useImageUrl";
-import Image from "next/image";
+import { PersonFill } from "react-bootstrap-icons";
 import type { NameSearchResult } from "state/search/name-search-state";
+import { ImageWrapper } from "./image-wrapper";
 
-interface Props {
+interface Props<Suggestion extends NameSearchResult> {
   label: string;
   autoFocus?: boolean;
   valueFieldName: string;
@@ -16,9 +17,12 @@ interface Props {
   isDisabled?: boolean;
   isOptional?: boolean;
   makeKey?(item: NameSearchResult): string;
+  onNodeChange?(node: { value: Suggestion } | null | undefined): void;
 }
 
-export function CitizenSuggestionsField<Suggestion extends NameSearchResult>(props: Props) {
+export function CitizenSuggestionsField<Suggestion extends NameSearchResult>(
+  props: Props<Suggestion>,
+) {
   const { setValues, errors, values } = useFormikContext<any>();
   const { SOCIAL_SECURITY_NUMBERS } = useFeatureEnabled();
   const { makeImageUrl } = useImageUrl();
@@ -35,6 +39,7 @@ export function CitizenSuggestionsField<Suggestion extends NameSearchResult>(pro
           typeof localValue !== "undefined" ? { [props.labelFieldName]: localValue } : {};
         const valueField = node ? { [props.valueFieldName]: node.key as string } : {};
 
+        props.onNodeChange?.(node);
         setValues({ ...values, ...labelValue, ...valueField });
       }}
       localValue={values[props.labelFieldName]}
@@ -56,7 +61,7 @@ export function CitizenSuggestionsField<Suggestion extends NameSearchResult>(pro
           <Item key={key} textValue={name}>
             <div className="flex items-center">
               {item.imageId ? (
-                <Image
+                <ImageWrapper
                   alt={`${item.name} ${item.surname}`}
                   className="rounded-md w-[30px] h-[30px] object-cover mr-2"
                   draggable={false}
@@ -64,6 +69,7 @@ export function CitizenSuggestionsField<Suggestion extends NameSearchResult>(pro
                   loading="lazy"
                   width={30}
                   height={30}
+                  fallback={<PersonFill className="w-12 h-12 text-gray-500/60" />}
                 />
               ) : null}
               <p>

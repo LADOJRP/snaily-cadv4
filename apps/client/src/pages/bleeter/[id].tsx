@@ -15,10 +15,10 @@ import { useImageUrl } from "hooks/useImageUrl";
 import { Title } from "components/shared/Title";
 import { dataToSlate, Editor } from "components/editor/editor";
 import type { DeleteBleeterByIdData, GetBleeterByIdData } from "@snailycad/types/api";
-import Image from "next/image";
+import { ImageWrapper } from "components/shared/image-wrapper";
 
 const ManageBleetModal = dynamic(
-  async () => (await import("components/bleeter/ManageBleetModal")).ManageBleetModal,
+  async () => (await import("components/bleeter/manage-bleet-modal")).ManageBleetModal,
   { ssr: false },
 );
 
@@ -80,7 +80,7 @@ export default function BleetPost({ post }: Props) {
 
       <main className="mt-2 bleet-reset">
         {post.imageId ? (
-          <Image
+          <ImageWrapper
             width={1600}
             height={320}
             alt={post.title}
@@ -92,7 +92,7 @@ export default function BleetPost({ post }: Props) {
             loading="lazy"
           />
         ) : null}
-        <Editor isReadonly value={dataToSlate(post)} />
+        <Editor hideBorder isReadonly value={dataToSlate(post)} />
       </main>
 
       <ManageBleetModal post={post} />
