@@ -9,12 +9,11 @@ import {
   isEmpty,
 } from "lib/utils";
 import { useTranslations } from "use-intl";
-import { Button, buttonVariants } from "@snailycad/ui";
+import { Button, buttonVariants, TabsContent } from "@snailycad/ui";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import useFetch from "lib/useFetch";
 import { useRouter } from "next/router";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
-import { TabsContent } from "components/shared/TabList";
 import { Status } from "components/shared/Status";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
@@ -228,7 +227,7 @@ export function AllUnitsTab({ units }: Props) {
               callsign: generateCallsign(unit),
               badgeNumber: unit.badgeNumber,
               department: formatOfficerDepartment(unit) ?? common("none"),
-              departmentStatus: <Status>{departmentStatus}</Status>,
+              departmentStatus: <Status fallback="—">{departmentStatus}</Status>,
               division: formatUnitDivisions(unit),
               rank: <OfficerRank unit={unit} />,
               position: unit.position ?? common("none"),

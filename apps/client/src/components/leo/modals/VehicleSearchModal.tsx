@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Loader, Button, Item, AsyncListSearchField } from "@snailycad/ui";
+import { Loader, Button, Item, AsyncListSearchField, TabList } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
-import { Form, Formik } from "formik";
+import { Form, Formik, useFormikContext } from "formik";
 import useFetch from "lib/useFetch";
 import { ModalIds } from "types/ModalIds";
 import { useTranslations } from "use-intl";
-import { BoloType, CustomFieldCategory } from "@snailycad/types";
+import { BoloType, CustomFieldCategory, RegisteredVehicle } from "@snailycad/types";
 import { useRouter } from "next/router";
 import { useVehicleSearch, VehicleSearchResult } from "state/search/vehicle-search-state";
 import { ManageVehicleFlagsModal } from "./VehicleSearch/ManageVehicleFlagsModal";
@@ -14,7 +14,6 @@ import { ManageVehicleLicensesModal } from "./VehicleSearch/ManageVehicleLicense
 import { ManageCustomFieldsModal } from "./NameSearchModal/ManageCustomFieldsModal";
 import { useNameSearch } from "state/search/name-search-state";
 import { useBolos } from "hooks/realtime/useBolos";
-import { TabList } from "components/shared/TabList";
 import { ResultsTab } from "./VehicleSearch/tabs/ResultsTab";
 import { NotesTab } from "./NameSearchModal/tabs/notes-tab";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
@@ -36,7 +35,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
   );
   const { bolos } = useBolos();
 
-  const { isOpen, openModal, closeModal } = useModal();
+  const { isOpen, openModal, closeModal, getPayload } = useModal();
   const common = useTranslations("Common");
   const vT = useTranslations("Vehicles");
   const cT = useTranslations("Citizen");
@@ -45,6 +44,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
   const router = useRouter();
   const { CREATE_USER_CITIZEN_LEO } = useFeatureEnabled();
 
+  const payloadVehicle = getPayload<Partial<RegisteredVehicle> | null>(ModalIds.VehicleSearch);
   const isLeo = router.pathname === "/officer";
   const showMarkVehicleAsStolenButton = currentResult && isLeo && !currentResult.reportedStolen;
   const showImpoundVehicleButton = currentResult && isLeo && !currentResult.impounded;
@@ -125,8 +125,8 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
   }
 
   const INITIAL_VALUES = {
-    vinNumber: currentResult?.vinNumber ?? "",
-    plateOrVin: currentResult?.vinNumber ?? "",
+    vinNumber: payloadVehicle?.vinNumber ?? currentResult?.vinNumber ?? "",
+    plateOrVin: payloadVehicle?.vinNumber ?? currentResult?.vinNumber ?? "",
   };
 
   return (
@@ -300,6 +300,8 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
                 customFields={currentResult.customFields ?? []}
               />
             ) : null}
+
+            <AutoSubmit />
           </Form>
         )}
       </Formik>
@@ -322,4 +324,19 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
       ) : null}
     </Modal>
   );
+}
+
+function AutoSubmit() {
+  const { getPayload } = useModal();
+  const payloadVehicle = getPayload<Partial<RegisteredVehicle>>(ModalIds.VehicleSearch);
+  const { submitForm } = useFormikContext();
+
+  // if there's a name, auto-submit the form.
+  React.useEffect(() => {
+    if (payloadVehicle) {
+      submitForm();
+    }
+  }, [payloadVehicle, submitForm]);
+
+  return null;
 }

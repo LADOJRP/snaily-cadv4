@@ -5,9 +5,8 @@ import { useAuth } from "context/AuthContext";
 import useFetch from "lib/useFetch";
 import { Toggle } from "components/form/Toggle";
 import { CadFeature, Feature } from "@snailycad/types";
-import { Button, Loader, TextField } from "@snailycad/ui";
+import { Button, Loader, TextField, TabsContent } from "@snailycad/ui";
 import { SettingsFormField } from "components/form/SettingsFormField";
-import { TabsContent } from "components/shared/TabList";
 import { SettingsTabs } from "src/pages/admin/manage/cad-settings";
 import { toastMessage } from "lib/toastMessage";
 import { DEFAULT_DISABLED_FEATURES } from "hooks/useFeatureEnabled";
@@ -25,6 +24,11 @@ const featuresWithURL: string[] = [
   Feature.BUREAU_OF_FIREARMS,
   Feature.COURTHOUSE,
   Feature.COURTHOUSE_POSTS,
+  Feature.TONES,
+  Feature.ACTIVE_WARRANTS,
+  Feature.WARRANT_STATUS_APPROVAL,
+  Feature.ACTIVE_INCIDENTS,
+  Feature.LICENSE_EXAMS,
 ];
 
 export function CADFeaturesTab() {

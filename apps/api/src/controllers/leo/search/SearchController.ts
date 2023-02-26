@@ -41,6 +41,30 @@ export const vehicleSearchInclude = {
   notes: true,
 };
 
+const RecordsInclude = (isRecordApprovalEnabled: boolean) => ({
+  where: isRecordApprovalEnabled ? { status: WhitelistStatus.ACCEPTED } : undefined,
+  include: {
+    officer: {
+      include: leoProperties,
+    },
+    seizedItems: true,
+    courtEntry: { include: { dates: true } },
+    vehicle: { include: { model: { include: { value: true } } } },
+    incident: { include: incidentInclude },
+    call911: { include: callInclude },
+    violations: {
+      include: {
+        penalCode: {
+          include: {
+            warningApplicable: true,
+            warningNotApplicable: true,
+          },
+        },
+      },
+    },
+  },
+});
+
 export const citizenSearchIncludeOrSelect = (
   user: User,
   cad: cad & { features?: Record<Feature, boolean> },
@@ -73,29 +97,7 @@ export const citizenSearchIncludeOrSelect = (
         customFields: { include: { field: true } },
         warrants: { include: { officer: { include: leoProperties } } },
         notes: true,
-        Record: {
-          where: isEnabled ? { status: WhitelistStatus.ACCEPTED } : undefined,
-          include: {
-            officer: {
-              include: leoProperties,
-            },
-            seizedItems: true,
-            courtEntry: { include: { dates: true } },
-            vehicle: { include: { model: { include: { value: true } } } },
-            incident: { include: incidentInclude },
-            call911: { include: callInclude },
-            violations: {
-              include: {
-                penalCode: {
-                  include: {
-                    warningApplicable: true,
-                    warningNotApplicable: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        Record: RecordsInclude(isEnabled),
         dlCategory: { include: { value: true } },
       },
     } as any;
@@ -187,6 +189,51 @@ export class LeoSearchController {
     ) as APITypes.PostLeoSearchCitizenData;
   }
 
+  @Post("/business")
+  @Description("Search businesses by their name")
+  @UsePermissions({
+    fallback: (u) => u.isLeo || u.isDispatch,
+    permissions: [Permissions.Leo, Permissions.Dispatch],
+  })
+  async searchBusinessByName(
+    @BodyParams("name") name: string,
+    @Context("cad") cad: { features?: Record<Feature, boolean> },
+  ): Promise<APITypes.PostLeoSearchBusinessData> {
+    if (!name || name.length < 3) {
+      return [];
+    }
+
+    const isEnabled = isFeatureEnabled({
+      feature: Feature.CITIZEN_RECORD_APPROVAL,
+      features: cad.features,
+      defaultReturn: false,
+    });
+
+    const businesses = await prisma.business.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      include: {
+        Record: RecordsInclude(isEnabled),
+        citizen: true,
+        vehicles: {
+          include: vehicleSearchInclude,
+        },
+        employees: {
+          include: {
+            citizen: true,
+            role: { include: { value: true } },
+          },
+        },
+      },
+    });
+
+    return businesses;
+  }
+
   @Post("/weapon")
   @Description("Search weapons by their serialNumber")
   @UsePermissions({
@@ -232,18 +279,20 @@ export class LeoSearchController {
     permissions: [Permissions.Leo, Permissions.Dispatch],
   })
   async searchVehicle(
-    @BodyParams("plateOrVin", String) plateOrVin: string,
+    @BodyParams("plateOrVin", String) _plateOrVin: string,
     @QueryParams("includeMany", Boolean) includeMany: boolean,
   ): Promise<APITypes.PostLeoSearchVehicleData> {
-    if (!plateOrVin || plateOrVin.length < 3) {
+    const trimmedPlateOrVin = _plateOrVin.trim();
+
+    if (!trimmedPlateOrVin || trimmedPlateOrVin.length < 3) {
       return null;
     }
 
     const data = {
       where: {
         OR: [
-          { plate: { startsWith: plateOrVin.toUpperCase() } },
-          { vinNumber: { startsWith: plateOrVin.toUpperCase() } },
+          { plate: { startsWith: trimmedPlateOrVin.toUpperCase() } },
+          { vinNumber: { startsWith: trimmedPlateOrVin.toUpperCase() } },
         ],
       },
       include: vehicleSearchInclude,

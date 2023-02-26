@@ -64,6 +64,7 @@ export type ApiToken = Prisma.ApiToken & {
 export type ApiTokenLog = Prisma.ApiTokenLog;
 
 export type DiscordRoles = Prisma.DiscordRoles & {
+  adminRoles?: DiscordRole[];
   leoRoles?: DiscordRole[];
   emsFdRoles?: DiscordRole[];
   dispatchRoles?: DiscordRole[];
@@ -348,6 +349,7 @@ type _Record = Prisma.Record & {
   seizedItems?: Prisma.SeizedItem[];
   courtEntry?: CourtEntry | null;
   vehicle?: (Prisma.RegisteredVehicle & { model: VehicleValue }) | null;
+  release?: Partial<RecordRelease> | null;
 };
 export { _Record as Record };
 

@@ -1,7 +1,6 @@
 import { LEO_INCIDENT_SCHEMA } from "@snailycad/schemas";
-import { Loader, Button } from "@snailycad/ui";
+import { Loader, Button, Input } from "@snailycad/ui";
 import { FormField } from "components/form/FormField";
-import { Select } from "components/form/Select";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
 import { Form, Formik } from "formik";
@@ -16,16 +15,17 @@ import { dataToSlate, Editor } from "components/editor/editor";
 import { IncidentEventsArea } from "./IncidentEventsArea";
 import { classNames } from "lib/classNames";
 import { useActiveIncidents } from "hooks/realtime/useActiveIncidents";
-import { LeoIncident, StatusValueType } from "@snailycad/types";
+import { LeoIncident, StatusValueType, ValueType } from "@snailycad/types";
 import { useValues } from "context/ValuesContext";
 import type { PostIncidentsData, PutIncidentByIdData } from "@snailycad/types/api";
 import { AddressPostalSelect } from "components/form/select/PostalSelect";
 import { InvolvedUnitsTable } from "./involved-units/involved-units-table";
+import { ValueSelectField } from "components/form/inputs/value-select-field";
 
 interface Props {
   incident?: LeoIncident | null;
   onClose?(): void;
-  onCreate?(incident: LeoIncident): void;
+  onCreate?(incident: LeoIncident & { openModalAfterCreation?: boolean }): void;
   onUpdate?(oldIncident: LeoIncident, incident: LeoIncident): void;
 }
 
@@ -83,11 +83,11 @@ export function ManageIncidentModal({
 
       if (json && !error) {
         id = json.id;
-        onCreate?.(json);
+        onCreate?.({ ...json, openModalAfterCreation: values.openModalAfterCreation });
       }
     }
 
-    if (id) {
+    if (id && !values.openModalAfterCreation) {
       closeModal(ModalIds.ManageIncident);
     }
   }
@@ -102,6 +102,7 @@ export function ManageIncidentModal({
     arrestsMade: incident?.arrestsMade ?? false,
     isActive: isDispatch ? true : incident?.isActive ?? false,
     situationCodeId: incident?.situationCodeId ?? null,
+    openModalAfterCreation: true,
   };
 
   return (
@@ -160,26 +161,18 @@ export function ManageIncidentModal({
                 </FormField>
 
                 <FormRow flexLike>
-                  <FormField
-                    optional
-                    errorMessage={errors.situationCodeId}
-                    label={t("situationCode")}
+                  <ValueSelectField
                     className="w-full"
-                  >
-                    <Select
-                      disabled={areFieldsDisabled}
-                      isClearable
-                      values={codes10.values
-                        .filter((v) => v.type === StatusValueType.SITUATION_CODE)
-                        .map((v) => ({
-                          label: v.value.value,
-                          value: v.id,
-                        }))}
-                      onChange={handleChange}
-                      name="situationCodeId"
-                      value={values.situationCodeId}
-                    />
-                  </FormField>
+                    isOptional
+                    isDisabled={areFieldsDisabled}
+                    isClearable
+                    label={t("situationCode")}
+                    fieldName="situationCodeId"
+                    values={codes10.values}
+                    valueType={ValueType.CODES_10}
+                    filterFn={(value) => value.type === StatusValueType.SITUATION_CODE}
+                  />
+
                   <AddressPostalSelect postalOnly addressLabel="location" />
                 </FormRow>
 
@@ -188,7 +181,24 @@ export function ManageIncidentModal({
                 ) : null}
               </div>
 
-              <footer className="flex justify-end mt-5">
+              <footer className="flex items-center justify-end mt-5">
+                {isDispatch && !incident ? (
+                  <FormField
+                    className="!mb-0 mr-2"
+                    labelClassName="min-w-fit"
+                    label="Open Manage incident modal after call creation?"
+                    checkbox
+                  >
+                    <Input
+                      checked={values.openModalAfterCreation}
+                      onChange={() =>
+                        setFieldValue("openModalAfterCreation", !values.openModalAfterCreation)
+                      }
+                      type="checkbox"
+                    />
+                  </FormField>
+                ) : null}
+
                 <Button type="reset" onPress={handleClose} variant="cancel">
                   {common("cancel")}
                 </Button>

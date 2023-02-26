@@ -39,6 +39,8 @@ import { getSelectedTableRows } from "hooks/shared/table/use-table-state";
 import { SearchArea } from "components/shared/search/search-area";
 import { useLoadValuesClientSide } from "hooks/useLoadValuesClientSide";
 import { toastMessage } from "lib/toastMessage";
+import Link from "next/link";
+import { BoxArrowUpRight, InfoCircle } from "react-bootstrap-icons";
 
 const ManageValueModal = dynamic(
   async () => (await import("components/admin/values/ManageValueModal")).ManageValueModal,
@@ -61,19 +63,19 @@ interface Props {
   pathValues: GetValuesData[number];
 }
 
+const pathsRecord: Partial<Record<ValueType, ValueType[]>> = {
+  [ValueType.DEPARTMENT]: [ValueType.OFFICER_RANK],
+  [ValueType.DIVISION]: [ValueType.DEPARTMENT],
+  [ValueType.QUALIFICATION]: [ValueType.DEPARTMENT],
+  [ValueType.CODES_10]: [ValueType.DEPARTMENT],
+  [ValueType.OFFICER_RANK]: [ValueType.DEPARTMENT],
+  [ValueType.EMERGENCY_VEHICLE]: [ValueType.DEPARTMENT, ValueType.DIVISION],
+};
+
 export default function ValuePath({ pathValues: { totalCount, type, values: data } }: Props) {
   const router = useRouter();
   const path = (router.query.path as string).toUpperCase().replace("-", "_");
   const routeData = valueRoutes.find((v) => v.type === type);
-
-  const pathsRecord: Partial<Record<ValueType, ValueType[]>> = {
-    [ValueType.DEPARTMENT]: [ValueType.OFFICER_RANK],
-    [ValueType.DIVISION]: [ValueType.DEPARTMENT],
-    [ValueType.QUALIFICATION]: [ValueType.DEPARTMENT],
-    [ValueType.CODES_10]: [ValueType.DEPARTMENT],
-    [ValueType.OFFICER_RANK]: [ValueType.DEPARTMENT],
-    [ValueType.EMERGENCY_VEHICLE]: [ValueType.DEPARTMENT, ValueType.DIVISION],
-  };
 
   useLoadValuesClientSide({
     // @ts-expect-error - this is fine
@@ -95,6 +97,7 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
     totalCount,
   });
 
+  const [allSelected, setAllSelected] = React.useState(false);
   const [tempValue, valueState] = useTemporaryItem(asyncTable.items);
   const { state, execute } = useFetch();
 
@@ -157,7 +160,9 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
   }
 
   async function handleDeleteSelected() {
-    const selectedRows = getSelectedTableRows(data, tableState.rowSelection);
+    const selectedRows = allSelected
+      ? { all: true }
+      : getSelectedTableRows(data, tableState.rowSelection);
 
     const { json } = await execute<DeleteValuesBulkData>({
       path: `/admin/values/${type.toLowerCase()}/bulk-delete`,
@@ -166,8 +171,13 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
     });
 
     if (json) {
-      asyncTable.remove(...selectedRows);
+      if (Array.isArray(selectedRows)) {
+        asyncTable.remove(...selectedRows);
+      } else {
+        asyncTable.setItems([]);
+      }
 
+      setAllSelected(false);
       tableState.setRowSelection({});
       closeModal(ModalIds.AlertDeleteSelectedValues);
 
@@ -199,6 +209,8 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
     );
   }
 
+  const documentationUrl = createValueDocumentationURL(type);
+
   return (
     <AdminLayout
       permissions={{
@@ -213,6 +225,14 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
             {t("totalItems")}:{" "}
             <span className="font-normal">{asyncTable.pagination.totalDataCount}</span>
           </h2>
+          <Link
+            className="mt-1 underline flex items-center gap-1 text-blue-500"
+            target="_blank"
+            href={documentationUrl}
+          >
+            {common("learnMore")}
+            <BoxArrowUpRight className="inline-block" />
+          </Link>
         </div>
 
         <div className="flex gap-2">
@@ -226,13 +246,33 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
         </div>
       </header>
 
-      <div role="alert" className="px-4 py-2 card my-3 !bg-slate-900 !border-slate-500 border-2">
-        <h3 className="font-bold text-xl mb-2">Tip</h3>
-
-        <p>{t("cacheTip")}</p>
-      </div>
-
       <SearchArea search={{ search, setSearch }} asyncTable={asyncTable} totalCount={totalCount} />
+
+      {!allSelected &&
+      getObjLength(tableState.rowSelection) === tableState.pagination.pageSize &&
+      totalCount > tableState.pagination.pageSize ? (
+        <div className="flex items-center gap-2 px-4 py-2 card my-3 !bg-slate-900 !border-slate-500 border-2">
+          <InfoCircle />
+          <span>
+            {getObjLength(tableState.rowSelection)} items selected.{" "}
+            <Button
+              onClick={() => setAllSelected(true)}
+              variant="transparent"
+              className="underline"
+              size="xs"
+            >
+              Select all {totalCount}?
+            </Button>
+          </span>
+        </div>
+      ) : null}
+
+      {allSelected ? (
+        <div className="flex items-center gap-2 px-4 py-2 card my-3 !bg-slate-900 !border-slate-500 border-2">
+          <InfoCircle />
+          <span>{totalCount} items selected. </span>
+        </div>
+      ) : null}
 
       {asyncTable.items.length <= 0 ? (
         <p className="mt-5">There are no values yet for this type.</p>
@@ -301,7 +341,7 @@ export default function ValuePath({ pathValues: { totalCount, type, values: data
       <AlertModal
         id={ModalIds.AlertDeleteSelectedValues}
         description={t("alert_deleteSelectedValues", {
-          length: getObjLength(tableState.rowSelection),
+          length: allSelected ? totalCount : getObjLength(tableState.rowSelection),
         })}
         onDeleteClick={handleDeleteSelected}
         title={typeT("DELETE")}
@@ -348,3 +388,13 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, req, quer
     },
   };
 };
+
+export function createValueDocumentationURL(type: ValueType) {
+  const transformedPaths: Partial<Record<ValueType, string>> = {
+    [ValueType.DRIVERSLICENSE_CATEGORY]: "license-category",
+    [ValueType.BLOOD_GROUP]: "bloodgroup",
+  };
+
+  const path = transformedPaths[type] ?? type.replace("_", "-").toLowerCase();
+  return `https://docs.snailycad.org/docs/features/general/values/${path}`;
+}

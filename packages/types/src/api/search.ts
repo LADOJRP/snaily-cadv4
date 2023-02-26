@@ -80,6 +80,13 @@ export type PostLeoSearchVehicleData =
     })
   | null;
 
+export type PostLeoSearchBusinessData = (Types.Business & {
+  citizen: Types.BaseCitizen;
+  vehicles: Types.RegisteredVehicle[];
+  employees: Types.Employee[];
+  Record: Types.Record[];
+})[];
+
 /**
  * @method POST
  * @route /search/custom-field

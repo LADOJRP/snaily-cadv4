@@ -1,4 +1,4 @@
-import { Button } from "@snailycad/ui";
+import { Button, TabsContent } from "@snailycad/ui";
 import { useTranslations } from "use-intl";
 import { yesOrNoText } from "lib/utils";
 import { classNames } from "lib/classNames";
@@ -7,7 +7,6 @@ import { FullDate } from "components/shared/FullDate";
 import { useVehicleSearch } from "state/search/vehicle-search-state";
 import { Pencil } from "react-bootstrap-icons";
 import { Status } from "components/shared/Status";
-import { TabsContent } from "components/shared/TabList";
 import { TruckLogsTable } from "../TruckLogsTable";
 import { CustomFieldsArea } from "../../CustomFieldsArea";
 import { useVehicleLicenses } from "hooks/locale/useVehicleLicenses";
@@ -132,7 +131,7 @@ export function ResultsTab() {
         {DMV ? (
           <li>
             <Infofield label={vT("dmvStatus")}>
-              <Status>{currentResult.dmvStatus}</Status>
+              <Status fallback="—">{currentResult.dmvStatus}</Status>
             </Infofield>
           </li>
         ) : null}

@@ -179,6 +179,7 @@ model DiscordRoles {
   taxiRoles           DiscordRole[] @relation("taxiRoles")
   adminRole           DiscordRole?  @relation("adminRole", fields: [adminRoleId], references: [id])
   adminRoleId         String?
+  adminRoles          DiscordRole[] @relation("adminRoles")
   whitelistedRoleId   String?
   whitelistedRole     DiscordRole?  @relation("whitelistedRole", fields: [whitelistedRoleId], references: [id])
   courthouseRoles     DiscordRole[] @relation("courthouseRoles")
@@ -218,6 +219,7 @@ model DiscordRole {
   towRolesArr           DiscordRoles[] @relation("towRoles")
   courthouseRoles       DiscordRoles[] @relation("courthouseRoles")
   CustomRole            CustomRole[]
+  adminRolesArr         DiscordRoles[] @relation("adminRoles")
 }
 
 // audit logs
@@ -803,8 +805,10 @@ model Business {
   status        WhitelistStatus?
   businessPosts BusinessPost[]
   employees     Employee[]
+  Record        Record[]
   vehicles      RegisteredVehicle[] @relation("registeredBusinessVehicles")
   roles         EmployeeValue[]     @relation("businessValueBusinessRoles")
+  RecordLog     RecordLog[]
 }
 
 model Employee {
@@ -1223,8 +1227,8 @@ model Record {
   id                   String              @id @default(uuid())
   caseNumber           Int                 @default(autoincrement())
   type                 RecordType
-  citizen              Citizen             @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  citizenId            String
+  citizen              Citizen?            @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizenId            String?
   officer              Officer?            @relation(fields: [officerId], references: [id], onDelete: Cascade)
   officerId            String?
   violations           Violation[]
@@ -1252,6 +1256,8 @@ model Record {
   call911Id            String?
   incident             LeoIncident?        @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   incidentId           String?
+  business             Business?           @relation(fields: [businessId], references: [id])
+  businessId           String?
 }
 
 model RecordRelease {
@@ -1280,15 +1286,17 @@ model Warrant {
 }
 
 model RecordLog {
-  id        String   @id @default(uuid())
-  citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  citizenId String
-  records   Record?  @relation(fields: [recordId], references: [id])
-  recordId  String?
-  warrant   Warrant? @relation(fields: [warrantId], references: [id])
-  warrantId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id         String    @id @default(uuid())
+  citizen    Citizen?  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizenId  String?
+  business   Business? @relation(fields: [businessId], references: [id])
+  businessId String?
+  records    Record?   @relation(fields: [recordId], references: [id])
+  recordId   String?
+  warrant    Warrant?  @relation(fields: [warrantId], references: [id])
+  warrantId  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
 }
 
 // Expungement requests
@@ -1747,4 +1755,6 @@ enum Feature {
   CALL_911_APPROVAL // See #1459
   FORCE_DISCORD_AUTH // See #1502
   FORCE_STEAM_AUTH // See #1502
+  EDITABLE_SSN // See #1544
+  EDITABLE_VIN // See #1544
 }

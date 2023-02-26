@@ -1,11 +1,10 @@
 import * as React from "react";
 import { useTranslations } from "use-intl";
-import { Button, Loader } from "@snailycad/ui";
+import { Button, Loader, TabsContent } from "@snailycad/ui";
 import { Record, RecordType } from "@snailycad/types";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import { FullDate } from "components/shared/FullDate";
-import { TabsContent } from "components/shared/TabList";
 import { makeUnitName } from "lib/utils";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/ModalIds";
@@ -54,8 +53,11 @@ export function ArrestReportsTab({ arrestReports }: Props) {
 
   function handleViewClick(item: GetManagePendingArrestReports["arrestReports"][number]) {
     setTempRecord(item.records!);
+
     openModal(ModalIds.ManageRecord, {
-      citizenName: `${item.citizen.name} ${item.citizen.surname}`,
+      citizenName: `${item.citizen?.name} ${item.citizen?.surname}`,
+      businessId: item.business?.id,
+      businessName: item.business?.name,
     });
   }
 
@@ -93,7 +95,8 @@ export function ArrestReportsTab({ arrestReports }: Props) {
               id: item.id,
               caseNumber: `#${record.caseNumber}`,
               type,
-              citizen: `${item.citizen.name} ${item.citizen.surname}`,
+              citizen: item.citizen ? `${item.citizen.name} ${item.citizen.surname}` : "—",
+              business: item.business ? `${item.business.name}` : "—",
               officer: officer ? `${callsign} ${officerName}` : common("none"),
               postal: record.postal || common("none"),
               notes: (
@@ -109,7 +112,7 @@ export function ArrestReportsTab({ arrestReports }: Props) {
               ),
               violations: <ViolationsColumn violations={record.violations} />,
               createdAt: createdAt ? <FullDate>{createdAt}</FullDate> : "—",
-              status: <Status>{record.status}</Status>,
+              status: <Status fallback="—">{record.status}</Status>,
               actions: (
                 <>
                   <Button size="xs" className="mr-2" onPress={() => handleViewClick(item)}>
@@ -140,6 +143,7 @@ export function ArrestReportsTab({ arrestReports }: Props) {
             { header: common("type"), accessorKey: "type" },
             { header: t("caseNumber"), accessorKey: "caseNumber" },
             { header: t("citizen"), accessorKey: "citizen" },
+            { header: t("business"), accessorKey: "business" },
             { header: t("officer"), accessorKey: "officer" },
             { header: t("postal"), accessorKey: "postal" },
             { header: t("status"), accessorKey: "status" },

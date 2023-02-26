@@ -1,7 +1,6 @@
-import { Button } from "@snailycad/ui";
+import { Button, TabsContent } from "@snailycad/ui";
 import { FormField } from "components/form/FormField";
 import { Select } from "components/form/Select";
-import { TabsContent } from "components/shared/TabList";
 import { useFormikContext } from "formik";
 import { useActiveIncidents } from "hooks/realtime/useActiveIncidents";
 import { useCall911State } from "state/dispatch/call-911-state";
@@ -35,8 +34,6 @@ export function ConnectionsTab({
 }) {
   const t = useTranslations("Leo");
   const { handleChange, errors, values } = useFormikContext<_FormikContext>();
-
-  console.log({ record });
 
   const { calls, setCurrentlySelectedCall } = useCall911State(
     (state) => ({

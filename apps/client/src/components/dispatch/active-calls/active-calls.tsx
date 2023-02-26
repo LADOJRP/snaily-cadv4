@@ -15,7 +15,7 @@ import { FullDate } from "components/shared/FullDate";
 import { classNames } from "lib/classNames";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
-import { Droppable } from "components/shared/dnd/Droppable";
+import { Droppable } from "@snailycad/ui";
 import { DndActions } from "types/DndActions";
 import { AssignedUnitsColumn } from "./assigned-units-column";
 import type { Get911CallsData, Post911CallAssignUnAssign } from "@snailycad/types/api";
@@ -169,7 +169,7 @@ function _ActiveCalls({ initialData }: Props) {
                 caseNumber: `#${call.caseNumber}`,
                 type: call.type?.value.value ?? common("none"),
                 priority: call.type?.priority ?? common("none"),
-                status: <Status>{call.status}</Status>,
+                status: <Status fallback="—">{call.status}</Status>,
                 name: `${call.name} ${call.viaDispatch ? `(${leo("dispatch")})` : ""}`,
                 location: `${call.location} ${call.postal ? `(${call.postal})` : ""}`,
                 description: <CallDescription data={call} />,
