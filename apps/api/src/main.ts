@@ -21,7 +21,8 @@ Sentry.init({
   ],
   tracesSampleRate: 1.0,
   attachStacktrace: true,
-  ignoreErrors: [/can't reach database server at/],
+  ignoreErrors: [/invocation: Can't reach database server at/gi],
+  denyUrls: [/localhost/],
 });
 
 const rootDir = __dirname;
@@ -77,10 +78,12 @@ void bootstrap();
 
 process
   .on("unhandledRejection", (error) => {
+    console.error(error);
     console.error(`uncaughtException captured: ${error}`);
     Sentry.captureException(error);
   })
   .on("uncaughtException", (error) => {
+    console.error(error);
     console.error(`uncaughtException captured: ${error}`);
     Sentry.captureException(error);
   });

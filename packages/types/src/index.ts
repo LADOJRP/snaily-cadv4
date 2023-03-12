@@ -164,6 +164,7 @@ export type RegisteredVehicle = Prisma.RegisteredVehicle & {
   notes?: Prisma.Note[];
   TruckLogs?: TruckLog[];
   Business?: Business[];
+  trimLevels?: Value[];
 };
 
 export type Weapon = Prisma.Weapon & {
@@ -221,7 +222,7 @@ export type DriversLicenseCategoryValue = Prisma.DriversLicenseCategoryValue & {
   value: Value;
 };
 
-export type VehicleValue = Prisma.VehicleValue & { value: Value };
+export type VehicleValue = Prisma.VehicleValue & { trimLevels?: Value[]; value: Value };
 
 export type WeaponValue = Prisma.WeaponValue & { value: Value };
 
@@ -301,6 +302,13 @@ export type LeoIncident = Prisma.LeoIncident & {
   unitsInvolved: IncidentInvolvedUnit[];
 };
 
+export type EmsFdIncident = Prisma.EmsFdIncident & {
+  creator?: EmsFdDeputy | null;
+  situationCode: StatusValue | null;
+  events?: IncidentEvent[];
+  unitsInvolved: IncidentInvolvedUnit[];
+};
+
 export type IncidentEvent = Prisma.IncidentEvent;
 
 export type CombinedLeoUnit = Prisma.CombinedLeoUnit & {
@@ -310,7 +318,9 @@ export type CombinedLeoUnit = Prisma.CombinedLeoUnit & {
   activeVehicle?: Officer["activeVehicle"];
 };
 
-export type ActiveDispatchers = Prisma.ActiveDispatchers;
+export type ActiveDispatchers = Prisma.ActiveDispatchers & {
+  department?: DepartmentValue | null;
+};
 
 export type Call911 = Prisma.Call911 & {
   position: Position | null;

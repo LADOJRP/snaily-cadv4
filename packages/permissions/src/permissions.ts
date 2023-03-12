@@ -25,7 +25,11 @@ export enum Permissions {
   ManageAwardsAndQualifications = "ManageAwardsAndQualifications",
 
   Dispatch = "Dispatch",
+
+  // ems-fd
   EmsFd = "EmsFd",
+  ViewEmsFdIncidents = "ViewEmsFdIncidents",
+  ManageEmsFdIncidents = "ManageEmsFdIncidents",
 
   //  citizen related
   ViewTaxiCalls = "ViewTaxiCalls",
@@ -96,6 +100,7 @@ export enum Permissions {
   ManageValueAddress = "ManageValueAddress",
   ManageValueEmergencyVehicle = "ManageValueEmergencyVehicle",
   ManageValueAddressFlag = "ManageValueAddressFlag",
+  ManageValueVehicleTrimLevel = "ManageValueVehicleTrimLevel",
 
   // other
   UsePersonalApiToken = "UsePersonalApiToken",
