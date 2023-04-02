@@ -55,13 +55,13 @@ export function RecordsTab({
 
   function handleRecordUpdate(data: Record) {
     if (!currentResult || currentResult.isConfidential) return;
+    const isNewRecord = !currentResult.Record.some((v) => v.id === data.id);
 
     setCurrentResult?.({
       ...currentResult,
-      Record: currentResult.Record.map((v) => {
-        if (v.id === data.id) return data;
-        return v;
-      }),
+      Record: isNewRecord
+        ? [...currentResult.Record, data]
+        : currentResult.Record.map((v) => (v.id === data.id ? data : v)),
     });
   }
 

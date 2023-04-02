@@ -18,7 +18,7 @@ interface Options<T> {
   search?: string;
 
   disabled?: boolean;
-  totalCount: number;
+  totalCount?: number;
   initialData?: T[];
   scrollToTopOnDataChange?: boolean;
   fetchOptions: FetchOptions;
@@ -28,20 +28,24 @@ interface Options<T> {
 export function useAsyncTable<T>(options: Options<T>) {
   const scrollToTopOnDataChange = options.scrollToTopOnDataChange ?? true;
 
-  const list = useList<T>({ getKey: options.getKey, initialData: options.initialData ?? [] });
+  const list = useList<T>({
+    getKey: options.getKey,
+    initialData: options.initialData ?? [],
+    totalCount: options.totalCount ?? 0,
+  });
   const { state: loadingState, execute } = useFetch();
 
   const [debouncedSearch, setDebouncedSearch] = React.useState(options.search);
   const [filters, setFilters] = React.useState<Record<string, any> | null>(null);
-  const [totalDataCount, setTotalCount] = React.useState(options.totalCount);
   const [paginationOptions, setPagination] = React.useState({
     pageSize: options.fetchOptions.pageSize ?? 35,
     pageIndex: options.fetchOptions.pageIndex ?? 0,
   });
 
-  useQuery({
+  const { isInitialLoading, error } = useQuery({
+    retry: false,
     enabled: !options.disabled,
-    initialData: options.initialData ?? [],
+    initialData: options.initialData ?? undefined,
     queryFn: fetchData,
     queryKey: [paginationOptions.pageIndex, debouncedSearch, filters, options.fetchOptions.path],
     refetchOnMount: options.fetchOptions.refetchOnMount,
@@ -49,7 +53,6 @@ export function useAsyncTable<T>(options: Options<T>) {
   });
 
   React.useEffect(() => {
-    setTotalCount(options.totalCount);
     setPagination({
       pageSize: options.fetchOptions.pageSize ?? 35,
       pageIndex: options.fetchOptions.pageIndex ?? 0,
@@ -76,20 +79,26 @@ export function useAsyncTable<T>(options: Options<T>) {
       }
     }
 
-    const { json } = await execute({ path, params: Object.fromEntries(searchParams) });
-    const toReturnData = options.fetchOptions.onResponse(json);
-    setTotalCount(toReturnData.totalCount);
+    const { json, error } = await execute({
+      noToast: true,
+      path,
+      params: Object.fromEntries(searchParams),
+      signal: context.signal,
+    });
 
-    if (scrollToTopOnDataChange) {
-      window.scrollTo({ behavior: "smooth", top: 0 });
+    if (error) {
+      if (error === "Request aborted") return list.items;
+      throw new Error(error);
     }
+
+    const toReturnData = options.fetchOptions.onResponse(json);
 
     if (scrollToTopOnDataChange) {
       window.scrollTo({ behavior: "smooth", top: 0 });
     }
 
     if (Array.isArray(toReturnData.data)) {
-      return list.setItems(toReturnData.data);
+      return list.setItems(toReturnData.data, toReturnData.totalCount);
     }
 
     return list.setItems([]);
@@ -100,14 +109,17 @@ export function useAsyncTable<T>(options: Options<T>) {
   const pagination = {
     /** indicates whether data comes from the useAsyncTable hook. */
     __ASYNC_TABLE__: true,
-    totalDataCount,
+    totalDataCount: list.totalCount,
     isLoading: loadingState === "loading",
     setPagination,
+    error: error as Error,
     ...paginationOptions,
   } as const;
 
   return {
     ...list,
+    noItemsAvailable: !isInitialLoading && !error && list.items.length <= 0,
+    isInitialLoading,
     filters,
     setFilters,
     isLoading: loadingState === "loading",

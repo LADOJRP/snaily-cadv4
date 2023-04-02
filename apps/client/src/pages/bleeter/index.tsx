@@ -34,6 +34,7 @@ export default function Bleeter({ posts }: Props) {
 
   const list = useList({
     initialData: posts,
+    totalCount: posts.length,
   });
 
   return (
@@ -69,6 +70,7 @@ export default function Bleeter({ posts }: Props) {
                 <div>
                   {post.imageId ? (
                     <ImageWrapper
+                      quality={80}
                       width={1600}
                       height={320}
                       alt={post.title}

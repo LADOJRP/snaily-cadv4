@@ -32,6 +32,7 @@ const NO_LOADING_ROUTES = [
   "/auth/pending",
   "/auth/temp-password",
   "/auth/connections",
+  "/auth/account-password",
 ];
 
 export function AuthProvider({ initialData, children }: ProviderProps) {
@@ -64,6 +65,14 @@ export function AuthProvider({ initialData, children }: ProviderProps) {
     if (!user && !NO_LOADING_ROUTES.includes(router.pathname)) {
       const from = router.asPath;
       router.push(`/auth/login?from=${from}`);
+    }
+
+    const isForceAccountPassword =
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      (cad?.features?.FORCE_ACCOUNT_PASSWORD ?? false) && !user?.hasPassword;
+    if (user && !NO_LOADING_ROUTES.includes(router.pathname) && isForceAccountPassword) {
+      const from = router.asPath;
+      router.push(`/auth/account-password?from=${from}`);
     }
 
     if (

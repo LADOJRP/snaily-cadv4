@@ -1,7 +1,7 @@
 {
   "name": "@snailycad/ui",
   "type": "module",
-  "version": "1.51.0",
+  "version": "1.53.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,13 +14,13 @@
     "typecheck": "yarn tsc --noEmit"
   },
   "devDependencies": {
-    "@snailycad/types": "1.51.0",
-    "rimraf": "^4.3.1",
-    "tailwindcss": "^3.2.7",
+    "@snailycad/types": "1.53.0",
+    "rimraf": "^4.4.1",
+    "tailwindcss": "^3.3.1",
     "tslib": "^2.5.0",
-    "tsup": "^6.6.3",
-    "typescript": "^4.9.5",
-    "vite": "^4.1.4"
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.3",
+    "vite": "^4.2.1"
   },
   "tsup": {
     "entry": [
@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.1.0",
-    "@radix-ui/react-tabs": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.3",
     "@react-aria/breadcrumbs": "^3.5.0",
     "@react-aria/button": "^3.7.0",
     "@react-aria/calendar": "^3.1.0",
@@ -102,15 +102,15 @@
     "@react-types/overlays": "^3.7.0",
     "@react-types/select": "^3.7.0",
     "@react-types/shared": "^3.17.0",
-    "@snailycad/utils": "1.51.0",
+    "@snailycad/utils": "1.53.0",
     "react-bootstrap-icons": "^1.10.2",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
-    "tailwind-merge": "^1.10.0"
+    "tailwind-merge": "^1.11.0"
   },
   "peerDependencies": {
     "date-fns": ">=2.29.3",
-    "next-intl": ">=2.11.0",
+    "next-intl": ">=2.12.0",
     "react": ">=18.2.0",
     "react-dom": ">=18.2.0"
   },

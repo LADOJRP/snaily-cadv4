@@ -6,7 +6,10 @@ import type * as Types from "../index.js";
  * @method GET
  * @route /court-entries
  */
-export type GetCourtEntriesData = Types.CourtEntry[];
+export interface GetCourtEntriesData {
+  courtEntries: Types.CourtEntry[];
+  totalCount: number;
+}
 
 /**
  * @method POST
@@ -30,7 +33,10 @@ export type DeleteCourtEntriesData = boolean;
  * @method GET
  * @route /courthouse-posts
  */
-export type GetCourthousePostsData = Types.CourthousePost[];
+export interface GetCourthousePostsData {
+  courthousePosts: Types.CourthousePost[];
+  totalCount: number;
+}
 
 /**
  * @method POST
@@ -93,22 +99,25 @@ export type PostNameChangeRequestsData = GetNameChangeRequestsData[number];
  * @method GET
  * @route /records/active-warrants
  */
-export type GetActiveWarrantsData = (Prisma.Warrant & {
-  citizen: Types.BaseCitizen;
-  assignedOfficers: Types.AssignedWarrantOfficer[];
-})[];
+export interface GetActiveWarrantsData {
+  activeWarrants: (Prisma.Warrant & {
+    citizen: Types.BaseCitizen;
+    assignedOfficers: Types.AssignedWarrantOfficer[];
+  })[];
+  totalCount: number;
+}
 
 /**
  * @method POST
  * @route /records/create-warrant
  */
-export type PostCreateWarrantData = GetActiveWarrantsData[number];
+export type PostCreateWarrantData = GetActiveWarrantsData["activeWarrants"][number];
 
 /**
  * @method PUT
  * @route /records/warrant/:id
  */
-export type PutWarrantsData = GetActiveWarrantsData[number];
+export type PutWarrantsData = GetActiveWarrantsData["activeWarrants"][number];
 
 /**
  * @method POST

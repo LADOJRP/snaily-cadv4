@@ -1,7 +1,6 @@
-import * as React from "react";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { Warrant, WhitelistStatus } from "@snailycad/types";
-import { Table, useTableState } from "components/shared/Table";
+import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { useTranslations } from "next-intl";
 import { Button } from "@snailycad/ui";
 import { FullDate } from "components/shared/FullDate";
@@ -14,21 +13,29 @@ import { CreateWarrantModal } from "components/leo/modals/CreateWarrantModal";
 import { CallDescription } from "components/dispatch/active-calls/CallDescription";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import { makeUnitName } from "lib/utils";
+import { useInvalidateQuery } from "hooks/use-invalidate-query";
 
-interface Props {
-  warrants: GetManagePendingWarrants;
-}
+type PendingWarrant = GetManagePendingWarrants["pendingWarrants"][number];
 
-export function PendingWarrantsTab({ warrants: data }: Props) {
-  const [warrants, setWarrants] = React.useState(data);
-  const [tempWarrant, warrantState] = useTemporaryItem(warrants);
-
+export function PendingWarrantsTab() {
   const { openModal } = useModal();
   const t = useTranslations();
   const common = useTranslations("Common");
   const tableState = useTableState();
   const { state, execute } = useFetch();
   const { generateCallsign } = useGenerateCallsign();
+  const { invalidateQuery } = useInvalidateQuery(["admin", "notifications"]);
+
+  const asyncTable = useAsyncTable<PendingWarrant>({
+    fetchOptions: {
+      onResponse: (data: GetManagePendingWarrants) => ({
+        data: data.pendingWarrants,
+        totalCount: data.totalCount,
+      }),
+      path: "/admin/manage/pending-warrants",
+    },
+  });
+  const [tempWarrant, warrantState] = useTemporaryItem(asyncTable.items);
 
   function handleViewWarrant(warrant: Warrant) {
     warrantState.setTempId(warrant.id);
@@ -43,7 +50,9 @@ export function PendingWarrantsTab({ warrants: data }: Props) {
     });
 
     if (typeof json === "boolean" && json) {
-      setWarrants((p) => p.filter((v) => v.id !== id));
+      invalidateQuery();
+
+      asyncTable.remove(id);
       warrantState.setTempId(null);
     }
   }
@@ -52,19 +61,20 @@ export function PendingWarrantsTab({ warrants: data }: Props) {
     <TabsContent value="pending-warrants">
       <h3 className="font-semibold text-xl">{t("Management.MANAGE_PENDING_WARRANTS")}</h3>
 
-      {warrants.length <= 0 ? (
+      {asyncTable.noItemsAvailable ? (
         <p className="my-2">{t("Courthouse.noNameChangeRequests")}</p>
       ) : (
         <Table
+          isLoading={asyncTable.isInitialLoading}
           tableState={tableState}
-          data={warrants.map((warrant) => {
+          data={asyncTable.items.map((warrant) => {
             const nameAndCallsign = `${generateCallsign(warrant.officer)} ${makeUnitName(
               warrant.officer,
             )}`;
 
             return {
               id: warrant.id,
-              description: <CallDescription data={warrant} />,
+              description: <CallDescription nonCard data={warrant} />,
               officer: nameAndCallsign,
               createdAt: <FullDate>{warrant.createdAt}</FullDate>,
               actions: (

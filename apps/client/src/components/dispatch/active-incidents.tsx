@@ -1,14 +1,13 @@
 import * as React from "react";
 import { useTranslations } from "use-intl";
 import { Button, Droppable } from "@snailycad/ui";
-import compareDesc from "date-fns/compareDesc";
 import { useActiveDispatchers } from "hooks/realtime/use-active-dispatchers";
 import { Table, useTableState } from "components/shared/Table";
 import { yesOrNoText } from "lib/utils";
 import { FullDate } from "components/shared/FullDate";
 import { ModalIds } from "types/ModalIds";
 import { useModal } from "state/modalState";
-import { useActiveIncidents } from "hooks/realtime/useActiveIncidents";
+import { useActiveIncidentsTable } from "hooks/realtime/use-active-incidents-table";
 import { AlertModal } from "components/modal/AlertModal";
 import useFetch from "lib/useFetch";
 import type { LeoIncident } from "@snailycad/types";
@@ -20,6 +19,8 @@ import type { PostIncidentsData, PutIncidentByIdData } from "@snailycad/types/ap
 import { CallDescription } from "./active-calls/CallDescription";
 
 import dynamic from "next/dynamic";
+import { useActiveIncidents } from "hooks/realtime/useActiveIncidents";
+import compareDesc from "date-fns/compareDesc";
 
 const ManageIncidentModal = dynamic(
   async () => (await import("components/leo/incidents/manage-incident-modal")).ManageIncidentModal,
@@ -36,10 +37,16 @@ export function ActiveIncidents() {
   const common = useTranslations("Common");
   const { hasActiveDispatchers } = useActiveDispatchers();
   const { openModal, closeModal } = useModal();
-  const { activeIncidents, setActiveIncidents } = useActiveIncidents();
   const { state, execute } = useFetch();
   const draggingUnit = useDispatchState((state) => state.draggingUnit);
-  const tableState = useTableState({ tableId: "active-incidents" });
+
+  const asyncTable = useActiveIncidentsTable();
+  const { activeIncidents } = useActiveIncidents();
+
+  const tableState = useTableState({
+    tableId: "active-incidents",
+    pagination: asyncTable.pagination,
+  });
 
   async function handleAssignUnassignToIncident(
     incident: LeoIncident,
@@ -53,13 +60,7 @@ export function ActiveIncidents() {
     });
 
     if (json.id) {
-      const callsMapped = activeIncidents.map((incident) => {
-        if (incident.id === json.id) {
-          return { ...incident, ...json };
-        }
-        return incident;
-      });
-      setActiveIncidents(callsMapped);
+      asyncTable.update(json.id, json);
     }
   }
 
@@ -77,7 +78,8 @@ export function ActiveIncidents() {
     });
 
     if (json.id) {
-      setActiveIncidents(activeIncidents.filter((v) => v.id !== tempIncident.id));
+      asyncTable.remove(json.id);
+
       closeModal(ModalIds.AlertDeleteIncident);
       setTempIncident(undefined);
     }
@@ -115,10 +117,11 @@ export function ActiveIncidents() {
         </div>
       </header>
 
-      {activeIncidents.length <= 0 ? (
+      {asyncTable.noItemsAvailable ? (
         <p className="px-4 py-2 text-neutral-700 dark:text-gray-300">{t("noActiveIncidents")}</p>
       ) : (
         <Table
+          isLoading={asyncTable.isInitialLoading}
           tableState={tableState}
           features={{ isWithinCardOrModal: true }}
           containerProps={{ className: "mb-3 mx-4" }}
@@ -140,7 +143,6 @@ export function ActiveIncidents() {
                 arrestsMade: common(yesOrNoText(incident.arrestsMade)),
                 situationCode: incident.situationCode?.value.value ?? common("none"),
                 description: <CallDescription data={incident} />,
-
                 actions: (
                   <>
                     <Button
@@ -201,7 +203,7 @@ export function ActiveIncidents() {
         <ManageIncidentModal
           type="leo"
           onCreate={(incident) => {
-            setActiveIncidents([incident as LeoIncident, ...activeIncidents]);
+            asyncTable.prepend(incident as LeoIncident);
 
             if (incident.openModalAfterCreation) {
               setTempIncident(incident as LeoIncident);
@@ -212,16 +214,9 @@ export function ActiveIncidents() {
           }}
           onUpdate={(old, incident) => {
             if (incident.isActive) {
-              setActiveIncidents(
-                activeIncidents.map((v) => {
-                  if (v.id === old.id) {
-                    return { ...(v as LeoIncident), ...(incident as LeoIncident) };
-                  }
-                  return v as LeoIncident;
-                }),
-              );
+              asyncTable.update(old.id, incident as LeoIncident);
             } else {
-              setActiveIncidents(activeIncidents.filter((v) => v.id !== incident.id));
+              asyncTable.remove(incident.id);
             }
           }}
           onClose={() => setTempIncident(undefined)}

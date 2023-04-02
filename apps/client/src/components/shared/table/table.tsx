@@ -9,10 +9,10 @@ import {
   Row,
   AccessorKeyColumnDef,
 } from "@tanstack/react-table";
-import { TableRow } from "./TableRow";
-import { TablePagination } from "./TablePagination";
+import { TableRow } from "./table-row";
+import { TablePagination } from "./table-pagination";
 import { classNames } from "lib/classNames";
-import { TableHeader } from "./TableHeader";
+import { TableHeader } from "./table-header";
 import { useAuth } from "context/AuthContext";
 import { TableActionsAlignment } from "@snailycad/types";
 import { orderColumnsByTableActionsAlignment } from "lib/table/orderColumnsByTableActionsAlignment";
@@ -20,7 +20,9 @@ import type { useTableState } from "hooks/shared/table/use-table-state";
 import { ReactSortable } from "react-sortablejs";
 import { useMounted } from "@casper124578/useful";
 import { createTableDragDropColumn } from "lib/table/create-table-dnd-column";
-import { createTableCheckboxColumn } from "./IndeterminateCheckbox";
+import { createTableCheckboxColumn } from "./indeterminate-checkbox";
+import { TableSkeletonLoader } from "./skeleton-loader";
+import { ExclamationCircleFill } from "react-bootstrap-icons";
 
 export const DRAGGABLE_TABLE_HANDLE = "__TABLE_HANDLE__";
 export type _RowData = RowData & {
@@ -31,6 +33,7 @@ interface Props<TData extends _RowData> {
   data: TData[];
   columns: (AccessorKeyColumnDef<TData, keyof TData> | null)[];
 
+  isLoading?: boolean;
   tableState: ReturnType<typeof useTableState>;
   containerProps?: { style?: React.CSSProperties; className?: string };
 
@@ -47,6 +50,7 @@ export function Table<TData extends _RowData>({
   containerProps,
   features,
   tableState,
+  isLoading,
 }: Props<TData>) {
   const isMounted = useMounted();
   const { user } = useAuth();
@@ -130,44 +134,62 @@ export function Table<TData extends _RowData>({
         containerProps?.className,
       )}
     >
-      <table className="w-full whitespace-nowrap max-h-64">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHeader<TData>
-                    tableId={tableState.tableId}
-                    tableLeafs={tableLeafs}
-                    key={header.id}
-                    header={header as Header<TData, any>}
-                    tableActionsAlignment={tableActionsAlignment}
-                  />
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-        <ReactSortable
-          animation={200}
-          className="mt-5"
-          list={table.getRowModel().rows}
-          tag="tbody"
-          disabled={!features?.dragAndDrop}
-          setList={handleMove}
-          handle={`.${DRAGGABLE_TABLE_HANDLE}`}
+      {isLoading ? (
+        <TableSkeletonLoader
+          isWithinCardOrModal={features?.isWithinCardOrModal}
+          tableHeaders={table.getFlatHeaders()}
+        />
+      ) : tableState.pagination.error ? (
+        <div
+          role="alert"
+          className="flex flex-col p-2 px-4 text-black rounded-md shadow bg-red-400 border border-red-500/80"
         >
-          {visibleTableRows.map((row, idx) => (
-            <TableRow<TData>
-              key={row.id}
-              row={row}
-              idx={idx}
-              tableActionsAlignment={tableActionsAlignment}
-              stickyBgColor={stickyBgColor}
-            />
-          ))}
-        </ReactSortable>
-      </table>
+          <header className="flex items-center gap-2 mb-2">
+            <ExclamationCircleFill />
+            <h5 className="font-semibold text-lg">An unexpected error occurred</h5>
+          </header>
+          <p>{tableState.pagination.error?.message || "Unable to fetch this route"}</p>
+        </div>
+      ) : (
+        <table className="w-full whitespace-nowrap max-h-64">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHeader<TData>
+                      tableId={tableState.tableId}
+                      tableLeafs={tableLeafs}
+                      key={header.id}
+                      header={header as Header<TData, any>}
+                      tableActionsAlignment={tableActionsAlignment}
+                    />
+                  );
+                })}
+              </tr>
+            ))}
+          </thead>
+          <ReactSortable
+            animation={200}
+            className="mt-5"
+            list={table.getRowModel().rows}
+            tag="tbody"
+            disabled={!features?.dragAndDrop}
+            setList={handleMove}
+            handle={`.${DRAGGABLE_TABLE_HANDLE}`}
+          >
+            {visibleTableRows.map((row, idx) => (
+              <TableRow<TData>
+                key={row.id}
+                row={row}
+                idx={idx}
+                tableActionsAlignment={tableActionsAlignment}
+                stickyBgColor={stickyBgColor}
+              />
+            ))}
+          </ReactSortable>
+        </table>
+      )}
 
       {dataLength <= visibleTableRows.length ? null : (
         <TablePagination isLoading={tableState.pagination.isLoading} table={table} />

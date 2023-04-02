@@ -184,8 +184,8 @@ export function AllUnitsTab({ units }: Props) {
         </FormField>
       </SearchArea>
 
-      {asyncTable.items.length <= 0 ? (
-        <p className="mt-2">{t("Management.noUnits")}</p>
+      {asyncTable.noItemsAvailable ? (
+        <p>{t("Management.noUnits")}</p>
       ) : (
         <Table
           tableState={tableState}
@@ -200,6 +200,7 @@ export function AllUnitsTab({ units }: Props) {
                 <div className="min-w-[144px]">
                   {unit.imageId ? (
                     <ImageWrapper
+                      quality={70}
                       className="rounded-md w-[30px] h-[30px] object-cover mr-2 inline-block"
                       draggable={false}
                       src={makeImageUrl("units", unit.imageId)!}

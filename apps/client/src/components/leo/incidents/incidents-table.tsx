@@ -47,7 +47,7 @@ export function IncidentsTable<T extends EmsFdIncident | LeoIncident>(
         data: json.incidents,
         totalCount: json.totalCount,
       }),
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       path: props.type === "ems-fd" ? "/ems-fd/incidents" : "/incidents",
     },
   });
@@ -67,7 +67,7 @@ export function IncidentsTable<T extends EmsFdIncident | LeoIncident>(
 
     const { json } = await execute<DeleteIncidentByIdData>({
       path:
-        // eslint-disable-next-line
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         props.type === "ems-fd"
           ? `/ems-fd/incidents/${tempIncident.id}`
           : `/incidents/${tempIncident.id}`,
@@ -102,7 +102,7 @@ export function IncidentsTable<T extends EmsFdIncident | LeoIncident>(
 
   return (
     <>
-      {asyncTable.items.length <= 0 ? (
+      {asyncTable.noItemsAvailable ? (
         <p className="mt-5">{t("noIncidents")}</p>
       ) : (
         <Table
@@ -122,6 +122,7 @@ export function IncidentsTable<T extends EmsFdIncident | LeoIncident>(
                 >
                   {incident.creator?.imageId ? (
                     <ImageWrapper
+                      quality={70}
                       className="rounded-md w-[30px] h-[30px] object-cover mr-2"
                       draggable={false}
                       src={makeImageUrl("units", incident.creator.imageId)!}

@@ -95,10 +95,14 @@ export type DeleteImportWeaponsData = boolean;
  * @method GET
  * @route /admin/manage/businesses
  */
-export type GetManageBusinessesData = (Prisma.Business & {
-  citizen: { id: string; name: string; surname: string };
-  user: Types.User;
-})[];
+export interface GetManageBusinessesData {
+  totalCount: number;
+  businesses: (Prisma.Business & {
+    /** owners */
+    employees: (Prisma.Employee & { citizen: Types.BaseCitizen })[];
+    user: Types.User;
+  })[];
+}
 
 /**
  * @method GET
@@ -116,7 +120,7 @@ export interface GetManageBusinessByIdEmployeesData {
  * @method PUT
  * @route /admin/manage/businesses
  */
-export type PutManageBusinessesData = GetManageBusinessesData[number];
+export type PutManageBusinessesData = GetManageBusinessesData["businesses"][number];
 
 /**
  * @method DELETE
@@ -227,13 +231,16 @@ export type DeleteManageCitizenByIdData = boolean;
  * @method GET
  * @route /admin/manage/custom-fields
  */
-export type GetManageCustomFieldsData = Prisma.CustomField[];
+export interface GetManageCustomFieldsData {
+  customFields: Prisma.CustomField[];
+  totalCount: number;
+}
 
 /**
  * @method POST
  * @route /admin/manage/custom-fields
  */
-export type POstManageCustomFieldsData = Prisma.CustomField;
+export type PostManageCustomFieldsData = Prisma.CustomField;
 
 /**
  * @method PUT
@@ -395,13 +402,16 @@ export type DeleteManageUserRevokeApiTokenData = boolean;
  * @method Get
  * @route /admin/manage/expungement-requests
  */
-export type GetManageExpungementRequests = (Prisma.ExpungementRequest & {
-  citizen: Prisma.Citizen;
-  warrants: Prisma.Warrant[];
-  records: (Prisma.Record & {
-    violations: (Prisma.Violation & { penalCode: Prisma.PenalCode })[];
+export interface GetManageExpungementRequests {
+  pendingExpungementRequests: (Prisma.ExpungementRequest & {
+    citizen: Prisma.Citizen;
+    warrants: Prisma.Warrant[];
+    records: (Prisma.Record & {
+      violations: (Prisma.Violation & { penalCode: Prisma.PenalCode })[];
+    })[];
   })[];
-})[];
+  totalCount: number;
+}
 
 /**
  * @method Put
@@ -413,9 +423,12 @@ export type PutManageExpungementRequests = Prisma.ExpungementRequest;
  * @method Get
  * @route /admin/manage/name-change-requests
  */
-export type GetManageNameChangeRequests = (Prisma.NameChangeRequest & {
-  citizen: Prisma.Citizen;
-})[];
+export interface GetManageNameChangeRequests {
+  pendingNameChangeRequests: (Prisma.NameChangeRequest & {
+    citizen: Prisma.Citizen;
+  })[];
+  totalCount: number;
+}
 
 /**
  * @method Put
@@ -427,11 +440,14 @@ export type PutManageNameChangeRequests = Prisma.NameChangeRequest;
  * @method Get
  * @route /admin/manage/pending-warrants
  */
-export type GetManagePendingWarrants = (Prisma.Warrant & {
-  citizen: Prisma.Citizen;
-  assignedOfficers: Types.AssignedWarrantOfficer[];
-  officer: Types.Officer;
-})[];
+export interface GetManagePendingWarrants {
+  pendingWarrants: (Prisma.Warrant & {
+    citizen: Prisma.Citizen;
+    assignedOfficers: Types.AssignedWarrantOfficer[];
+    officer: Types.Officer;
+  })[];
+  totalCount: number;
+}
 
 /**
  * @method Put
@@ -443,7 +459,10 @@ export type PutManagePendingWarrants = boolean;
  * @method GET
  * @route /admin/manage/custom-roles
  */
-export type GetCustomRolesData = (Prisma.CustomRole & { discordRole?: Types.DiscordRole | null })[];
+export interface GetCustomRolesData {
+  totalCount: number;
+  customRoles: (Prisma.CustomRole & { discordRole?: Types.DiscordRole | null })[];
+}
 
 /**
  * @method POST

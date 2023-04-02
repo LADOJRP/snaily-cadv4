@@ -129,9 +129,10 @@ model DiscordWebhook {
 model AutoSetUserProperties {
   id String @id @default(cuid())
 
-  leo      Boolean? @default(false)
-  dispatch Boolean? @default(false)
-  emsFd    Boolean? @default(false)
+  leo                Boolean? @default(false)
+  dispatch           Boolean? @default(false)
+  emsFd              Boolean? @default(false)
+  defaultPermissions String[]
 
   cad cad[]
 
@@ -392,7 +393,6 @@ model Citizen {
   medicalRecords       MedicalRecord[]
   towCalls             TowCall[]
   createdTowCalls      TowCall[]                     @relation("towCallCreator")
-  businesses           Business[]
   Employee             Employee[]
   officers             Officer[]
   warrants             Warrant[]
@@ -809,8 +809,6 @@ model Business {
   id            String              @id @default(cuid())
   user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
-  citizen       Citizen             @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  citizenId     String
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @default(now()) @updatedAt
   name          String              @db.VarChar(255)
@@ -838,6 +836,8 @@ model Employee {
   roleId             String?
   employeeOfTheMonth Boolean         @default(false)
   canCreatePosts     Boolean         @default(true)
+  canManageEmployees Boolean         @default(false)
+  canManageVehicles  Boolean         @default(false)
   whitelistStatus    WhitelistStatus @default(ACCEPTED)
   businessPosts      BusinessPost[]
   createdAt          DateTime        @default(now())
@@ -1815,4 +1815,5 @@ enum Feature {
   EDITABLE_SSN // See #1544
   EDITABLE_VIN // See #1544
   SIGNAL_100_CITIZEN // See #1562
+  FORCE_ACCOUNT_PASSWORD // See #1498
 }

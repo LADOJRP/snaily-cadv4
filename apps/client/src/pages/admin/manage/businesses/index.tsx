@@ -1,27 +1,18 @@
 import { useTranslations } from "use-intl";
-import * as React from "react";
-import {
-  TabsContent,
-  TabList,
-  Loader,
-  Button,
-  TextField,
-  buttonVariants,
-  buttonSizes,
-} from "@snailycad/ui";
+import { TabsContent, TabList, Loader, Button, buttonVariants, buttonSizes } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
 import { useModal } from "state/modalState";
-import { WhitelistStatus, Rank } from "@snailycad/types";
+import { Rank } from "@snailycad/types";
 import useFetch from "lib/useFetch";
 import { AdminLayout } from "components/admin/AdminLayout";
 import { ModalIds } from "types/ModalIds";
 import { requestAll, yesOrNoText } from "lib/utils";
-import { PendingBusinessesTab } from "components/admin/manage/business/PendingBusinessesTab";
+import { PendingBusinessesTab } from "components/admin/manage/business/pending-businesses-tab";
 import { useAuth } from "context/AuthContext";
-import { Table, useTableState } from "components/shared/Table";
+import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { Title } from "components/shared/Title";
 import { Status } from "components/shared/Status";
 import { usePermission, Permissions } from "hooks/usePermission";
@@ -35,10 +26,6 @@ interface Props {
 }
 
 export default function ManageBusinesses({ businesses: data }: Props) {
-  const [businesses, setBusinesses] = React.useState<GetManageBusinessesData>(data);
-  const [tempValue, valueState] = useTemporaryItem(businesses);
-  const [reason, setReason] = React.useState("");
-  const reasonRef = React.useRef<HTMLInputElement>(null);
   const { cad } = useAuth();
 
   const { state, execute } = useFetch();
@@ -49,7 +36,19 @@ export default function ManageBusinesses({ businesses: data }: Props) {
   const t = useTranslations("Management");
   const common = useTranslations("Common");
   const businessWhitelisted = cad?.businessWhitelisted ?? false;
-  const pendingBusinesses = businesses.filter((v) => v.status === WhitelistStatus.PENDING);
+
+  const asyncTable = useAsyncTable<GetManageBusinessesData["businesses"][number]>({
+    totalCount: data.totalCount,
+    initialData: data.businesses,
+    fetchOptions: {
+      path: "/admin/manage/businesses",
+      onResponse: (json: GetManageBusinessesData) => ({
+        data: json.businesses,
+        totalCount: json.totalCount,
+      }),
+    },
+  });
+  const [tempValue, valueState] = useTemporaryItem(asyncTable.items);
 
   const TABS = [
     {
@@ -60,12 +59,12 @@ export default function ManageBusinesses({ businesses: data }: Props) {
 
   if (hasPermissions([Permissions.ManageBusinesses], true) && businessWhitelisted) {
     TABS[1] = {
-      name: `${t("pendingBusinesses")} (${pendingBusinesses.length})`,
+      name: `${t("pendingBusinesses")}`,
       value: "pendingBusinesses",
     };
   }
 
-  function handleDeleteClick(value: GetManageBusinessesData[number]) {
+  function handleDeleteClick(value: GetManageBusinessesData["businesses"][number]) {
     valueState.setTempId(value.id);
     openModal(ModalIds.AlertDeleteBusiness);
   }
@@ -73,26 +72,18 @@ export default function ManageBusinesses({ businesses: data }: Props) {
   async function handleDelete() {
     if (!tempValue) return;
 
-    if (!reason.trim() && reasonRef.current) {
-      return reasonRef.current.focus();
-    }
-
     const { json } = await execute<DeleteBusinessByIdData>({
       path: `/admin/manage/businesses/${tempValue.id}`,
       method: "DELETE",
-      data: { reason },
     });
 
     if (json) {
-      setBusinesses((p) => p.filter((v) => v.id !== tempValue.id));
+      asyncTable.remove(tempValue.id);
+
       valueState.setTempId(null);
       closeModal(ModalIds.AlertDeleteBusiness);
     }
   }
-
-  React.useEffect(() => {
-    setBusinesses(data);
-  }, [data]);
 
   return (
     <AdminLayout
@@ -108,48 +99,58 @@ export default function ManageBusinesses({ businesses: data }: Props) {
       <Title>{t("MANAGE_BUSINESSES")}</Title>
 
       <TabList tabs={TABS}>
-        <TabsContent aria-label={t("allBusinesses")} value="allBusinesses">
+        <TabsContent
+          tabName={t("allBusinesses")}
+          aria-label={t("allBusinesses")}
+          value="allBusinesses"
+        >
           <h2 className="text-2xl font-semibold mb-2">{t("allBusinesses")}</h2>
 
-          {businesses.length <= 0 ? (
+          {asyncTable.noItemsAvailable ? (
             <p className="mt-5">{t("noBusinesses")}</p>
           ) : (
             <Table
               tableState={tableState}
-              data={businesses.map((business) => ({
-                id: business.id,
-                name: business.name,
-                owner: `${business.citizen.name} ${business.citizen.surname}`,
-                user: business.user.username,
-                status: <Status fallback="—">{business.status}</Status>,
-                whitelisted: common(yesOrNoText(business.whitelisted)),
-                actions: (
-                  <>
-                    <Button
-                      className="ml-2"
-                      onPress={() => handleDeleteClick(business)}
-                      size="xs"
-                      variant="danger"
-                    >
-                      {common("delete")}
-                    </Button>
+              data={asyncTable.items.map((business) => {
+                const owners = business.employees;
 
-                    <Link
-                      className={classNames(
-                        buttonVariants.default,
-                        buttonSizes.xs,
-                        "border rounded-md ml-2",
-                      )}
-                      href={`/admin/manage/businesses/${business.id}`}
-                    >
-                      {common("manage")}
-                    </Link>
-                  </>
-                ),
-              }))}
+                return {
+                  id: business.id,
+                  name: business.name,
+                  owners: owners
+                    .map((owner) => `${owner.citizen.name} ${owner.citizen.surname}`)
+                    .join(", "),
+                  user: business.user.username,
+                  status: <Status fallback="—">{business.status}</Status>,
+                  whitelisted: common(yesOrNoText(business.whitelisted)),
+                  actions: (
+                    <>
+                      <Button
+                        className="ml-2"
+                        onPress={() => handleDeleteClick(business)}
+                        size="xs"
+                        variant="danger"
+                      >
+                        {common("delete")}
+                      </Button>
+
+                      <Link
+                        className={classNames(
+                          buttonVariants.default,
+                          buttonSizes.xs,
+                          "border rounded-md ml-2",
+                        )}
+                        href={`/admin/manage/businesses/${business.id}`}
+                      >
+                        {common("manage")}
+                      </Link>
+                    </>
+                  ),
+                };
+              })}
               columns={[
                 { header: common("name"), accessorKey: "name" },
-                { header: t("owner"), accessorKey: "owner" },
+                { header: t("owners"), accessorKey: "owners" },
                 { header: t("user"), accessorKey: "user" },
                 businessWhitelisted ? { header: t("status"), accessorKey: "status" } : null,
                 { header: t("whitelisted"), accessorKey: "whitelisted" },
@@ -160,7 +161,7 @@ export default function ManageBusinesses({ businesses: data }: Props) {
             />
           )}
         </TabsContent>
-        <PendingBusinessesTab setBusinesses={setBusinesses} businesses={pendingBusinesses} />
+        <PendingBusinessesTab />
       </TabList>
 
       <Modal
@@ -169,15 +170,6 @@ export default function ManageBusinesses({ businesses: data }: Props) {
         isOpen={isOpen(ModalIds.AlertDeleteBusiness)}
         className="max-w-2xl"
       >
-        <div>
-          <p className="my-3">
-            {t.rich("alert_deleteBusiness", {
-              name: tempValue?.name ?? "",
-            })}
-          </p>
-          <TextField label="Reason" inputRef={reasonRef} value={reason} onChange={setReason} />
-        </div>
-
         <div className="flex items-center justify-end gap-2 mt-2">
           <Button
             variant="cancel"

@@ -13,6 +13,7 @@ import { Permissions } from "hooks/usePermission";
 import useFetch from "lib/useFetch";
 import { Status } from "components/shared/Status";
 import type { PostBOFData, GetPendingBOFWeapons } from "@snailycad/types/api";
+import { useInvalidateQuery } from "hooks/use-invalidate-query";
 
 interface Props {
   data: GetPendingBOFWeapons;
@@ -22,6 +23,7 @@ export default function BureauOfFirearms({ data }: Props) {
   const t = useTranslations();
   const common = useTranslations("Common");
   const { state, execute } = useFetch();
+  const { invalidateQuery } = useInvalidateQuery(["officer", "notifications"]);
 
   const asyncTable = useAsyncTable({
     fetchOptions: {
@@ -44,6 +46,7 @@ export default function BureauOfFirearms({ data }: Props) {
     });
 
     if (json) {
+      await invalidateQuery();
       asyncTable.update(id, json);
     }
   }
@@ -58,7 +61,7 @@ export default function BureauOfFirearms({ data }: Props) {
     >
       <Title>{t("Bof.bureauOfFirearms")}</Title>
 
-      {asyncTable.items.length <= 0 ? (
+      {asyncTable.noItemsAvailable ? (
         <p className="mt-5">{t("Bof.noWeaponsPendingBof")}</p>
       ) : (
         <Table
@@ -69,6 +72,7 @@ export default function BureauOfFirearms({ data }: Props) {
                 className: weapon.bofStatus === "PENDING" ? "opacity-100" : "opacity-50",
               },
               id: weapon.id,
+              owner: `${weapon.citizen.name} ${weapon.citizen.surname}`,
               model: weapon.model.value.value,
               registrationStatus: weapon.registrationStatus.value,
               serialNumber: weapon.serialNumber,
@@ -100,6 +104,7 @@ export default function BureauOfFirearms({ data }: Props) {
             };
           })}
           columns={[
+            { header: t("Vehicles.owner"), accessorKey: "owner" },
             { header: t("Weapons.model"), accessorKey: "model" },
             { header: t("Weapons.registrationStatus"), accessorKey: "registrationStatus" },
             { header: t("Weapons.serialNumber"), accessorKey: "serialNumber" },

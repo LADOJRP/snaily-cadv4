@@ -1,4 +1,4 @@
-import { Prisma, Rank } from "@prisma/client";
+import { Prisma, Rank, WhitelistStatus } from "@prisma/client";
 import { Controller } from "@tsed/di";
 import { NotFound } from "@tsed/exceptions";
 import { UseBeforeEach } from "@tsed/platform-middlewares";
@@ -16,17 +16,11 @@ import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 
 const businessInclude = {
-  citizen: {
-    select: {
-      name: true,
-      surname: true,
-      id: true,
-    },
-  },
   user: {
     select: userProperties,
   },
-};
+  employees: { include: { citizen: true }, where: { role: { as: "OWNER" } } },
+} as const;
 
 @UseBeforeEach(IsAuth)
 @Controller("/admin/manage/businesses")
@@ -42,10 +36,33 @@ export class AdminManageBusinessesController {
       Permissions.ManageBusinesses,
     ],
   })
-  async getBusinesses(): Promise<APITypes.GetManageBusinessesData> {
-    const businesses = await prisma.business.findMany({ include: businessInclude });
+  async getBusinesses(
+    @QueryParams("pendingOnly", Boolean) pendingOnly = false,
+    @QueryParams("skip", Number) skip = 0,
+    @QueryParams("includeAll", Boolean) includeAll = false,
+    @QueryParams("query", String) query = "",
+  ): Promise<APITypes.GetManageBusinessesData> {
+    const where = {} as Prisma.BusinessWhereInput;
 
-    return businesses;
+    if (query) {
+      where.OR = [{ address: { contains: query } }, { name: { contains: query } }];
+    }
+
+    if (pendingOnly) {
+      where.status = WhitelistStatus.PENDING;
+    }
+
+    const [totalCount, businesses] = await prisma.$transaction([
+      prisma.business.count({ where }),
+      prisma.business.findMany({
+        take: includeAll ? undefined : 35,
+        skip: includeAll ? undefined : skip,
+        where,
+        include: businessInclude,
+      }),
+    ]);
+
+    return { businesses, totalCount };
   }
 
   @Get("/:id/employees")
@@ -95,14 +112,8 @@ export class AdminManageBusinessesController {
   ) {
     const data = validateSchema(UPDATE_EMPLOYEE_SCHEMA, body);
     const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
-        NOT: { role: { as: EmployeeAsEnum.OWNER } },
-      },
-      include: {
-        citizen: true,
-        role: { include: { value: true } },
-      },
+      where: { id: employeeId },
+      include: { citizen: true, role: { include: { value: true } } },
     });
 
     if (!employee) {
@@ -115,8 +126,8 @@ export class AdminManageBusinessesController {
       },
     });
 
-    if (!role || role.as === EmployeeAsEnum.OWNER) {
-      throw new ExtendedBadRequest({ roleId: "cannotSetRoleToOwner" });
+    if (!role) {
+      throw new ExtendedBadRequest({ roleId: "roleNotFound" });
     }
 
     const updated = await prisma.employee.update({
@@ -125,6 +136,8 @@ export class AdminManageBusinessesController {
         employeeOfTheMonth: data.employeeOfTheMonth,
         canCreatePosts: data.canCreatePosts,
         roleId: role.id,
+        canManageEmployees: data.canManageEmployees,
+        canManageVehicles: data.canManageVehicles,
       },
       include: {
         citizen: true,

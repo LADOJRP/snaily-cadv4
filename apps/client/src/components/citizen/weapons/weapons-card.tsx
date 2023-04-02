@@ -29,6 +29,7 @@ export function WeaponsCard(props: Pick<GetCitizenWeaponsData, "weapons">) {
 
   const asyncTable = useAsyncTable({
     search,
+    scrollToTopOnDataChange: false,
     fetchOptions: {
       pageSize: 12,
       onResponse: (json: GetCitizenWeaponsData) => ({
@@ -90,7 +91,7 @@ export function WeaponsCard(props: Pick<GetCitizenWeaponsData, "weapons">) {
           totalCount={props.weapons.length}
         />
 
-        {!search && asyncTable.items.length <= 0 ? (
+        {!search && asyncTable.noItemsAvailable ? (
           <p className="text-neutral-700 dark:text-gray-400">{t("noWeapons")}</p>
         ) : (
           <Table
