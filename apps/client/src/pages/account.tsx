@@ -16,15 +16,15 @@ import { toastMessage } from "lib/toastMessage";
 import { canUseThirdPartyConnections } from "lib/utils";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { getAvailableSounds, Sounds } from "lib/server/getAvailableSounds.server";
-import { AccountInfoTab } from "components/account/AccountInfoTab";
+import { AccountInfoTab } from "components/account/account-info-tab";
 
 const AccountSettingsTab = dynamic(
-  async () => (await import("components/account/AccountSettingsTab")).AccountSettingsTab,
+  async () => (await import("components/account/account-settings-tab")).AccountSettingsTab,
   { ssr: false },
 );
 
 const AppearanceTab = dynamic(
-  async () => (await import("components/account/AppearanceTab")).AppearanceTab,
+  async () => (await import("components/account/appearance-tab")).AppearanceTab,
   { ssr: false },
 );
 
@@ -52,7 +52,7 @@ export default function Account({ availableSounds }: Props) {
   const showConnectionsTab = (DISCORD_AUTH || STEAM_OAUTH) && canUseThirdPartyConnections();
 
   const { hasPermissions } = usePermission();
-  const hasApiTokenPermissions = hasPermissions([Permissions.UsePersonalApiToken], false);
+  const hasApiTokenPermissions = hasPermissions([Permissions.UsePersonalApiToken]);
 
   const errors = {
     discordAccountAlreadyLinked: errorT("discordAccountAlreadyLinked"),

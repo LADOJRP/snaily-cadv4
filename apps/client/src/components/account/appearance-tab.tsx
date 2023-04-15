@@ -1,14 +1,13 @@
 import * as React from "react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { FormField } from "components/form/FormField";
-import { Toggle } from "components/form/Toggle";
 import { useAuth } from "context/AuthContext";
 import { Form, Formik } from "formik";
 import useFetch from "lib/useFetch";
 import { useTranslations } from "use-intl";
 import { StatusViewMode, TableActionsAlignment } from "@snailycad/types";
 import { Select } from "components/form/Select";
-import { Button, Loader, SelectField, TabsContent } from "@snailycad/ui";
+import { Button, Loader, SelectField, TabsContent, SwitchField } from "@snailycad/ui";
 import { i18n } from "../../../i18n.config.mjs";
 import type { Sounds } from "lib/server/getAvailableSounds.server";
 import { soundCamelCaseToKebabCase } from "lib/utils";
@@ -56,6 +55,7 @@ export function AppearanceTab({ availableSounds }: Props) {
     statusViewMode: user.statusViewMode ?? StatusViewMode.DOT_COLOR,
     tableActionsAlignment: user.tableActionsAlignment,
     locale: user?.locale ?? i18n.defaultLocale,
+    developerMode: user?.developerMode ?? false,
     soundSettings: {
       panicButton: user.soundSettings?.panicButton ?? true,
       signal100: user.soundSettings?.signal100 ?? true,
@@ -100,22 +100,27 @@ export function AppearanceTab({ availableSounds }: Props) {
         <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
           {({ handleChange, setFieldValue, values, errors }) => (
             <Form className="mt-3">
-              <FormField checkbox errorMessage={errors.isDarkTheme} label={t("darkTheme")}>
-                <Toggle
-                  value={values.isDarkTheme}
-                  onCheckedChange={handleChange}
-                  name="isDarkTheme"
-                />
-              </FormField>
+              <SwitchField
+                isSelected={values.developerMode}
+                onChange={(isSelected) => setFieldValue("developerMode", isSelected)}
+              >
+                {t("developerMode")}
+              </SwitchField>
 
-              <FormField errorMessage={errors.locale} label={t("locale")}>
-                <Select
-                  values={availableLanguages.map((v) => ({ value: v, label: v }))}
-                  value={values.locale}
-                  onChange={handleChange}
-                  name="locale"
-                />
-              </FormField>
+              <SwitchField
+                isSelected={values.isDarkTheme}
+                onChange={(isSelected) => setFieldValue("isDarkTheme", isSelected)}
+              >
+                {t("darkTheme")}
+              </SwitchField>
+
+              <SelectField
+                errorMessage={errors.locale}
+                selectedKey={values.locale}
+                onSelectionChange={(value) => setFieldValue("locale", value)}
+                label={t("locale")}
+                options={availableLanguages.map((v) => ({ value: v, label: v }))}
+              />
 
               <SelectField
                 errorMessage={errors.statusViewMode}
@@ -147,13 +152,14 @@ export function AppearanceTab({ availableSounds }: Props) {
                 {voices ? (
                   <section id="speech" className="mb-5">
                     <h3 className="text-xl font-semibold mb-3">{t("speech")}</h3>
-                    <FormField label={t("speech")} checkbox>
-                      <Toggle
-                        value={values.soundSettings.speech}
-                        onCheckedChange={handleChange}
-                        name="soundSettings.speech"
-                      />
-                    </FormField>
+
+                    <SwitchField
+                      isSelected={values.soundSettings.speech}
+                      onChange={(isSelected) => setFieldValue("soundSettings.speech", isSelected)}
+                    >
+                      {t("speech")}
+                    </SwitchField>
+
                     <FormField label={t("speechVoice")}>
                       <Select
                         disabled={!values.soundSettings.speech}
@@ -181,15 +187,16 @@ export function AppearanceTab({ availableSounds }: Props) {
                     if (["speech", "speechVoice"].includes(fieldName)) return null;
 
                     return (
-                      <div className="mb-3 flex flex-row gap-5" key={fieldName}>
-                        <FormField className="!mb-0" label={t(fieldName)} checkbox>
-                          <Toggle
-                            value={values.soundSettings[fieldName] as boolean}
-                            onCheckedChange={handleChange}
-                            name={`soundSettings.${fieldName}`}
-                            disabled={!soundAvailable}
-                          />
-                        </FormField>
+                      <div className="mb-1.5 flex flex-row gap-5" key={fieldName}>
+                        <SwitchField
+                          isSelected={values.soundSettings[fieldName] as boolean}
+                          onChange={(isSelected) =>
+                            setFieldValue(`soundSettings.${fieldName}`, isSelected)
+                          }
+                          isDisabled={!soundAvailable}
+                        >
+                          {t(fieldName)}
+                        </SwitchField>
 
                         <Button
                           size="xs"

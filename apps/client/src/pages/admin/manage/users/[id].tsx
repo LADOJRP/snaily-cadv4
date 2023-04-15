@@ -8,12 +8,10 @@ import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
 import { Rank } from "@snailycad/types";
 import { AdminLayout } from "components/admin/AdminLayout";
-import { useAuth } from "context/AuthContext";
 import {
   Loader,
   Button,
   buttonVariants,
-  SelectField,
   TextField,
   Breadcrumbs,
   BreadcrumbItem,
@@ -28,7 +26,6 @@ import { useModal } from "state/modalState";
 import { usePermission, Permissions } from "hooks/usePermission";
 import dynamic from "next/dynamic";
 import { SettingsFormField } from "components/form/SettingsFormField";
-import { AlertModal } from "components/modal/AlertModal";
 import { ApiTokenArea } from "components/admin/manage/users/api-token-area";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { classNames } from "lib/classNames";
@@ -69,8 +66,7 @@ export default function ManageCitizens(props: Props) {
   const { state, execute } = useFetch();
   const common = useTranslations("Common");
   const t = useTranslations("Management");
-  const { user: session } = useAuth();
-  const { openModal, closeModal } = useModal();
+  const { openModal } = useModal();
   const { hasPermissions } = usePermission();
   const { USER_API_TOKENS } = useFeatureEnabled();
 
@@ -88,25 +84,15 @@ export default function ManageCitizens(props: Props) {
 
   const INITIAL_VALUES = {
     username: user.username,
-    rank: user.rank,
-    isDispatch: user.isDispatch,
-    isLeo: user.isLeo,
-    isSupervisor: user.isSupervisor,
-    isEmsFd: user.isEmsFd,
-    isTow: user.isTow,
-    isTaxi: user.isTaxi,
     steamId: user.steamId ?? "",
     discordId: user.discordId ?? "",
-    useOldPerms: false,
   };
 
-  const isRankDisabled = user.rank === "OWNER" || user.id === session?.id;
   const validate = handleValidate(UPDATE_USER_SCHEMA);
 
   return (
     <AdminLayout
       permissions={{
-        fallback: (u) => u.rank !== Rank.USER,
         permissions: [Permissions.BanUsers, Permissions.ManageUsers, Permissions.DeleteUsers],
       }}
     >
@@ -131,28 +117,6 @@ export default function ManageCitizens(props: Props) {
                 value={values.username}
                 errorMessage={errors.username}
               />
-
-              <SelectField
-                isDisabled={isRankDisabled}
-                errorMessage={errors.rank}
-                label="Rank"
-                name="rank"
-                onSelectionChange={(key) => setFieldValue("rank", key)}
-                selectedKey={values.rank}
-                options={
-                  isRankDisabled
-                    ? [{ value: user.rank, label: user.rank }]
-                    : [
-                        { value: "ADMIN", label: "Admin" },
-                        { value: "USER", label: "User" },
-                      ]
-                }
-              >
-                <small className="text-base mt-2 text-neutral-600 dark:text-gray-300 mb-3">
-                  The rank does not have any influence on the permissions of the user. It is only
-                  used to identify the user in the system.
-                </small>
-              </SelectField>
 
               <SettingsFormField
                 description="A detailed permissions system where you can assign many actions to a user."
@@ -213,24 +177,6 @@ export default function ManageCitizens(props: Props) {
                   {common("save")}
                 </Button>
               </div>
-
-              <AlertModal
-                title={t("useOldPermissions")}
-                description={
-                  <>
-                    Are you sure you want to use the old permissions system.{" "}
-                    <span className="font-semibold">
-                      You cannot mix the old permissions with new permissions.
-                    </span>
-                  </>
-                }
-                id={ModalIds.AlertUseOldPermissions}
-                deleteText={t("useOldPermissions")}
-                onDeleteClick={() => {
-                  closeModal(ModalIds.AlertUseOldPermissions);
-                  setFieldValue("useOldPerms", true);
-                }}
-              />
             </Form>
           )}
         </Formik>
@@ -239,10 +185,10 @@ export default function ManageCitizens(props: Props) {
 
         {user.rank !== Rank.OWNER ? (
           <>
-            {hasPermissions([Permissions.BanUsers], true) ? (
+            {hasPermissions([Permissions.BanUsers]) ? (
               <BanArea setUser={setUser} user={user} />
             ) : null}
-            {hasPermissions([Permissions.DeleteUsers], true) ? (
+            {hasPermissions([Permissions.DeleteUsers]) ? (
               <DangerZone setUser={setUser} user={user} />
             ) : null}
           </>

@@ -1,5 +1,5 @@
 import { LEO_INCIDENT_SCHEMA } from "@snailycad/schemas";
-import { Loader, Button, Input } from "@snailycad/ui";
+import { Loader, Button, Input, SwitchField } from "@snailycad/ui";
 import { FormField } from "components/form/FormField";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
@@ -8,7 +8,6 @@ import { handleValidate } from "lib/handleValidate";
 import useFetch from "lib/useFetch";
 import { ModalIds } from "types/ModalIds";
 import { useTranslations } from "use-intl";
-import { Toggle } from "components/form/Toggle";
 import { FormRow } from "components/form/FormRow";
 import { useRouter } from "next/router";
 import { dataToSlate, Editor } from "components/editor/editor";
@@ -21,6 +20,9 @@ import type { PostIncidentsData, PutIncidentByIdData } from "@snailycad/types/ap
 import { AddressPostalSelect } from "components/form/select/PostalSelect";
 import { InvolvedUnitsTable } from "./involved-units/involved-units-table";
 import { ValueSelectField } from "components/form/inputs/value-select-field";
+import { Infofield } from "components/shared/Infofield";
+import { useAuth } from "context/AuthContext";
+import { FullDate } from "components/shared/FullDate";
 
 interface Props<T extends LeoIncident | EmsFdIncident> {
   incident?: T | null;
@@ -47,14 +49,15 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
   const { codes10 } = useValues();
   const router = useRouter();
   const { state, execute } = useFetch();
+  const { user } = useAuth();
 
   const isDispatch = router.pathname.includes("/dispatch");
   const isEmsFdIncidents = type === "ems-fd" || router.pathname === "/ems-fd/incidents";
   const isLeoIncidents = type === "leo" || router.pathname === "/officer/incidents";
   const areIncidentsNonDispatch = isEmsFdIncidents || isLeoIncidents;
 
-  const areEventsReadonly = !isDispatch || areIncidentsNonDispatch;
-  const areFieldsDisabled = !isDispatch && !areIncidentsNonDispatch;
+  const areEventsReadonly = isDispatch ? false : areIncidentsNonDispatch;
+  const areFieldsDisabled = isDispatch ? false : !areIncidentsNonDispatch;
 
   function handleAddUpdateCallEvent(incident: LeoIncident) {
     setActiveIncidents(activeIncidents.map((inc) => (inc.id === incident.id ? incident : inc)));
@@ -130,37 +133,49 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
           initialValues={INITIAL_VALUES}
           onSubmit={onSubmit}
         >
-          {({ handleChange, setFieldValue, errors, values, isValid }) => (
+          {({ setFieldValue, errors, values, isValid }) => (
             <Form className="w-full flex flex-col justify-between">
+              {incident ? (
+                <header className="mb-4 flex flex-wrap flex-row max-w-[1050px]">
+                  <Infofield className="mr-4" label={t("incident")}>
+                    #{incident.caseNumber}
+                  </Infofield>
+                  <Infofield className="mr-4" label={t("lastUpdatedAt")}>
+                    <FullDate>{incident.updatedAt}</FullDate>
+                  </Infofield>
+                  {user?.developerMode ? (
+                    <Infofield className="mt-2" label={t("id")}>
+                      {incident.id}
+                    </Infofield>
+                  ) : null}
+                </header>
+              ) : null}
+
               <div>
                 <FormRow>
-                  <FormField errorMessage={errors.firearmsInvolved} label={t("firearmsInvolved")}>
-                    <Toggle
-                      disabled={areFieldsDisabled}
-                      value={values.firearmsInvolved}
-                      name="firearmsInvolved"
-                      onCheckedChange={handleChange}
-                    />
-                  </FormField>
-                  <FormField
-                    errorMessage={errors.injuriesOrFatalities}
-                    label={t("injuriesOrFatalities")}
+                  <SwitchField
+                    isDisabled={areFieldsDisabled}
+                    isSelected={values.firearmsInvolved}
+                    onChange={(isSelected) => setFieldValue("firearmsInvolved", isSelected)}
                   >
-                    <Toggle
-                      disabled={areFieldsDisabled}
-                      value={values.injuriesOrFatalities}
-                      name="injuriesOrFatalities"
-                      onCheckedChange={handleChange}
-                    />
-                  </FormField>
-                  <FormField errorMessage={errors.arrestsMade} label={t("arrestsMade")}>
-                    <Toggle
-                      disabled={areFieldsDisabled}
-                      value={values.arrestsMade}
-                      name="arrestsMade"
-                      onCheckedChange={handleChange}
-                    />
-                  </FormField>
+                    {t("firearmsInvolved")}
+                  </SwitchField>
+
+                  <SwitchField
+                    isDisabled={areFieldsDisabled}
+                    isSelected={values.injuriesOrFatalities}
+                    onChange={(isSelected) => setFieldValue("injuriesOrFatalities", isSelected)}
+                  >
+                    {t("injuriesOrFatalities")}
+                  </SwitchField>
+
+                  <SwitchField
+                    isDisabled={areFieldsDisabled}
+                    isSelected={values.arrestsMade}
+                    onChange={(isSelected) => setFieldValue("arrestsMade", isSelected)}
+                  >
+                    {t("arrestsMade")}
+                  </SwitchField>
                 </FormRow>
 
                 <FormField errorMessage={errors.description} label={common("description")}>

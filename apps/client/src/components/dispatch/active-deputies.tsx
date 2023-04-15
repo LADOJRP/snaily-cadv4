@@ -30,7 +30,7 @@ import { shallow } from "zustand/shallow";
 import { generateContrastColor } from "lib/table/get-contrasting-text-color";
 import { Permissions, usePermission } from "hooks/usePermission";
 import { isUnitCombinedEmsFd } from "@snailycad/utils";
-import { MergeUnitModal } from "./active-units/MergeUnitModal";
+import { MergeUnitModal } from "./active-units/merge-unit-modal";
 
 interface Props {
   initialDeputies: (EmsFdDeputy | CombinedEmsFdUnit)[];
@@ -57,7 +57,7 @@ function ActiveDeputies({ initialDeputies }: Props) {
   const activeDeputies = isMounted ? _activeDeputies : initialDeputies;
   const isDispatch = router.pathname === "/dispatch";
 
-  const hasDispatchPerms = hasPermissions([Permissions.Dispatch], (u) => u.isDispatch);
+  const hasDispatchPerms = hasPermissions([Permissions.Dispatch]);
   const showCreateTemporaryUnitButton = isDispatch && hasDispatchPerms;
 
   const { activeDeputy, setActiveDeputy } = useEmsFdState(

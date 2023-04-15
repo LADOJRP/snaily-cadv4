@@ -92,12 +92,6 @@ type UserPicks =
   | "id"
   | "username"
   | "rank"
-  | "isLeo"
-  | "isSupervisor"
-  | "isEmsFd"
-  | "isDispatch"
-  | "isTow"
-  | "isTaxi"
   | "banned"
   | "banReason"
   | "avatarUrl"
@@ -119,7 +113,8 @@ type UserPicks =
   | "hasTempPassword"
   | "roles"
   | "lastSeen"
-  | "hasPassword";
+  | "hasPassword"
+  | "developerMode";
 
 export type User = Pick<
   Prisma.User & {

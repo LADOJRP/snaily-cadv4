@@ -12,10 +12,14 @@ export function EmsFdDropdown() {
   const isActive = (route: string) => router.pathname.startsWith(route);
 
   const { hasPermissions } = usePermission();
-  const hasIncidentPermissions = hasPermissions(
-    [Permissions.ManageEmsFdIncidents, Permissions.ViewEmsFdIncidents],
-    true,
-  );
+  const hasIncidentPermissions = hasPermissions([
+    Permissions.ManageEmsFdIncidents,
+    Permissions.ViewEmsFdIncidents,
+  ]);
+  const hasHospitalServicePermissions = hasPermissions([
+    Permissions.ViewDeadCitizens,
+    Permissions.ManageDeadCitizens,
+  ]);
 
   return (
     <Dropdown
@@ -37,6 +41,11 @@ export function EmsFdDropdown() {
       <Dropdown.LinkItem href="/ems-fd/my-deputy-logs">{t("myDeputyLogs")}</Dropdown.LinkItem>
       {hasIncidentPermissions ? (
         <Dropdown.LinkItem href="/ems-fd/incidents">{t("emsFdIncidents")}</Dropdown.LinkItem>
+      ) : null}
+      {hasHospitalServicePermissions ? (
+        <Dropdown.LinkItem href="/ems-fd/hospital-services">
+          {t("hospitalServices")}
+        </Dropdown.LinkItem>
       ) : null}
     </Dropdown>
   );

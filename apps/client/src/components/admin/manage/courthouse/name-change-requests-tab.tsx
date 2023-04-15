@@ -1,9 +1,8 @@
-import { TabsContent } from "@radix-ui/react-tabs";
 import { WhitelistStatus } from "@snailycad/types";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { useTranslations } from "next-intl";
-import { Button } from "@snailycad/ui";
+import { Button, TabsContent } from "@snailycad/ui";
 import { FullDate } from "components/shared/FullDate";
 import { Status } from "components/shared/Status";
 import useFetch from "lib/useFetch";
@@ -23,7 +22,7 @@ export function NameChangeRequestsTab({ requests: data }: Props) {
   const tableState = useTableState();
   const { state, execute } = useFetch();
   const { hasPermissions } = usePermission();
-  const hasManagePermissions = hasPermissions([Permissions.ManageNameChangeRequests], true);
+  const hasManagePermissions = hasPermissions([Permissions.ManageNameChangeRequests]);
   const { invalidateQuery } = useInvalidateQuery(["admin", "notifications"]);
 
   const asyncTable = useAsyncTable({
@@ -52,7 +51,12 @@ export function NameChangeRequestsTab({ requests: data }: Props) {
   }
 
   return (
-    <TabsContent value="name-change-requests">
+    <TabsContent
+      tabName={`${t("Management.MANAGE_NAME_CHANGE_REQUESTS")} ${
+        asyncTable.isInitialLoading ? "" : ` (${asyncTable.pagination.totalDataCount})`
+      }`}
+      value="name-change-requests"
+    >
       <h3 className="font-semibold text-xl">{t("Management.MANAGE_NAME_CHANGE_REQUESTS")}</h3>
 
       {asyncTable.noItemsAvailable ? (

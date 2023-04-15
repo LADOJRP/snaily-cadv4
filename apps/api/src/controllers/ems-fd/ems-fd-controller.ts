@@ -17,7 +17,6 @@ import {
   ShouldDoType,
   type User,
   Feature,
-  Rank,
 } from "@prisma/client";
 import type { EmsFdDeputy } from "@snailycad/types";
 import { AllowedFileExtension, allowedFileExtensions } from "@snailycad/config";
@@ -39,6 +38,7 @@ import { hasPermission } from "@snailycad/permissions";
 import { getImageWebPPath } from "lib/images/get-image-webp-path";
 import { HandleInactivity } from "middlewares/handle-inactivity";
 import { upsertEmsFdDeputy } from "lib/ems-fd/upsert-ems-fd-deputy";
+import { citizenInclude } from "controllers/citizen/CitizenController";
 
 @Controller("/ems-fd")
 @UseBeforeEach(IsAuth)
@@ -51,7 +51,6 @@ export class EmsFdController {
 
   @Get("/")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async getUserDeputies(@Context("user") user: User): Promise<APITypes.GetMyDeputiesData> {
@@ -68,7 +67,6 @@ export class EmsFdController {
 
   @Get("/logs")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd, Permissions.ViewUnits, Permissions.ManageUnits],
   })
   async getDeputyLogs(
@@ -80,7 +78,6 @@ export class EmsFdController {
     const hasManageUnitsPermissions = hasPermission({
       permissionsToCheck: [Permissions.ManageUnits, Permissions.ViewUnits, Permissions.DeleteUnits],
       userToCheck: user,
-      fallback: (u) => u.rank !== Rank.USER,
     });
     const userIdObj = hasManageUnitsPermissions ? {} : { userId: user.id };
 
@@ -102,7 +99,6 @@ export class EmsFdController {
 
   @Post("/")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async createEmsFdDeputy(
@@ -123,7 +119,6 @@ export class EmsFdController {
 
   @Put("/:id")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async updateDeputy(
@@ -149,7 +144,6 @@ export class EmsFdController {
 
   @Delete("/:id")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async deleteDeputy(
@@ -179,7 +173,6 @@ export class EmsFdController {
   @Use(ActiveDeputy)
   @Get("/active-deputy")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd || u.isLeo || u.isDispatch,
     permissions: [Permissions.EmsFd, Permissions.Leo, Permissions.Dispatch],
   })
   async getActiveDeputy(
@@ -191,7 +184,6 @@ export class EmsFdController {
   @Get("/active-deputies")
   @Description("Get all the active EMS/FD deputies")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd || u.isLeo || u.isDispatch,
     permissions: [Permissions.EmsFd, Permissions.Leo, Permissions.Dispatch],
   })
   @UseAfter(HandleInactivity)
@@ -233,7 +225,6 @@ export class EmsFdController {
   @Use(ActiveDeputy)
   @Post("/medical-record")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async createMedicalRecord(@BodyParams() body: unknown): Promise<APITypes.PostEmsFdMedicalRecord> {
@@ -265,8 +256,7 @@ export class EmsFdController {
 
   @Post("/declare/:citizenId")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd || u.isLeo || u.isDispatch,
-    permissions: [Permissions.EmsFd, Permissions.Leo, Permissions.Dispatch],
+    permissions: [Permissions.DeclareCitizenDead, Permissions.ManageDeadCitizens],
   })
   async declareCitizenDeadOrAlive(
     @PathParams("citizenId") citizenId: string,
@@ -313,7 +303,6 @@ export class EmsFdController {
   @IsFeatureEnabled({ feature: Feature.PANIC_BUTTON })
   @Description("Set the panic button for an ems-fd deputy by their id")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async panicButton(
@@ -387,9 +376,27 @@ export class EmsFdController {
     return deputy;
   }
 
+  @Get("/dead-citizens")
+  @Description("Get all the marked dead citizens")
+  @UsePermissions({
+    permissions: [Permissions.ViewDeadCitizens, Permissions.ManageDeadCitizens],
+  })
+  async getDeadCitizens(): Promise<APITypes.GetDeadCitizensData> {
+    const [totalCount, citizens] = await prisma.$transaction([
+      prisma.citizen.count({ where: { dead: true } }),
+      prisma.citizen.findMany({
+        where: {
+          dead: true,
+        },
+        include: citizenInclude,
+      }),
+    ]);
+
+    return { totalCount, citizens };
+  }
+
   @Post("/image/:id")
   @UsePermissions({
-    fallback: (u) => u.isEmsFd,
     permissions: [Permissions.EmsFd],
   })
   async uploadImageToOfficer(

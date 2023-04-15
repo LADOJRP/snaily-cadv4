@@ -17,6 +17,7 @@ import type * as APITypes from "@snailycad/types/api";
 import { getNextIncidentId } from "lib/incidents/get-next-incident-id";
 import { assignUnitsInvolvedToIncident } from "lib/incidents/handle-involved-units";
 import { ActiveDeputy } from "middlewares/active-deputy";
+import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 
 export const assignedUnitsInclude = {
   include: {
@@ -69,7 +70,6 @@ export class IncidentController {
       Permissions.ViewEmsFdIncidents,
       Permissions.ManageEmsFdIncidents,
     ],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async getAllIncidents(
     @QueryParams("activeType", String) activeType: ActiveTypes = "inactive",
@@ -119,7 +119,6 @@ export class IncidentController {
       Permissions.ViewEmsFdIncidents,
       Permissions.ManageEmsFdIncidents,
     ],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async getIncidentById(
     @PathParams("id") id: string,
@@ -136,7 +135,6 @@ export class IncidentController {
   @Post("/")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageEmsFdIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async createIncident(
     @BodyParams() body: unknown,
@@ -195,7 +193,6 @@ export class IncidentController {
 
   @Post("/:type/:incidentId")
   @UsePermissions({
-    fallback: (u) => u.isDispatch || u.isLeo || u.isEmsFd,
     permissions: [Permissions.Dispatch, Permissions.Leo, Permissions.EmsFd],
   })
   async assignToIncident(
@@ -299,7 +296,6 @@ export class IncidentController {
   @Put("/:id")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageEmsFdIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async updateIncident(
     @BodyParams() body: unknown,
@@ -356,11 +352,32 @@ export class IncidentController {
     return normalizedIncident;
   }
 
+  @Delete("/purge")
+  @UsePermissions({
+    permissions: [Permissions.PurgeLeoIncidents],
+  })
+  async purgeIncidents(
+    @BodyParams("ids") ids: string[],
+    @Context("sessionUserId") sessionUserId: string,
+  ) {
+    if (!Array.isArray(ids)) return false;
+
+    await prisma.$transaction(ids.map((id) => prisma.emsFdIncident.delete({ where: { id } })));
+
+    await createAuditLogEntry({
+      translationKey: "emsFdIncidentsPurged",
+      action: { type: AuditLogActionType.EmsIncidentsPurged, new: ids },
+      executorId: sessionUserId,
+      prisma,
+    });
+
+    return true;
+  }
+
   @Delete("/:id")
   @Description("Delete an incident by its id")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageEmsFdIncidents],
-    fallback: (u) => u.isSupervisor,
   })
   async deleteIncident(
     @PathParams("id") incidentId: string,

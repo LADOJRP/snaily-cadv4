@@ -44,7 +44,7 @@ const ManageUnitModal = dynamic(
 );
 
 const MergeUnitModal = dynamic(
-  async () => (await import("./active-units/MergeUnitModal")).MergeUnitModal,
+  async () => (await import("./active-units/merge-unit-modal")).MergeUnitModal,
   { ssr: false },
 );
 
@@ -77,7 +77,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
   const activeOfficers = isMounted ? _activeOfficers : initialOfficers;
   const isDispatch = router.pathname === "/dispatch";
 
-  const hasDispatchPerms = hasPermissions([Permissions.Dispatch], (u) => u.isDispatch);
+  const hasDispatchPerms = hasPermissions([Permissions.Dispatch]);
   const showCreateTemporaryUnitButton = isDispatch && hasDispatchPerms;
 
   const { leoSearch, showLeoFilters, setShowFilters } = useActiveUnitsState(

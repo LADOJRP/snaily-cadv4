@@ -27,12 +27,6 @@ export const userProperties = {
   id: true,
   username: true,
   rank: true,
-  isLeo: true,
-  isSupervisor: true,
-  isEmsFd: true,
-  isDispatch: true,
-  isTow: true,
-  isTaxi: true,
   banned: true,
   banReason: true,
   avatarUrl: true,
@@ -54,6 +48,7 @@ export const userProperties = {
   createdAt: true,
   updatedAt: true,
   lastSeen: true,
+  developerMode: true,
 };
 
 interface GetSessionUserOptions<ReturnNullOnError extends boolean> {

@@ -12,12 +12,12 @@ import {
   TextField,
   AsyncListSearchField,
   Item,
+  SwitchField,
 } from "@snailycad/ui";
 import useFetch from "lib/useFetch";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
-import { Toggle } from "components/form/Toggle";
 import { FormRow } from "components/form/FormRow";
 import { isUnitOfficer } from "@snailycad/utils";
 import { classNames } from "lib/classNames";
@@ -45,11 +45,8 @@ export function ManageUnitTab({ unit: data }: Props) {
   const { BADGE_NUMBERS, DIVISIONS } = useFeatureEnabled();
 
   const { hasPermissions } = usePermission();
-  const hasManagePermissions = hasPermissions([Permissions.ManageUnits], true);
-  const hasManageAwardsPermissions = hasPermissions(
-    [Permissions.ManageAwardsAndQualifications],
-    true,
-  );
+  const hasManagePermissions = hasPermissions([Permissions.ManageUnits]);
+  const hasManageAwardsPermissions = hasPermissions([Permissions.ManageAwardsAndQualifications]);
 
   async function onSubmit(
     values: typeof INITIAL_VALUES,
@@ -119,7 +116,7 @@ export function ManageUnitTab({ unit: data }: Props) {
                   setValues={({ localValue, node }) => {
                     setValues({
                       ...values,
-                      userId: node?.value.id ?? values.userId,
+                      userId: node?.value?.id ?? values.userId,
                       username: localValue ?? values.username,
                     });
                   }}
@@ -271,9 +268,12 @@ export function ManageUnitTab({ unit: data }: Props) {
                 />
               </FormRow>
 
-              <FormField label={t("suspended")}>
-                <Toggle onCheckedChange={handleChange} name="suspended" value={values.suspended} />
-              </FormField>
+              <SwitchField
+                isSelected={values.suspended}
+                onChange={(isSelected) => setFieldValue("suspended", isSelected)}
+              >
+                {t("suspended")}
+              </SwitchField>
 
               <footer className="flex justify-end">
                 <Link

@@ -23,6 +23,7 @@ export enum Permissions {
   ViewCustomRoles = "ViewCustomRoles",
   ManageWarrants = "ManageWarrants",
   ManageAwardsAndQualifications = "ManageAwardsAndQualifications",
+  PurgeLeoIncidents = "PurgeLeoIncidents",
 
   Dispatch = "Dispatch",
 
@@ -30,6 +31,10 @@ export enum Permissions {
   EmsFd = "EmsFd",
   ViewEmsFdIncidents = "ViewEmsFdIncidents",
   ManageEmsFdIncidents = "ManageEmsFdIncidents",
+  DeclareCitizenDead = "DeclareCitizenDead",
+  PurgeEmsFdIncidents = "PurgeEmsFdIncidents",
+  ViewDeadCitizens = "ViewDeadCitizens",
+  ManageDeadCitizens = "ManageDeadCitizens",
 
   //  citizen related
   ViewTaxiCalls = "ViewTaxiCalls",

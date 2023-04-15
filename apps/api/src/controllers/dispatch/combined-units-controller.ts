@@ -1,9 +1,9 @@
 import { Controller } from "@tsed/di";
-import { BodyParams, PathParams, UseBeforeEach } from "@tsed/common";
+import { BodyParams, Context, PathParams, UseBeforeEach } from "@tsed/common";
 import { ContentType, Description, Post } from "@tsed/schema";
 import { prisma } from "lib/data/prisma";
 import { BadRequest, NotFound } from "@tsed/exceptions";
-import { CombinedEmsFdUnit, CombinedLeoUnit, ShouldDoType } from "@prisma/client";
+import { CombinedEmsFdUnit, CombinedLeoUnit, Feature, ShouldDoType } from "@prisma/client";
 import { Socket } from "services/socket-service";
 import { IsAuth } from "middlewares/is-auth";
 import { UsePermissions, Permissions } from "middlewares/use-permissions";
@@ -12,6 +12,9 @@ import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncrement
 import type * as APITypes from "@snailycad/types/api";
 import { getNextActiveCallId } from "lib/calls/getNextActiveCall";
 import { getNextIncidentId } from "lib/incidents/get-next-incident-id";
+import { validateSchema } from "lib/data/validate-schema";
+import { MERGE_UNIT_SCHEMA } from "@snailycad/schemas";
+import { isFeatureEnabled } from "lib/cad";
 
 @Controller("/dispatch/status")
 @UseBeforeEach(IsAuth)
@@ -27,14 +30,16 @@ export class CombinedUnitsController {
     "Merge officers into a combined/merged unit via their ids. `entry: true` means it that officer will be the main unit.",
   )
   @UsePermissions({
-    fallback: (u) => u.isDispatch || u.isLeo,
     permissions: [Permissions.Dispatch, Permissions.Leo],
   })
   async mergeOfficers(
-    @BodyParams() ids: { entry: boolean; id: string }[],
+    @BodyParams() body: unknown,
+    @Context("cad") cad: { features?: Record<Feature, boolean> },
   ): Promise<APITypes.PostDispatchStatusMergeOfficers> {
+    const data = validateSchema(MERGE_UNIT_SCHEMA, body);
+
     const officers = await prisma.$transaction(
-      ids.map((officer) => {
+      data.ids.map((officer) => {
         return prisma.officer.findFirst({
           where: {
             id: officer.id,
@@ -52,7 +57,7 @@ export class CombinedUnitsController {
       throw new BadRequest("officerAlreadyMerged");
     }
 
-    const entryOfficerId = ids.find((v) => v.entry)?.id;
+    const entryOfficerId = data.ids.find((v) => v.entry)?.id;
     if (!entryOfficerId) {
       throw new BadRequest("noEntryOfficer");
     }
@@ -73,6 +78,26 @@ export class CombinedUnitsController {
 
     const [division] = entryOfficer.divisions;
 
+    const emergencyVehicle = data.vehicleId
+      ? await prisma.emergencyVehicleValue.findUnique({ where: { id: data.vehicleId } })
+      : null;
+
+    const isUserDefinedCallsignEnabled = isFeatureEnabled({
+      defaultReturn: false,
+      feature: Feature.USER_DEFINED_CALLSIGN_COMBINED_UNIT,
+      features: cad.features,
+    });
+
+    if (isUserDefinedCallsignEnabled) {
+      const existing = await prisma.combinedLeoUnit.findFirst({
+        where: { userDefinedCallsign: { equals: data.userDefinedCallsign, mode: "insensitive" } },
+      });
+
+      if (existing) {
+        throw new BadRequest("userDefinedCallsignAlreadyExists");
+      }
+    }
+
     const nextInt = await findNextAvailableIncremental({ type: "combined-leo" });
     const combinedUnit = await prisma.combinedLeoUnit.create({
       data: {
@@ -82,11 +107,13 @@ export class CombinedUnitsController {
         departmentId: entryOfficer.departmentId,
         incremental: nextInt,
         pairedUnitTemplate: division?.pairedUnitTemplate ?? null,
+        activeVehicleId: emergencyVehicle?.id ?? null,
+        userDefinedCallsign: isUserDefinedCallsignEnabled ? data.userDefinedCallsign || null : null,
       },
     });
 
-    const data = await Promise.all(
-      ids.map(async ({ id: officerId }, idx) => {
+    const combinedUnits = await Promise.all(
+      data.ids.map(async ({ id: officerId }, idx) => {
         await prisma.officer.update({
           where: { id: officerId },
           data: { statusId: null },
@@ -99,12 +126,12 @@ export class CombinedUnitsController {
           data: {
             officers: { connect: { id: officerId } },
           },
-          include: idx === ids.length - 1 ? combinedUnitProperties : undefined,
+          include: idx === data.ids.length - 1 ? combinedUnitProperties : undefined,
         });
       }),
     );
 
-    const last = data[data.length - 1];
+    const last = combinedUnits[combinedUnits.length - 1];
     await this.socket.emitUpdateOfficerStatus();
 
     return last as APITypes.PostDispatchStatusMergeOfficers;
@@ -115,14 +142,16 @@ export class CombinedUnitsController {
     "Merge ems-fd deputies into a combined/merged unit via their ids. `entry: true` means it that deputy will be the main unit.",
   )
   @UsePermissions({
-    fallback: (u) => u.isDispatch || u.isLeo,
     permissions: [Permissions.Dispatch, Permissions.Leo],
   })
   async mergeDeputies(
-    @BodyParams() ids: { entry: boolean; id: string }[],
+    @BodyParams() body: unknown,
+    @Context("cad") cad: { features?: Record<Feature, boolean> },
   ): Promise<APITypes.PostDispatchStatusMergeDeputies> {
+    const data = validateSchema(MERGE_UNIT_SCHEMA, body);
+
     const deputies = await prisma.$transaction(
-      ids.map((deputy) => {
+      data.ids.map((deputy) => {
         return prisma.emsFdDeputy.findFirst({
           where: {
             id: deputy.id,
@@ -140,7 +169,7 @@ export class CombinedUnitsController {
       throw new BadRequest("deputyAlreadyMerged");
     }
 
-    const entryDeputyId = ids.find((v) => v.entry)?.id;
+    const entryDeputyId = data.ids.find((v) => v.entry)?.id;
     if (!entryDeputyId) {
       throw new BadRequest("noEntryDeputy");
     }
@@ -159,6 +188,26 @@ export class CombinedUnitsController {
       select: { id: true },
     });
 
+    const emergencyVehicle = data.vehicleId
+      ? await prisma.emergencyVehicleValue.findUnique({ where: { id: data.vehicleId } })
+      : null;
+
+    const isUserDefinedCallsignEnabled = isFeatureEnabled({
+      defaultReturn: false,
+      feature: Feature.USER_DEFINED_CALLSIGN_COMBINED_UNIT,
+      features: cad.features,
+    });
+
+    if (isUserDefinedCallsignEnabled) {
+      const existing = await prisma.combinedEmsFdUnit.findFirst({
+        where: { userDefinedCallsign: { equals: data.userDefinedCallsign, mode: "insensitive" } },
+      });
+
+      if (existing) {
+        throw new BadRequest("userDefinedCallsignAlreadyExists");
+      }
+    }
+
     const nextInt = await findNextAvailableIncremental({ type: "combined-ems-fd" });
     const combinedUnit = await prisma.combinedEmsFdUnit.create({
       data: {
@@ -168,11 +217,13 @@ export class CombinedUnitsController {
         departmentId: entryDeputy.departmentId,
         incremental: nextInt,
         pairedUnitTemplate: entryDeputy.division?.pairedUnitTemplate ?? null,
+        activeVehicleId: emergencyVehicle?.id ?? null,
+        userDefinedCallsign: isUserDefinedCallsignEnabled ? data.userDefinedCallsign || null : null,
       },
     });
 
-    const data = await Promise.all(
-      ids.map(async ({ id: deputyId }, idx) => {
+    const combinedUnits = await Promise.all(
+      data.ids.map(async ({ id: deputyId }, idx) => {
         await prisma.emsFdDeputy.update({
           where: { id: deputyId },
           data: { statusId: null },
@@ -185,12 +236,12 @@ export class CombinedUnitsController {
           data: {
             deputies: { connect: { id: deputyId } },
           },
-          include: idx === ids.length - 1 ? combinedEmsFdUnitProperties : undefined,
+          include: idx === data.ids.length - 1 ? combinedEmsFdUnitProperties : undefined,
         });
       }),
     );
 
-    const last = data[data.length - 1];
+    const last = combinedUnits[combinedUnits.length - 1];
     await this.socket.emitUpdateDeputyStatus();
 
     return last as APITypes.PostDispatchStatusMergeDeputies;
@@ -199,7 +250,6 @@ export class CombinedUnitsController {
   @Post("/unmerge/:id")
   @Description("Unmerge officers by the combinedUnitId")
   @UsePermissions({
-    fallback: (u) => u.isDispatch || u.isLeo,
     permissions: [Permissions.Dispatch, Permissions.Leo],
   })
   async unmergeOfficers(

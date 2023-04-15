@@ -18,6 +18,7 @@ import type * as APITypes from "@snailycad/types/api";
 import { getNextIncidentId } from "lib/incidents/get-next-incident-id";
 import { assignUnitsInvolvedToIncident } from "lib/incidents/handle-involved-units";
 import { cad } from "@snailycad/types";
+import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 
 export const assignedUnitsInclude = {
   include: {
@@ -66,7 +67,6 @@ export class IncidentController {
   @Description("Get all the created incidents")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ViewIncidents, Permissions.ManageIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async getAllIncidents(
     @Context("cad") cad: cad,
@@ -115,7 +115,6 @@ export class IncidentController {
   @Description("Get an incident by its id")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ViewIncidents, Permissions.ManageIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async getIncidentById(
     @PathParams("id") id: string,
@@ -132,7 +131,6 @@ export class IncidentController {
   @Post("/")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async createIncident(
     @BodyParams() body: unknown,
@@ -191,7 +189,6 @@ export class IncidentController {
 
   @Post("/:type/:incidentId")
   @UsePermissions({
-    fallback: (u) => u.isDispatch || u.isLeo || u.isEmsFd,
     permissions: [Permissions.Dispatch, Permissions.Leo, Permissions.EmsFd],
   })
   async assignToIncident(
@@ -291,11 +288,40 @@ export class IncidentController {
     return normalizedIncident;
   }
 
+  @Delete("/purge")
+  @UsePermissions({
+    permissions: [Permissions.PurgeLeoIncidents],
+  })
+  async purgeIncidents(
+    @BodyParams("ids") ids: string[],
+    @Context("sessionUserId") sessionUserId: string,
+  ) {
+    if (!Array.isArray(ids)) return false;
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const event = await prisma.leoIncident.delete({
+          where: { id },
+        });
+
+        this.socket.emitUpdateActiveIncident({ ...event, isActive: false });
+      }),
+    );
+
+    await createAuditLogEntry({
+      translationKey: "leoIncidentsPurged",
+      action: { type: AuditLogActionType.LeoIncidentsPurged, new: ids },
+      executorId: sessionUserId,
+      prisma,
+    });
+
+    return true;
+  }
+
   @UseBefore(ActiveOfficer)
   @Put("/:id")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageIncidents],
-    fallback: (u) => u.isDispatch || u.isLeo,
   })
   async updateIncident(
     @BodyParams() body: unknown,
@@ -356,7 +382,6 @@ export class IncidentController {
   @Description("Delete an incident by its id")
   @UsePermissions({
     permissions: [Permissions.Dispatch, Permissions.ManageIncidents],
-    fallback: (u) => u.isSupervisor,
   })
   async deleteIncident(
     @PathParams("id") incidentId: string,

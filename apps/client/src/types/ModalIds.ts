@@ -83,6 +83,7 @@ export const enum ModalIds {
   AddInvolvedUnit = "AddInvolvedUnitModal",
   CreateTemporaryUnit = "CreateTemporaryUnitModal",
   BusinessSearch = "BusinessSearchModal",
+  AlertPurgeIncidents = "AlertPurgeIncidents",
 
   SearchMedicalRecord = "SearchMedicalRecordModal",
   CreateMedicalRecord = "CreateMedicalRecordModal",
@@ -143,4 +144,5 @@ export const enum ModalIds {
   AlertDisableUser2FA = "AlertDisableUser2FAModal",
   AlertCancelExpungementRequest = "AlertCancelExpungementRequestModal",
   AlertDeleteBusinessRole = "AlertDeleteBusinessRoleModal",
+  AlertDeclareCitizenAlive = "AlertDeclareCitizenAliveModal",
 }
