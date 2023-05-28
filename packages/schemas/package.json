@@ -1,6 +1,6 @@
 {
   "name": "@snailycad/schemas",
-  "version": "1.55.2",
+  "version": "1.58.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -24,7 +24,7 @@
     "typecheck": "yarn tsc --noEmit"
   },
   "devDependencies": {
-    "tslib": "^2.5.0",
+    "tslib": "^2.5.2",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },

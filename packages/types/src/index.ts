@@ -1,8 +1,10 @@
 import type { Permissions } from "@snailycad/permissions";
 import type * as Prisma from "@prisma/client";
 import type * as Enums from "./enums";
+import { CadFeatureOptions } from "./lib/cad-feature";
 
 export * from "./enums";
+export * from "./lib/cad-feature";
 
 type CADPick =
   | "id"
@@ -30,7 +32,7 @@ type CADPick =
 
 export type cad = Pick<
   Omit<Prisma.cad, "registrationCode"> & {
-    features: Record<Enums.Feature, boolean>;
+    features: Record<Enums.Feature, boolean> & { options?: CadFeatureOptions };
     miscCadSettings: MiscCadSettings | null;
     apiToken?: ApiToken | null;
     autoSetUserProperties?: AutoSetUserProperties | null;
@@ -144,9 +146,11 @@ export type Citizen = Prisma.Citizen & {
   flags?: Prisma.Value[];
   notes?: Prisma.Note[];
   suspendedLicenses?: SuspendedCitizenLicenses | null;
+  licensePoints?: CitizenLicensePoints | null;
 };
 
 export type SuspendedCitizenLicenses = Prisma.SuspendedCitizenLicenses;
+export type CitizenLicensePoints = Prisma.CitizenLicensePoints;
 
 export type Note = Prisma.Note & {
   createdBy?: Officer | null;

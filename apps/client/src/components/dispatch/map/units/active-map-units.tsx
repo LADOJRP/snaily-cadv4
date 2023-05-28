@@ -9,12 +9,12 @@ import {
 import { isUnitCombined, isUnitCombinedEmsFd } from "@snailycad/utils";
 import { useActiveDeputies } from "hooks/realtime/useActiveDeputies";
 import { useActiveOfficers } from "hooks/realtime/useActiveOfficers";
-import type { MapPlayer, PlayerDataEventPayload } from "types/Map";
+import type { MapPlayer, PlayerDataEventPayload } from "types/map";
 import { Root as AccordionRoot } from "@radix-ui/react-accordion";
 import { createPortal } from "react-dom";
 import { usePortal } from "@casper124578/useful";
 import { useTranslations } from "next-intl";
-import { UnitItem } from "./UnitItem";
+import { UnitItem } from "./unit-item";
 import { ManageUnitModal } from "components/dispatch/modals/manage-unit-modal";
 import { useMapPlayersStore } from "hooks/realtime/use-map-players";
 
@@ -25,7 +25,9 @@ interface Props {
 }
 
 export function ActiveMapUnits({ openItems, setOpenItems }: Props) {
-  const [tempUnit, setTempUnit] = React.useState<null | Officer | EmsFdDeputy>(null);
+  const [tempUnit, setTempUnit] = React.useState<
+    null | Officer | EmsFdDeputy | CombinedEmsFdUnit | CombinedLeoUnit
+  >(null);
   const { players } = useMapPlayersStore();
 
   const portalRef = usePortal("ActiveMapCalls");
@@ -78,17 +80,44 @@ interface ActiveUnitsOptions {
 
 function makeActiveUnits({ players, activeOfficers, activeDeputies }: ActiveUnitsOptions) {
   const activeUnits: MapPlayer[] = [];
-  const _activeOfficers = activeOfficers.flatMap((officer) => {
-    if (isUnitCombined(officer)) return officer.officers;
-    return officer;
-  });
-  const _activeDeputies = activeDeputies.flatMap((deputy) => {
-    if (isUnitCombinedEmsFd(deputy)) return deputy.deputies;
-    return deputy;
-  });
+  const _activeOfficers = activeOfficers;
+  const _activeDeputies = activeDeputies;
 
   for (const activeUnit of [..._activeOfficers, ..._activeDeputies]) {
     if (!activeUnit.status || activeUnit.status.shouldDo === ShouldDoType.SET_OFF_DUTY) continue;
+
+    if (isUnitCombined(activeUnit) || isUnitCombinedEmsFd(activeUnit)) {
+      const player = players.find((player) => {
+        const steamIds = isUnitCombinedEmsFd(activeUnit)
+          ? activeUnit.deputies.map((deputy) => deputy.user?.steamId)
+          : activeUnit.officers.map((officer) => officer.user?.steamId);
+
+        const discordIds = isUnitCombinedEmsFd(activeUnit)
+          ? activeUnit.deputies.map((deputy) => deputy.user?.discordId)
+          : activeUnit.officers.map((officer) => officer.user?.discordId);
+
+        const filteredSteamIds = steamIds.filter(Boolean) as string[];
+        const filteredDiscordIds = discordIds.filter(Boolean) as string[];
+
+        return (
+          (player.convertedSteamId && filteredSteamIds.includes(player.convertedSteamId)) ||
+          (player.discordId && filteredDiscordIds.includes(player.discordId))
+        );
+      });
+
+      if (!player || !("steamId" in player) || !("discordId" in player)) continue;
+
+      const existing = activeUnits.some((unit) => {
+        return unit.discordId === discordId || unit.convertedSteamId === steamId;
+      });
+
+      if (player && !existing) {
+        activeUnits.push({ ...player, unit: activeUnit });
+      }
+
+      continue;
+    }
+
     if (!activeUnit.user) continue;
 
     const steamId = activeUnit.user.steamId;

@@ -55,7 +55,7 @@ export class CADSettingsController {
       ...setCADFeatures(cad),
       registrationCode,
       version,
-    } as APITypes.GetCADSettingsData;
+    } as unknown as APITypes.GetCADSettingsData;
   }
 
   @Get("/audit-logs")
@@ -162,6 +162,7 @@ export class CADSettingsController {
       const createUpdateData = {
         isEnabled: feature.isEnabled,
         feature: feature.feature as Feature,
+        extraFields: JSON.stringify(feature.extraFields),
         cadId: cad.id,
       };
 
@@ -233,6 +234,18 @@ export class CADSettingsController {
         boloInactivityTimeout: data.boloInactivityTimeout || null,
         activeWarrantsInactivityTimeout: data.activeWarrantsInactivityTimeout || null,
         jailTimeScale: (data.jailTimeScaling || null) as JailTimeScale | null,
+        driversLicenseMaxPoints: data.driversLicenseMaxPoints,
+        pilotLicenseMaxPoints: data.pilotLicenseMaxPoints,
+        weaponLicenseMaxPoints: data.weaponLicenseMaxPoints,
+        waterLicenseMaxPoints: data.waterLicenseMaxPoints,
+        pilotLicenseTemplate: data.pilotLicenseTemplate,
+        driversLicenseTemplate: data.driversLicenseTemplate,
+        weaponLicenseTemplate: data.weaponLicenseTemplate,
+        waterLicenseTemplate: data.waterLicenseTemplate,
+        pilotLicenseNumberLength: data.pilotLicenseNumberLength,
+        driversLicenseNumberLength: data.driversLicenseNumberLength,
+        weaponLicenseNumberLength: data.weaponLicenseNumberLength,
+        waterLicenseNumberLength: data.waterLicenseNumberLength,
       },
       include: { webhooks: true },
     });
