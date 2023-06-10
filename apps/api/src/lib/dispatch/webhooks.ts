@@ -9,7 +9,7 @@ import {
   Feature,
 } from "@prisma/client";
 import { generateCallsign } from "@snailycad/utils";
-import { isFeatureEnabled } from "lib/cad";
+import { isFeatureEnabled } from "lib/upsert-cad";
 import type { HandlePanicButtonPressedOptions } from "lib/leo/send-panic-button-webhook";
 import { getTranslator } from "utils/get-translator";
 
@@ -90,7 +90,7 @@ export async function createPanicButtonEmbed(
 
   const unitName = isCombined ? null : `${unit.citizen.name} ${unit.citizen.surname}`;
   const template = isCombined
-    ? options.cad.miscCadSettings.pairedUnitSymbol
+    ? options.cad.miscCadSettings.pairedUnitTemplate
     : options.cad.miscCadSettings.callsignTemplate;
 
   const callsign = generateCallsign(unit as any, template);

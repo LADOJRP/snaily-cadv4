@@ -6,14 +6,14 @@ import { FormField } from "components/form/FormField";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
 import useFetch from "lib/useFetch";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { handleValidate } from "lib/handleValidate";
 import { BLEETER_SCHEMA } from "@snailycad/schemas";
 import { CropImageModal } from "components/modal/CropImageModal";
 import { dataToSlate, Editor } from "components/editor/editor";
 import type {
   GetBleeterByIdData,
-  PostBleeterByIdData,
+  PostBleeterData,
   PostBleeterByIdImageData,
   PutBleeterByIdData,
 } from "@snailycad/types/api";
@@ -22,7 +22,7 @@ import { useRouter } from "next/router";
 interface Props {
   post: GetBleeterByIdData | null;
 
-  onCreate?(bleet: PostBleeterByIdData & { isNew?: boolean }): void;
+  onCreate?(bleet: PostBleeterData & { isNew?: boolean }): void;
   onUpdate?(bleet: PutBleeterByIdData): void;
 }
 
@@ -59,7 +59,7 @@ export function ManageBleetModal({ post, onCreate, onUpdate }: Props) {
         onUpdate?.(json);
       }
     } else {
-      const data = await execute<PostBleeterByIdData, typeof INITIAL_VALUES>({
+      const data = await execute<PostBleeterData, typeof INITIAL_VALUES>({
         path: "/bleeter",
         method: "POST",
         data: values,

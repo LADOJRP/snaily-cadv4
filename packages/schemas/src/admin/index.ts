@@ -15,6 +15,9 @@ export const CAD_SETTINGS_SCHEMA = z.object({
 
 export const LIVE_MAP_SETTINGS = z.object({
   liveMapURL: z.string().nullable(),
+  liveMapURLs: z
+    .array(z.object({ url: z.string().url(), name: z.string().min(2), id: z.string().optional() }))
+    .nullable(),
 });
 
 export const API_TOKEN_SCHEMA = z.object({
@@ -73,7 +76,6 @@ export const DISCORD_SETTINGS_SCHEMA = z.object({
   dispatchRoles: z.array(z.any()).nullish(),
   towRoles: z.array(z.any()).nullish(),
   taxiRoles: z.array(z.any()).nullish(),
-  adminRoleId: z.string().nullish(),
   whitelistedRoleId: z.string().nullish(),
   courthouseRoles: z.array(z.any()).nullish(),
 

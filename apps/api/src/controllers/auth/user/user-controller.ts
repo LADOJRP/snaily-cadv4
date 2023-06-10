@@ -4,7 +4,7 @@ import { UseBefore } from "@tsed/platform-middlewares";
 import { ContentType, Delete, Description, Patch, Post } from "@tsed/schema";
 import { Cookie } from "@snailycad/config";
 import { prisma } from "lib/data/prisma";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { setCookie } from "utils/set-cookie";
 import { cad, Rank, ShouldDoType, StatusViewMode, TableActionsAlignment } from "@prisma/client";
 import { NotFound } from "@tsed/exceptions";
@@ -152,10 +152,15 @@ export class UserController {
     });
 
     if (officer) {
-      await prisma.officer.update({
-        where: { id: officer.id },
-        data: { statusId: null, activeCallId: null },
-      });
+      await prisma.$transaction([
+        prisma.officer.update({
+          where: { id: officer.id },
+          data: { statusId: null, activeCallId: null },
+        }),
+        prisma.dispatchChat.deleteMany({
+          where: { unitId: officer.id },
+        }),
+      ]);
 
       await handleStartEndOfficerLog({
         unit: officer,
@@ -183,6 +188,17 @@ export class UserController {
         userId,
         type: "ems-fd",
       });
+
+      await prisma.$transaction([
+        prisma.emsFdDeputy.update({
+          where: { id: emsFdDeputy.id },
+          data: { statusId: null, activeCallId: null },
+        }),
+        prisma.dispatchChat.deleteMany({
+          where: { unitId: emsFdDeputy.id },
+        }),
+      ]);
+
       await this.socket.emitUpdateDeputyStatus();
     }
 

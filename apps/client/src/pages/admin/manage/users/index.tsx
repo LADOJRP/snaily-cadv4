@@ -10,7 +10,7 @@ import { Permissions, usePermission } from "hooks/usePermission";
 import { AllUsersTab } from "components/admin/manage/users/tabs/all-users-tab";
 import type { GetManageUsersData } from "@snailycad/types/api";
 import { TabList, Button } from "@snailycad/ui";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import dynamic from "next/dynamic";
 
@@ -56,7 +56,7 @@ export default function ManageUsers({ data }: Props) {
 
         {hasManagePermissions ? (
           <div>
-            <Button onClick={() => openModal(ModalIds.PruneUsers)}>Prune Users</Button>
+            <Button onClick={() => openModal(ModalIds.PruneUsers)}>{t("pruneUsers")}</Button>
           </div>
         ) : null}
       </header>

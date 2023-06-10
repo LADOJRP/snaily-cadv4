@@ -1,19 +1,14 @@
 name: Bug Report
 description: Create a report to help improve SnailyCAD
 labels: "bug"
+assignees: "Dev-CasperTheGhost"
 body:
   - type: input
     attributes:
       label: What version of Node.js are you using?
-      description: "For example: 14.0.0"
+      description: "For example: 18.0.0"
     validations:
       required: true
-  - type: input
-    attributes:
-      label: What version of npm are you using?
-      description: "For example: 7.10.0"
-    validations:
-      required: false
   - type: input
     attributes:
       label: What operating system are you using?
@@ -23,7 +18,7 @@ body:
   - type: input
     attributes:
       label: What version of SnailyCAD are you currently using?
-      description: "For example: 1.0.0-beta.88"
+      description: "For example: 1.59.0"
     validations:
       required: true
   - type: textarea

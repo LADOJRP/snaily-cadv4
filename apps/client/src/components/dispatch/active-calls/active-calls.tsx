@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Manage911CallModal } from "components/dispatch/modals/Manage911CallModal";
+import { Manage911CallModal } from "components/dispatch/modals/manage-911-call/manage-911-call-modal";
 import { useRouter } from "next/router";
 import { Full911Call, useDispatchState } from "state/dispatch/dispatch-state";
 import { AssignedUnit, WhitelistStatus } from "@snailycad/types";
@@ -16,7 +16,7 @@ import { classNames } from "lib/classNames";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
 import { Droppable } from "@snailycad/ui";
-import { DndActions } from "types/DndActions";
+import { DndActions } from "types/dnd-actions";
 import { AssignedUnitsColumn } from "./assigned-units-column";
 import type { Get911CallsData, Post911CallAssignUnAssign } from "@snailycad/types/api";
 import { useMounted } from "@casper124578/useful";

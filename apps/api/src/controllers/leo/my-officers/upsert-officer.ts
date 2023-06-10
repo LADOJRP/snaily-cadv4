@@ -10,11 +10,11 @@ import {
   ShouldDoType,
   User,
 } from "@prisma/client";
-import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
+import { shouldCheckCitizenUserId } from "lib/citizen/has-citizen-access";
 import { prisma } from "lib/data/prisma";
 import { validateSchema } from "lib/data/validate-schema";
 import { BadRequest, NotFound } from "@tsed/exceptions";
-import { isFeatureEnabled } from "lib/cad";
+import { isFeatureEnabled } from "lib/upsert-cad";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { updateOfficerDivisionsCallsigns, validateMaxDepartmentsEachPerUser } from "lib/leo/utils";
 import { validateMaxDivisionsPerUnit } from "./MyOfficersController";
@@ -23,7 +23,8 @@ import { validateDuplicateCallsigns } from "lib/leo/validateDuplicateCallsigns";
 import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncremental";
 import { validateImageURL } from "lib/images/validate-image-url";
 import { getLastOfArray, manyToManyHelper } from "lib/data/many-to-many";
-import { leoProperties } from "lib/leo/activeOfficer";
+import { leoProperties } from "utils/leo/includes";
+
 import type * as APITypes from "@snailycad/types/api";
 import type { ZodSchema } from "zod";
 import generateBlurPlaceholder from "lib/images/generate-image-blur-data";
@@ -174,6 +175,7 @@ export async function upsertOfficer({
     const disconnectConnectArr = manyToManyHelper(
       existingOfficer?.divisions.map((v) => v.id) ?? [],
       toIdString(data.divisions),
+      { showUpsert: false },
     );
 
     await updateOfficerDivisionsCallsigns({

@@ -3,7 +3,7 @@ import { useTranslations } from "use-intl";
 import { Button } from "@snailycad/ui";
 import { ActiveOfficer, useLeoState } from "state/leo-state";
 import { useModal } from "state/modalState";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { useActiveOfficers } from "hooks/realtime/useActiveOfficers";
 import { useRouter } from "next/router";
 import { formatUnitDivisions, makeUnitName } from "lib/utils";
@@ -31,6 +31,7 @@ import { generateContrastColor } from "lib/table/get-contrasting-text-color";
 import dynamic from "next/dynamic";
 import { Permissions } from "@snailycad/permissions";
 import { usePermission } from "hooks/usePermission";
+import { PrivateMessagesModal } from "./active-units/private-messages/private-messages-modal";
 
 const CreateTemporaryUnitModal = dynamic(
   async () =>
@@ -264,6 +265,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
         />
       ) : null}
       {isDispatch && showCreateTemporaryUnitButton ? <CreateTemporaryUnitModal /> : null}
+      {isDispatch ? <PrivateMessagesModal /> : null}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { usePortal } from "@casper124578/useful";
 import { Button } from "@snailycad/ui";
 import { useTranslations } from "next-intl";
 import { useModal } from "state/modalState";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { MapItem, useDispatchMapState } from "state/mapState";
 import { Permissions, usePermission } from "hooks/usePermission";
 
@@ -35,6 +35,9 @@ export function MapActions() {
         ) : null}
         <Button onPress={() => openModal(ModalIds.Manage911Call)}>
           {t("Calls.create911Call")}
+        </Button>
+        <Button onPress={() => openModal(ModalIds.SelectMapServer)}>
+          {t("Leo.selectMapServer")}
         </Button>
       </div>,
       portalRef,

@@ -11,15 +11,15 @@ import {
 } from "@prisma/client";
 import { validateSchema } from "lib/data/validate-schema";
 import { EMS_FD_DEPUTY_SCHEMA } from "@snailycad/schemas";
-import { isFeatureEnabled } from "lib/cad";
+import { isFeatureEnabled } from "lib/upsert-cad";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { prisma } from "lib/data/prisma";
 import { validateMaxDepartmentsEachPerUser } from "lib/leo/utils";
 import { validateDuplicateCallsigns } from "lib/leo/validateDuplicateCallsigns";
 import { handleWhitelistStatus } from "lib/leo/handleWhitelistStatus";
 import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncremental";
-import { unitProperties } from "lib/leo/activeOfficer";
-import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
+import { unitProperties } from "utils/leo/includes";
+import { shouldCheckCitizenUserId } from "lib/citizen/has-citizen-access";
 import { NotFound } from "@tsed/exceptions";
 import { validateImageURL } from "lib/images/validate-image-url";
 import generateBlurPlaceholder from "lib/images/generate-image-blur-data";

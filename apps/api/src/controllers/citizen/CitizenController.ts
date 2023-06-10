@@ -3,7 +3,7 @@ import { Controller } from "@tsed/di";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
 import { QueryParams, BodyParams, PathParams } from "@tsed/platform-params";
 import { prisma } from "lib/data/prisma";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { BadRequest, Forbidden, NotFound } from "@tsed/exceptions";
 import { CREATE_CITIZEN_SCHEMA, CREATE_OFFICER_SCHEMA } from "@snailycad/schemas";
 import fs from "node:fs/promises";
@@ -13,22 +13,22 @@ import { User, ValueType, Feature, cad, MiscCadSettings, Prisma } from "@prisma/
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { canManageInvariant, userProperties } from "lib/auth/getSessionUser";
 import { validateSchema } from "lib/data/validate-schema";
-import { updateCitizenLicenseCategories } from "lib/citizen/licenses";
-import { isFeatureEnabled } from "lib/cad";
-import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
-import { citizenObjectFromData } from "lib/citizen";
+import { updateCitizenLicenseCategories } from "lib/citizen/licenses/update-citizen-license-categories";
+import { isFeatureEnabled } from "lib/upsert-cad";
+import { shouldCheckCitizenUserId } from "lib/citizen/has-citizen-access";
+import { citizenObjectFromData } from "lib/citizen/citizen-create-data-obj";
 import type * as APITypes from "@snailycad/types/api";
 import { getImageWebPPath } from "lib/images/get-image-webp-path";
-import { validateSocialSecurityNumber } from "lib/citizen/validateSSN";
-import { setEndedSuspendedLicenses } from "lib/citizen/setEndedSuspendedLicenses";
+import { validateSocialSecurityNumber } from "lib/citizen/validate-ssn";
+import { setEndedSuspendedLicenses } from "lib/citizen/licenses/set-ended-suspended-licenses";
 import { upsertOfficer } from "controllers/leo/my-officers/upsert-officer";
-import { createCitizenViolations } from "lib/records/create-citizen-violations";
+import { createCitizenViolations } from "~/lib/leo/records/create-citizen-violations";
 import generateBlurPlaceholder from "lib/images/generate-image-blur-data";
 import { z } from "zod";
 import { RecordsInclude } from "controllers/leo/search/SearchController";
-import { leoProperties } from "lib/leo/activeOfficer";
+import { leoProperties } from "utils/leo/includes";
 
-export const citizenInclude = {
+export const citizenInclude = Prisma.validator<Prisma.CitizenSelect>()({
   user: { select: userProperties },
   flags: true,
   suspendedLicenses: true,
@@ -68,7 +68,7 @@ export const citizenInclude = {
   pilotLicense: true,
   waterLicense: true,
   dlCategory: { include: { value: true } },
-} as const;
+});
 
 export const citizenIncludeWithRecords = {
   ...citizenInclude,

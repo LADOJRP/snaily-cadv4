@@ -18,7 +18,7 @@ import { useValues } from "context/ValuesContext";
 import { Form, Formik, type FormikHelpers } from "formik";
 import { handleValidate } from "lib/handleValidate";
 import useFetch from "lib/useFetch";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { useTranslations } from "use-intl";
 import { RecordType, type PenalCode, type Record, PaymentStatus } from "@snailycad/types";
 import { toastMessage } from "lib/toastMessage";
@@ -137,6 +137,7 @@ export function ManageRecordModal(props: Props) {
         jailTime: value.jailTime?.enabled ? value.jailTime?.value : null,
         fine: value.fine?.enabled ? value.fine?.value : null,
         counts: value.counts?.value ?? null,
+        communityService: value.communityService?.enabled ? value.communityService?.value : null,
       })),
     };
 
@@ -216,6 +217,10 @@ export function ManageRecordModal(props: Props) {
             fine: { enabled: !!v.fine, value: v.fine ?? undefined },
             counts: { enabled: true, value: v.counts ?? undefined },
             jailTime: { enabled: !!v.jailTime, value: v.jailTime ?? undefined },
+            communityService: {
+              enabled: !!v.communityService,
+              value: v.communityService ?? undefined,
+            },
             bail: { enabled: LEO_BAIL ? !!v.jailTime : false, value: v.bail ?? undefined },
           },
         };

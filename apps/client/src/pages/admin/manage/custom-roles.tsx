@@ -11,7 +11,7 @@ import { Permissions } from "@snailycad/permissions";
 import { Button } from "@snailycad/ui";
 import { useModal } from "state/modalState";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { AlertModal } from "components/modal/AlertModal";
 import useFetch from "lib/useFetch";
 import { usePermission } from "hooks/usePermission";
@@ -190,7 +190,10 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, req }) =>
       customRoles,
       session: user,
       messages: {
-        ...(await getTranslations(["admin", "values", "common"], user?.locale ?? locale)),
+        ...(await getTranslations(
+          ["admin", "cad-settings", "values", "common"],
+          user?.locale ?? locale,
+        )),
       },
     },
   };

@@ -18,18 +18,13 @@ model cad {
   ownerId                 String
   areaOfPlay              String?                @db.VarChar(255)
   steamApiKey             String?                @db.VarChar(255)
-  discordWebhookURL       String?                @db.VarChar(255)
   whitelisted             Boolean                @default(false)
   towWhitelisted          Boolean                @default(false)
   taxiWhitelisted         Boolean                @default(false)
   businessWhitelisted     Boolean                @default(false)
-  maxPlateLength          Int                    @default(8)
-  liveMapSocketURl        String?                @db.VarChar(255)
   logoId                  String?
-  logoBlurData            String?
   registrationCode        String?
   features                CadFeature[]
-  disabledFeatures        Feature[]
   miscCadSettings         MiscCadSettings?       @relation(fields: [miscCadSettingsId], references: [id])
   miscCadSettingsId       String?
   apiToken                ApiToken?              @relation(fields: [apiTokenId], references: [id])
@@ -73,6 +68,7 @@ model MiscCadSettings {
   pairedUnitSymbol          String?        @default("A") @db.VarChar(255)
   signal100Enabled          Boolean        @default(false)
   liveMapURL                String?        @db.Text
+  liveMapURLs               LiveMapURL[]
   roleplayEnabled           Boolean?       @default(true)
   authScreenBgImageId       String?
   authScreenHeaderImageId   String?
@@ -102,16 +98,18 @@ model MiscCadSettings {
 
   lastInactivitySyncTimestamp DateTime?
 
-  /// deprecated, use `webhooks` instead
-  call911WebhookId     String?
-  statusesWebhookId    String?
-  panicButtonWebhookId String?
-  boloWebhookId        String?
-
   webhooks    DiscordWebhook[]
   rawWebhooks RawWebhook[]
 
   cad cad[]
+}
+
+model LiveMapURL {
+  id                String           @id @default(cuid())
+  url               String
+  name              String
+  MiscCadSettings   MiscCadSettings? @relation(fields: [miscCadSettingsId], references: [id], onDelete: Cascade)
+  miscCadSettingsId String?
 }
 
 model RawWebhook {
@@ -177,30 +175,16 @@ model DiscordRoles {
   id      String @id @default(cuid())
   guildId String
 
-  leoRole             DiscordRole?  @relation("leoRole", fields: [leoRoleId], references: [id])
-  leoRoleId           String?
-  leoRoles            DiscordRole[] @relation("leoRoles")
-  leoSupervisorRole   DiscordRole?  @relation("leoSupervisorRole", fields: [leoSupervisorRoleId], references: [id])
-  leoSupervisorRoleId String?
-  leoSupervisorRoles  DiscordRole[] @relation("leoSupervisorRoles")
-  emsFdRole           DiscordRole?  @relation("emsFdRole", fields: [emsFdRoleId], references: [id])
-  emsFdRoleId         String?
-  emsFdRoles          DiscordRole[] @relation("emsFdRoles")
-  dispatchRole        DiscordRole?  @relation("dispatchRole", fields: [dispatchRoleId], references: [id])
-  dispatchRoleId      String?
-  dispatchRoles       DiscordRole[] @relation("dispatchRoles")
-  towRole             DiscordRole?  @relation("towRole", fields: [towRoleId], references: [id])
-  towRoleId           String?
-  towRoles            DiscordRole[] @relation("towRoles")
-  taxiRole            DiscordRole?  @relation("taxiRole", fields: [taxiRoleId], references: [id])
-  taxiRoleId          String?
-  taxiRoles           DiscordRole[] @relation("taxiRoles")
-  adminRole           DiscordRole?  @relation("adminRole", fields: [adminRoleId], references: [id])
-  adminRoleId         String?
-  adminRoles          DiscordRole[] @relation("adminRoles")
-  whitelistedRoleId   String?
-  whitelistedRole     DiscordRole?  @relation("whitelistedRole", fields: [whitelistedRoleId], references: [id])
-  courthouseRoles     DiscordRole[] @relation("courthouseRoles")
+  leoRoles           DiscordRole[] @relation("leoRoles")
+  leoSupervisorRoles DiscordRole[] @relation("leoSupervisorRoles")
+  emsFdRoles         DiscordRole[] @relation("emsFdRoles")
+  dispatchRoles      DiscordRole[] @relation("dispatchRoles")
+  towRoles           DiscordRole[] @relation("towRoles")
+  taxiRoles          DiscordRole[] @relation("taxiRoles")
+  adminRoles         DiscordRole[] @relation("adminRoles")
+  whitelistedRoleId  String?
+  whitelistedRole    DiscordRole?  @relation("whitelistedRole", fields: [whitelistedRoleId], references: [id])
+  courthouseRoles    DiscordRole[] @relation("courthouseRoles")
 
   adminRolePermissions         String[]
   leoRolePermissions           String[]
@@ -216,27 +200,21 @@ model DiscordRoles {
 }
 
 model DiscordRole {
-  id                    String         @id @unique
-  name                  String
-  guildId               String?
-  discordRoles          DiscordRoles   @relation(fields: [discordRolesId], references: [id])
-  discordRolesId        String
-  leoRoles              DiscordRoles[] @relation("leoRole")
+  id             String       @id @unique
+  name           String
+  guildId        String?
+  discordRoles   DiscordRoles @relation(fields: [discordRolesId], references: [id])
+  discordRolesId String
+  CustomRole     CustomRole[]
+
   leoRolesArr           DiscordRoles[] @relation("leoRoles")
-  emsFdRoles            DiscordRoles[] @relation("emsFdRole")
   emsFdRolesArr         DiscordRoles[] @relation("emsFdRoles")
-  dispatchRoles         DiscordRoles[] @relation("dispatchRole")
-  towRoles              DiscordRoles[] @relation("towRole")
-  taxiRoles             DiscordRoles[] @relation("taxiRole")
-  leoSupervisorRoles    DiscordRoles[] @relation("leoSupervisorRole")
-  adminRoles            DiscordRoles[] @relation("adminRole")
   whitelistedRoles      DiscordRoles[] @relation("whitelistedRole")
   dispatchRolesArr      DiscordRoles[] @relation("dispatchRoles")
   leoSupervisorRolesArr DiscordRoles[] @relation("leoSupervisorRoles")
   taxiRolesArr          DiscordRoles[] @relation("taxiRoles")
   towRolesArr           DiscordRoles[] @relation("towRoles")
   courthouseRoles       DiscordRoles[] @relation("courthouseRoles")
-  CustomRole            CustomRole[]
   adminRolesArr         DiscordRoles[] @relation("adminRoles")
 }
 
@@ -286,7 +264,7 @@ model User {
   vehicles             RegisteredVehicle[]
   weapons              Weapon[]
   notifications        Notification[]
-  executedNotifictions Notification[]       @relation("executor")
+  executedNotifictions Notification[]         @relation("executor")
   medicalRecords       MedicalRecord[]
   bleeterPosts         BleeterPost[]
   businesses           Business[]
@@ -303,6 +281,8 @@ model User {
   ActiveTone           ActiveTone[]
   AuditLog             AuditLog[]
   DoctorVisit          DoctorVisit[]
+  BleeterProfile       BleeterProfile?
+  BleeterProfileFollow BleeterProfileFollow[]
 }
 
 model UserSession {
@@ -420,6 +400,7 @@ model Citizen {
   suspendedLicensesId  String?
   LicenseExam          LicenseExam[]
   DoctorVisit          DoctorVisit[]
+  pets                 Pet[]
 
   @@index([name, surname], name: "fullname")
 }
@@ -447,6 +428,20 @@ model SuspendedCitizenLicenses {
   citizens               Citizen[]
 }
 
+model Pet {
+  id          String   @id @default(cuid())
+  name        String
+  breed       String   @db.VarChar(255)
+  color       String   @db.VarChar(255)
+  weight      String   @db.VarChar(255)
+  dateOfBirth DateTime
+  citizen     Citizen  @relation(fields: [citizenId], references: [id])
+  citizenId   String
+
+  notes          Note[]
+  medicalRecords PetMedicalRecord[]
+}
+
 model Note {
   id        String   @id @default(uuid())
   text      String
@@ -459,6 +454,8 @@ model Note {
   citizenId   String?
   vehicle     RegisteredVehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId   String?
+  pet         Pet?               @relation(fields: [petId], references: [id])
+  petId       String?
 }
 
 model RegisteredVehicle {
@@ -526,6 +523,18 @@ model MedicalRecord {
   description  String? @db.Text
   bloodGroup   Value?  @relation(fields: [bloodGroupId], references: [id])
   bloodGroupId String?
+}
+
+model PetMedicalRecord {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  pet       Pet      @relation(fields: [petId], references: [id])
+  petId     String
+
+  // type = diseases
+  type        String? @db.Text
+  description String? @db.Text
 }
 
 model DoctorVisit {
@@ -653,14 +662,15 @@ model WarningNotApplicable {
 }
 
 model Violation {
-  id          String    @id @default(uuid())
-  fine        Int?
-  jailTime    Int?
-  bail        Int?
-  penalCode   PenalCode @relation(fields: [penalCodeId], references: [id])
-  penalCodeId String
-  records     Record[]
-  counts      Int?
+  id               String    @id @default(uuid())
+  fine             Int?
+  jailTime         Int?
+  bail             Int?
+  communityService String?
+  penalCode        PenalCode @relation(fields: [penalCodeId], references: [id])
+  penalCodeId      String
+  records          Record[]
+  counts           Int?
 }
 
 model SeizedItem {
@@ -679,7 +689,6 @@ model DivisionValue {
   department                 DepartmentValue?             @relation("divisionDepartmentToValue", fields: [departmentId], references: [id], onDelete: Cascade)
   departmentId               String?
   callsign                   String?
-  officers                   Officer[]                    @relation("officerDivisionToDivision")
   officerDivisionsToDivision Officer[]                    @relation("officerDivisionsToDivision")
   deputies                   EmsFdDeputy[]                @relation("emsFdDivisionToDivision")
   pairedUnitTemplate         String?
@@ -781,15 +790,45 @@ model Notification {
 }
 
 // bleeter
+model BleeterProfile {
+  id         String                 @id @default(cuid())
+  name       String                 @db.VarChar(255)
+  handle     String                 @unique @db.VarChar(255)
+  isVerified Boolean?               @default(false)
+  bio        String?                @db.Text
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String                 @unique
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @default(now()) @updatedAt
+  followers  BleeterProfileFollow[] @relation("followers")
+  following  BleeterProfileFollow[] @relation("following")
+  posts      BleeterPost[]
+}
+
+model BleeterProfileFollow {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  followerProfile    BleeterProfile? @relation(name: "followers", fields: [followerProfileId], references: [id], onDelete: Cascade)
+  followerProfileId  String?
+  followingProfile   BleeterProfile? @relation(name: "following", fields: [followingProfileId], references: [id], onDelete: Cascade)
+  followingProfileId String?
+}
+
 model BleeterPost {
-  id            String  @id @default(uuid())
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String          @id @default(uuid())
+  creator       BleeterProfile? @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId     String?
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
-  title         String  @db.VarChar(255)
-  body          String? @db.Text
+  title         String          @db.VarChar(255)
+  body          String?         @db.Text
   bodyData      Json?
-  imageId       String? @db.VarChar(255)
-  imageBlurData String? @db.Text
+  imageId       String?         @db.VarChar(255)
+  imageBlurData String?         @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -910,9 +949,6 @@ model Officer {
   activeDivisionCallsign      IndividualDivisionCallsign?  @relation("divisionCallsign", fields: [activeDivisionCallsignId], references: [id])
   activeDivisionCallsignId    String?
   incremental                 Int?
-  // `division` is deprecated. Use `divisions` instead.
-  division                    DivisionValue?               @relation("officerDivisionToDivision", fields: [divisionId], references: [id])
-  divisionId                  String?
   divisions                   DivisionValue[]              @relation("officerDivisionsToDivision")
   rank                        Value?                       @relation("officerRankToValue", fields: [rankId], references: [id])
   rankId                      String?
@@ -956,6 +992,7 @@ model Officer {
   activeVehicleId             String?
   isTemporary                 Boolean                      @default(false)
   identifiers                 String[]
+  ChatCreator                 ChatCreator[]
 }
 
 model IndividualDivisionCallsign {
@@ -1079,6 +1116,7 @@ model LeoIncident {
   EmsFdDeputy          EmsFdDeputy[]          @relation("emsfdActiveIncident")
   CombinedEmsFdUnit    CombinedEmsFdUnit[]    @relation("combinedEmsFdActiveIncident")
   Record               Record[]
+  DispatchChat         DispatchChat[]
 }
 
 model IncidentEvent {
@@ -1117,6 +1155,7 @@ model CombinedLeoUnit {
   AssignedWarrantOfficer    AssignedWarrantOfficer[]
   EmsFdIncident             EmsFdIncident?           @relation(fields: [emsFdIncidentId], references: [id])
   emsFdIncidentId           String?
+  ChatCreator               ChatCreator[]
 }
 
 model CombinedEmsFdUnit {
@@ -1139,10 +1178,12 @@ model CombinedEmsFdUnit {
   lastStatusChangeTimestamp DateTime?
   activeVehicle             EmergencyVehicleValue? @relation("activeEmergencyVehicle_combined_emsfd_unit", fields: [activeVehicleId], references: [id], onDelete: SetNull)
   activeVehicleId           String?
-  AssignedUnit              AssignedUnit[]
-  IncidentInvolvedUnit      IncidentInvolvedUnit[]
   EmsFdIncident             EmsFdIncident?         @relation(fields: [emsFdIncidentId], references: [id])
   emsFdIncidentId           String?
+
+  AssignedUnit         AssignedUnit[]
+  IncidentInvolvedUnit IncidentInvolvedUnit[]
+  ChatCreator          ChatCreator[]
 }
 
 // dispatching
@@ -1154,6 +1195,36 @@ model ActiveDispatchers {
   userId       String
   department   DepartmentValue? @relation(fields: [departmentId], references: [id])
   departmentId String?
+}
+
+model DispatchChat {
+  id         String       @id @default(uuid())
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now()) @updatedAt
+  message    String       @db.Text
+  unitId     String
+  // creator = null ? dispatcher : unit
+  creator    ChatCreator? @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId  String?
+  call       Call911?     @relation(fields: [callId], references: [id], onDelete: Cascade)
+  callId     String?
+  incident   LeoIncident? @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentId String?
+}
+
+model ChatCreator {
+  id                String             @id @default(uuid())
+  officer           Officer?           @relation(fields: [officerId], references: [id])
+  officerId         String?
+  deputy            EmsFdDeputy?       @relation(fields: [emsFdDeputyId], references: [id])
+  emsFdDeputyId     String?
+  combinedUnit      CombinedLeoUnit?   @relation(fields: [combinedLeoId], references: [id])
+  combinedLeoId     String?
+  combinedEmsFdUnit CombinedEmsFdUnit? @relation(fields: [combinedEmsFdId], references: [id])
+  combinedEmsFdId   String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+  DispatchChat      DispatchChat[]
 }
 
 // 911 calls & bolos
@@ -1193,6 +1264,7 @@ model Call911 {
   Record            Record[]
   EmsFdIncident     EmsFdIncident?      @relation(fields: [emsFdIncidentId], references: [id])
   emsFdIncidentId   String?
+  DispatchChat      DispatchChat[]
 }
 
 model GTAMapPosition {
@@ -1452,6 +1524,7 @@ model EmsFdDeputy {
   CombinedEmsFdUnit         CombinedEmsFdUnit?     @relation(fields: [combinedEmsFdUnitId], references: [id])
   combinedEmsFdUnitId       String?
   EmsFdIncident             EmsFdIncident[]        @relation("emsFdIncidentCreator")
+  ChatCreator               ChatCreator[]
 }
 
 model EmsFdIncident {
@@ -1852,4 +1925,5 @@ enum Feature {
   USER_DEFINED_CALLSIGN_COMBINED_UNIT // see #1607
   HOSPITAL_SERVICES // see #1602
   MEDICAL_RECORDS_CITIZEN_MANAGEABLE
+  PETS // see #1640
 }

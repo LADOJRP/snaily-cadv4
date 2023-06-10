@@ -10,16 +10,19 @@ import * as modalButtons from "components/modal-buttons/buttons";
 import { ModalButton } from "components/modal-buttons/ModalButton";
 import type { PostLeoTogglePanicButtonData } from "@snailycad/types/api";
 import { useActiveDispatchers } from "hooks/realtime/use-active-dispatchers";
-import { ModalIds } from "types/ModalIds";
+import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { useImageUrl } from "hooks/useImageUrl";
 import { useMounted } from "@casper124578/useful";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
-import { useValues } from "context/ValuesContext";
 import dynamic from "next/dynamic";
 import { ImageWrapper } from "components/shared/image-wrapper";
+import { ActiveCallColumn } from "components/dispatch/active-units/officers/active-call-column";
+import { ActiveIncidentColumn } from "components/dispatch/active-units/officers/active-incident-column";
+import { PrivateMessagesButton } from "./private-messages/private-messages-button";
+import { PrivateMessagesModal } from "components/dispatch/active-units/private-messages/private-messages-modal";
 
 const TonesModal = dynamic(
   async () => (await import("components/dispatch/modals/tones-modal")).TonesModal,
@@ -58,11 +61,6 @@ export function ModalButtons({ initialActiveOfficer }: { initialActiveOfficer: A
   const { TONES, PANIC_BUTTON } = useFeatureEnabled();
   const { makeImageUrl } = useImageUrl();
 
-  const { codes10 } = useValues();
-  const panicButtonCode = codes10.values.find(
-    (code) => code.shouldDo === ShouldDoType.PANIC_BUTTON,
-  );
-
   async function handlePanic() {
     if (!activeOfficer) return;
 
@@ -89,26 +87,55 @@ export function ModalButtons({ initialActiveOfficer }: { initialActiveOfficer: A
   return (
     <div className="py-2">
       {nameAndCallsign && activeOfficer ? (
-        <p className="text-lg">
-          <span className="font-semibold">{t("Leo.activeOfficer")}: </span>
+        <div className="flex items-center gap-x-12">
+          <p className="text-lg">
+            <span className="font-semibold">{t("Leo.activeOfficer")}: </span>
 
-          {isUnitOfficer(activeOfficer) && activeOfficer.imageId ? (
-            <ImageWrapper
-              quality={70}
-              className="rounded-md w-[30px] h-[30px] object-cover mx-2 inline"
-              draggable={false}
-              src={makeImageUrl("units", activeOfficer.imageId)!}
-              loading="lazy"
-              width={30}
-              height={30}
-              alt={String(nameAndCallsign)}
+            {isUnitOfficer(activeOfficer) && activeOfficer.imageId ? (
+              <ImageWrapper
+                quality={70}
+                className="rounded-md w-[30px] h-[30px] object-cover mx-2 inline"
+                draggable={false}
+                src={makeImageUrl("units", activeOfficer.imageId)!}
+                loading="lazy"
+                width={30}
+                height={30}
+                alt={String(nameAndCallsign)}
+              />
+            ) : null}
+            {nameAndCallsign}
+          </p>
+
+          <p className="flex items-center gap-x-1">
+            <span className="font-semibold">{t("Leo.activeCall")}: </span>
+            <ActiveCallColumn
+              size="sm"
+              callId={activeOfficer.activeCallId}
+              isDispatch={false}
+              unitId={activeOfficer.id}
             />
-          ) : null}
-          {nameAndCallsign}
-        </p>
+          </p>
+
+          <p className="flex items-center gap-x-1">
+            <span className="font-semibold">{t("Leo.incident")}: </span>
+            <ActiveIncidentColumn
+              size="sm"
+              incidentId={activeOfficer.activeIncidentId}
+              isDispatch={false}
+              unitId={activeOfficer.id}
+            />
+          </p>
+
+          <p className="flex items-center gap-x-1">
+            <span className="font-semibold">{t("Leo.privateMessages")}: </span>
+            <PrivateMessagesButton unit={activeOfficer} />
+          </p>
+
+          <PrivateMessagesModal />
+        </div>
       ) : null}
 
-      <div className="mt-2 modal-buttons-grid">
+      <div className="mt-3 modal-buttons-grid">
         {buttons.map((button, idx) => {
           return (
             <ModalButton
@@ -121,7 +148,7 @@ export function ModalButtons({ initialActiveOfficer }: { initialActiveOfficer: A
           );
         })}
 
-        {PANIC_BUTTON && panicButtonCode ? (
+        {PANIC_BUTTON ? (
           <Button
             id="panicButton"
             disabled={state === "loading" || isButtonDisabled}

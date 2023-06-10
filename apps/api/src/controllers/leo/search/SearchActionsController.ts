@@ -10,9 +10,9 @@ import {
 import { BodyParams, PathParams } from "@tsed/platform-params";
 import { BadRequest, NotFound } from "@tsed/exceptions";
 import { prisma } from "lib/data/prisma";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { citizenInclude } from "controllers/citizen/CitizenController";
-import { updateCitizenLicenseCategories } from "lib/citizen/licenses";
+import { updateCitizenLicenseCategories } from "lib/citizen/licenses/update-citizen-license-categories";
 import {
   cad,
   Feature,
@@ -34,17 +34,17 @@ import { UsePermissions, Permissions } from "middlewares/use-permissions";
 import { validateSchema } from "lib/data/validate-schema";
 import { manyToManyHelper } from "lib/data/many-to-many";
 import { validateCustomFields } from "lib/validate-custom-fields";
-import { isFeatureEnabled } from "lib/cad";
+import { isFeatureEnabled } from "lib/upsert-cad";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import {
   appendCustomFields,
   citizenSearchIncludeOrSelect,
   vehicleSearchInclude,
 } from "./SearchController";
-import { citizenObjectFromData } from "lib/citizen";
+import { citizenObjectFromData } from "lib/citizen/citizen-create-data-obj";
 import { generateString } from "utils/generate-string";
 import type * as APITypes from "@snailycad/types/api";
-import { createVehicleImpoundedWebhookData } from "controllers/calls/TowController";
+import { createVehicleImpoundedWebhookData } from "controllers/calls/tow-controller";
 import { sendDiscordWebhook, sendRawWebhook } from "lib/discord/webhooks";
 import { getFirstOfficerFromActiveOfficer } from "lib/leo/utils";
 import { ActiveOfficer } from "middlewares/active-officer";
@@ -212,6 +212,7 @@ export class SearchActionsController {
     const disconnectConnectArr = manyToManyHelper(
       vehicle.flags.map((v) => v.id),
       flags,
+      { showUpsert: false },
     );
 
     await prisma.$transaction(
@@ -249,6 +250,7 @@ export class SearchActionsController {
     const disconnectConnectArr = manyToManyHelper(
       citizen.flags.map((v) => v.id),
       flags,
+      { showUpsert: false },
     );
 
     await prisma.$transaction(
@@ -286,6 +288,7 @@ export class SearchActionsController {
     const disconnectConnectArr = manyToManyHelper(
       citizen.addressFlags.map((v) => v.id),
       addressFlags,
+      { showUpsert: false },
     );
 
     await prisma.$transaction(

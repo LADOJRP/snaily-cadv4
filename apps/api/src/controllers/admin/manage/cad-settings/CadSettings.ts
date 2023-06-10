@@ -9,7 +9,7 @@ import { Controller } from "@tsed/di";
 import { BodyParams, Context, QueryParams } from "@tsed/platform-params";
 import { ContentType, Delete, Get, Put } from "@tsed/schema";
 import { prisma } from "lib/data/prisma";
-import { CAD_SELECT, IsAuth, setCADFeatures } from "middlewares/is-auth";
+import { CAD_SELECT, IsAuth, setCADFeatures } from "middlewares/auth/is-auth";
 import { BadRequest } from "@tsed/exceptions";
 import { Req, Res, UseBefore } from "@tsed/common";
 import { Socket } from "services/socket-service";
@@ -221,8 +221,8 @@ export class CADSettingsController {
         pairedUnitTemplate: data.pairedUnitTemplate,
         callsignTemplate: data.callsignTemplate,
         caseNumberTemplate: data.caseNumberTemplate,
-        authScreenBgImageId: data.authScreenBgImageId,
-        authScreenHeaderImageId: data.authScreenHeaderImageId,
+        authScreenBgImageId: data.authScreenBgImageId || null,
+        authScreenHeaderImageId: data.authScreenHeaderImageId || null,
         maxOfficersPerUser: data.maxOfficersPerUser,
         maxDepartmentsEachPerUser: data.maxDepartmentsEachPerUser,
         maxAssignmentsToCalls: data.maxAssignmentsToCalls,

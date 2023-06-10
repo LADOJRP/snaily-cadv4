@@ -5,16 +5,16 @@ import { prisma } from "lib/data/prisma";
 import { BadRequest, NotFound } from "@tsed/exceptions";
 import { CombinedEmsFdUnit, CombinedLeoUnit, Feature, ShouldDoType } from "@prisma/client";
 import { Socket } from "services/socket-service";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { UsePermissions, Permissions } from "middlewares/use-permissions";
-import { combinedEmsFdUnitProperties, combinedUnitProperties } from "lib/leo/activeOfficer";
 import { findNextAvailableIncremental } from "lib/leo/findNextAvailableIncremental";
 import type * as APITypes from "@snailycad/types/api";
-import { getNextActiveCallId } from "lib/calls/getNextActiveCall";
+import { getNextActive911CallId } from "lib/dispatch/911-calls/get-next-active-911-call";
 import { getNextIncidentId } from "lib/incidents/get-next-incident-id";
 import { validateSchema } from "lib/data/validate-schema";
 import { MERGE_UNIT_SCHEMA } from "@snailycad/schemas";
-import { isFeatureEnabled } from "lib/cad";
+import { isFeatureEnabled } from "lib/upsert-cad";
+import { combinedUnitProperties, combinedEmsFdUnitProperties } from "utils/leo/includes";
 
 @Controller("/dispatch/status")
 @UseBeforeEach(IsAuth)
@@ -283,7 +283,7 @@ export class CombinedUnitsController {
     const statusId = onDutyStatusCode?.id ?? unit.statusId ?? undefined;
 
     const [nextCallId, nextIncidentId] = await Promise.all([
-      getNextActiveCallId({
+      getNextActive911CallId({
         callId: "null",
         type: "unassign",
         unit,

@@ -16,11 +16,11 @@ import { Controller } from "@tsed/di";
 import { BadRequest, NotFound } from "@tsed/exceptions";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
 import { canManageInvariant } from "lib/auth/getSessionUser";
-import { isFeatureEnabled } from "lib/cad";
-import { shouldCheckCitizenUserId } from "lib/citizen/hasCitizenAccess";
+import { isFeatureEnabled } from "lib/upsert-cad";
+import { shouldCheckCitizenUserId } from "lib/citizen/has-citizen-access";
 import { prisma } from "lib/data/prisma";
 import { validateSchema } from "lib/data/validate-schema";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { generateString } from "utils/generate-string";
 import { citizenInclude } from "./CitizenController";
@@ -385,6 +385,7 @@ export class VehiclesController {
       const connectDisconnectArr = manyToManyHelper(
         vehicle.trimLevels.map((v) => v.id),
         data.trimLevels,
+        { showUpsert: false },
       );
 
       await prisma.$transaction(

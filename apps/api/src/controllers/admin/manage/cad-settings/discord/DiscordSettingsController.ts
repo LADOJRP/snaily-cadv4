@@ -2,7 +2,7 @@ import process from "node:process";
 import { BodyParams, Context, Controller, UseBeforeEach } from "@tsed/common";
 import { ContentType, Get, Post } from "@tsed/schema";
 import { RESTGetAPIGuildRolesResult, Routes } from "discord-api-types/v10";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { prisma } from "lib/data/prisma";
 import { cad, DiscordRole } from "@prisma/client";
 import { BadRequest } from "@tsed/exceptions";
@@ -115,7 +115,6 @@ export class DiscordSettingsController {
       courthouseRoles: data.courthouseRoles,
       towRoles: data.towRoles,
       taxiRoles: data.taxiRoles,
-      adminRoleId: data.adminRoleId,
       whitelistedRoleId: data.whitelistedRoleId,
     };
 
@@ -129,7 +128,6 @@ export class DiscordSettingsController {
 
     const createUpdateData = {
       guildId,
-      adminRoleId: data.adminRoleId ?? null,
       whitelistedRoleId: data.whitelistedRoleId ?? null,
       adminRolePermissions: data.adminRolePermissions ?? [],
       leoRolePermissions: data.leoRolePermissions ?? [],
@@ -251,6 +249,7 @@ export class DiscordSettingsController {
     const disconnectConnectArr = manyToManyHelper(
       options.discordRoles.map((v) => v.id),
       options.newRoles,
+      { showUpsert: false },
     );
 
     await prisma.$transaction(

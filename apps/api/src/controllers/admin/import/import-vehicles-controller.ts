@@ -10,7 +10,7 @@ import {
   QueryParams,
   UseBeforeEach,
 } from "@tsed/common";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { parseImportFile } from "utils/file";
 import { validateSchema } from "lib/data/validate-schema";
 import { generateString } from "utils/generate-string";
@@ -168,7 +168,7 @@ export async function importVehiclesHandler(body: unknown[]) {
 
       let last = vehicle;
       if (data.flags) {
-        const disconnectConnectArr = manyToManyHelper([], data.flags);
+        const disconnectConnectArr = manyToManyHelper([], data.flags, { showUpsert: false });
 
         last = getLastOfArray(
           await prisma.$transaction(

@@ -9,14 +9,14 @@ import {
   PlatformMulterFile,
   UseBeforeEach,
 } from "@tsed/common";
-import { IsAuth } from "middlewares/is-auth";
+import { IsAuth } from "middlewares/auth/is-auth";
 import { parseImportFile } from "utils/file";
 import { validateSchema } from "lib/data/validate-schema";
 import { generateString } from "utils/generate-string";
 import { IMPORT_CITIZENS_ARR } from "@snailycad/schemas/dist/admin/import/citizens";
 import { importVehiclesHandler } from "./import-vehicles-controller";
 import { importWeaponsHandler } from "./import-weapons-controller";
-import { updateCitizenLicenseCategories } from "lib/citizen/licenses";
+import { updateCitizenLicenseCategories } from "~/lib/citizen/licenses/update-citizen-license-categories";
 import { manyToManyHelper } from "lib/data/many-to-many";
 import type * as APITypes from "@snailycad/types/api";
 import { Permissions, UsePermissions } from "middlewares/use-permissions";
@@ -149,7 +149,7 @@ export class ImportCitizensController {
         }
 
         if (data.flags) {
-          const disconnectConnectArr = manyToManyHelper([], data.flags);
+          const disconnectConnectArr = manyToManyHelper([], data.flags, { showUpsert: false });
 
           await prisma.$transaction(
             disconnectConnectArr.map((v) =>

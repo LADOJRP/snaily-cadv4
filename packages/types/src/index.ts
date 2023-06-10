@@ -10,7 +10,6 @@ type CADPick =
   | "id"
   | "name"
   | "areaOfPlay"
-  | "maxPlateLength"
   | "towWhitelisted"
   | "taxiWhitelisted"
   | "whitelisted"
@@ -53,6 +52,7 @@ export type CadFeature = Prisma.CadFeature;
 
 export type MiscCadSettings = Prisma.MiscCadSettings & {
   webhooks?: DiscordWebhook[];
+  liveMapURLs?: Prisma.LiveMapURL[];
 };
 
 export type DiscordWebhook = Prisma.DiscordWebhook;
@@ -74,7 +74,6 @@ export type DiscordRoles = Prisma.DiscordRoles & {
   towRoles?: DiscordRole[];
   taxiRoles?: DiscordRole[];
   courthouseRoles?: DiscordRole[];
-  adminRole: DiscordRole | null;
   whitelistedRole: DiscordRole | null;
   roles?: DiscordRole[];
 
@@ -148,6 +147,14 @@ export type Citizen = Prisma.Citizen & {
   suspendedLicenses?: SuspendedCitizenLicenses | null;
   licensePoints?: CitizenLicensePoints | null;
 };
+
+export type Pet = Prisma.Pet & {
+  citizen: BaseCitizen;
+  notes?: Note[];
+  medicalRecords?: PetMedicalRecord[];
+};
+
+export type PetMedicalRecord = Prisma.PetMedicalRecord;
 
 export type SuspendedCitizenLicenses = Prisma.SuspendedCitizenLicenses;
 export type CitizenLicensePoints = Prisma.CitizenLicensePoints;
@@ -233,6 +240,8 @@ export type VehicleValue = Prisma.VehicleValue & { trimLevels?: Value[]; value: 
 export type WeaponValue = Prisma.WeaponValue & { value: Value };
 
 export type BleeterPost = Prisma.BleeterPost;
+export type BleeterProfile = Prisma.BleeterProfile & {};
+export type BleeterProfileFollow = Prisma.BleeterProfileFollow & {};
 
 export type TowCall = Prisma.TowCall & {
   assignedUnit: Pick<Prisma.Citizen, "name" | "surname" | "id"> | null;
@@ -327,6 +336,18 @@ export type CombinedLeoUnit = Prisma.CombinedLeoUnit & {
 export type ActiveDispatchers = Prisma.ActiveDispatchers & {
   department?: DepartmentValue | null;
 };
+
+export type DispatchChat = Prisma.DispatchChat & {
+  /** null = Dispatch */
+  creator: ChatCreator | null;
+  call?: Call911 | null;
+  /** active incident */
+  incident?: LeoIncident | null;
+};
+
+export interface ChatCreator {
+  unit: Officer | CombinedLeoUnit | EmsFdDeputy | CombinedEmsFdUnit;
+}
 
 export type Call911 = Prisma.Call911 & {
   position: Position | null;
