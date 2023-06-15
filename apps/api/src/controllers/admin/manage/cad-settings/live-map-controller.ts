@@ -12,7 +12,9 @@ import { Permissions, UsePermissions } from "middlewares/use-permissions";
 import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 import type { MiscCadSettings } from "@snailycad/types";
 import sharp from "sharp";
-import { manyToManyHelper } from "lib/data/many-to-many";
+import { getLastOfArray, manyToManyHelper } from "lib/data/many-to-many";
+import { allowedFileExtensions } from "@snailycad/config";
+import { ExtendedBadRequest } from "~/exceptions/extended-bad-request";
 
 @Controller("/admin/manage/cad-settings/live-map")
 @ContentType("application/json")
@@ -35,22 +37,19 @@ export class CADSettingsLiveMapController {
       { showUpsert: true, customAccessorKey: "id" },
     );
 
-    await prisma.$transaction(
-      connectDisconnectArr.map((item) =>
-        prisma.miscCadSettings.update({
-          where: { id: cad.miscCadSettingsId ?? "null" },
-          data: { liveMapURLs: item },
+    const updated = getLastOfArray(
+      await prisma.$transaction(
+        connectDisconnectArr.map((item, idx) => {
+          const isLast = idx === connectDisconnectArr.length - 1;
+
+          return prisma.miscCadSettings.update({
+            where: { id: cad.miscCadSettingsId ?? "null" },
+            data: { liveMapURLs: item, liveMapURL: null },
+            include: isLast ? { webhooks: true } : undefined,
+          });
         }),
       ),
     );
-
-    const updated = await prisma.miscCadSettings.update({
-      where: {
-        id: cad.miscCadSettingsId ?? "null",
-      },
-      data: { liveMapURL: data.liveMapURL },
-      include: { webhooks: true },
-    });
 
     await createAuditLogEntry({
       action: {
@@ -71,7 +70,29 @@ export class CADSettingsLiveMapController {
     permissions: [Permissions.ManageCADSettings],
   })
   async updateLiveMapTiles(@MultipartFile("tiles") files: PlatformMulterFile[]) {
+    const allowedNames = [
+      "minimap_sea_0_0",
+      "minimap_sea_0_1",
+      "minimap_sea_1_0",
+      "minimap_sea_1_1",
+      "minimap_sea_2_0",
+      "minimap_sea_2_1",
+    ];
+
+    if (!Array.isArray(files)) {
+      throw new ExtendedBadRequest({ tiles: "Invalid files" });
+    }
+
     for (const file of files) {
+      const fileType = file.mimetype as (typeof allowedFileExtensions)[number];
+      if (!allowedFileExtensions.includes(fileType)) {
+        throw new ExtendedBadRequest({ tiles: "Invalid file type" });
+      }
+
+      if (!allowedNames.includes(file.originalname)) {
+        throw new ExtendedBadRequest({ tiles: "Invalid file name" });
+      }
+
       const sharpImage = sharp(file.buffer).webp({ quality: 80 });
 
       const pathToClientPublicDir = `${process.cwd()}/../client/public/tiles/${

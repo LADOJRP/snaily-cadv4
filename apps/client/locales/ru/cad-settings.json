@@ -94,6 +94,12 @@
   "LiveMapTab": {
     "liveMapSettings": "Настройки Карты",
     "liveMapUrl": "Ссылка на карту",
+    "liveMapURLs": "Ссылки на карту",
+    "addURL": "Добавить ссылку",
+    "editURL": "Редактировать ссылку",
+    "noLiveMapUrls": "Ссылки на карту еще не были добавлены.",
+    "foundPreviousLiveMapURLTitle": "Найдена ссылка на карту",
+    "foundPreviousLiveMapURLDescription": "Найдены старые ссылки на карту. Добавить?",
     "liveMapUrlDescription": "Данная ссылка будет коммуницировать с вашим Fivem скриптом.",
     "liveMapSettingsInfo": "Настройте ссылку на карту и квадраты (части).",
     "mapTiles": "Квадраты",
@@ -170,7 +176,10 @@
     "weaponLicenseNumberLength": "Длина Номера Оружейной Лицензии",
     "weaponLicenseNumberLengthDescription": "Длина номера оружейной лицензии (По умолчанию: 8)",
     "waterLicenseNumberLength": "Длина Номера Водительской Лицензии",
-    "waterLicenseNumberLengthDescription": "Длина номера водительской лицензии (По умолчанию: 8)"
+    "waterLicenseNumberLengthDescription": "Длина номера водительской лицензии (По умолчанию: 8)",
+    "seconds": "Секунды",
+    "minutes": "Минуты",
+    "hours": "Часы"
   },
   "Features": {
     "enableOrDisableFeatures": "Включить или отключить функции",

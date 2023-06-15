@@ -8,12 +8,15 @@ import { MultipartFile, PlatformMulterFile, UseBefore } from "@tsed/common";
 import { AllowedFileExtension, allowedFileExtensions } from "@snailycad/config";
 import fs from "node:fs/promises";
 import { cad, Feature, MiscCadSettings } from "@prisma/client";
-import { Permissions } from "@snailycad/permissions";
+import { Permissions, hasPermission } from "@snailycad/permissions";
 import { UsePermissions } from "middlewares/use-permissions";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { getImageWebPPath } from "lib/images/get-image-webp-path";
 import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 import type { User } from "@snailycad/types";
+import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import sharp from "sharp";
 
 @Controller("/admin/manage/cad-settings/image")
 @ContentType("application/json")
@@ -48,11 +51,19 @@ export class ManageCitizensController {
       await fs.rm(previousImage, { force: true });
     }
 
+    const hasManageCadSettingsPermissions = hasPermission({
+      permissionsToCheck: [Permissions.ManageCADSettings],
+      userToCheck: user,
+    });
+
     const [data] = await Promise.all([
       prisma.cad.update({
         where: { id: cad.id },
         data: { logoId: image.fileName },
-        select: CAD_SELECT(user, true),
+        select: CAD_SELECT({
+          includeDiscordRoles: true,
+          selectCADsettings: hasManageCadSettingsPermissions,
+        }),
       }),
       fs.writeFile(image.path, image.buffer),
     ]);
@@ -66,6 +77,8 @@ export class ManageCitizensController {
       prisma,
       executorId: user.id,
     });
+
+    this.handleUploadFavicon(file);
 
     return data;
   }
@@ -102,5 +115,20 @@ export class ManageCitizensController {
         return data;
       }),
     );
+  }
+
+  private async handleUploadFavicon(image: PlatformMulterFile) {
+    const clientPublicFolder = resolve(process.cwd(), "../client", "public");
+    const doesFaviconExist = existsSync(`${clientPublicFolder}/favicon.png`);
+
+    if (doesFaviconExist) {
+      // don't override the existing favicon
+      return;
+    }
+
+    const sharpImage = sharp(image.buffer).png({ quality: 80 });
+    const buffer = await sharpImage.toBuffer();
+
+    await fs.writeFile(`${clientPublicFolder}/favicon.png`, buffer);
   }
 }

@@ -450,8 +450,12 @@ export class AdminManageUnitsController {
       features: cad.features,
     });
 
-    if (isBadgeNumbersEnabled && typeof data.badgeNumber !== "undefined" && !data.badgeNumber) {
-      throw new ExtendedBadRequest({ badgeNumber: "Required" });
+    if (
+      isBadgeNumbersEnabled &&
+      typeof data.badgeNumberString !== "undefined" &&
+      !data.badgeNumberString
+    ) {
+      throw new ExtendedBadRequest({ badgeNumberString: "Required" });
     }
 
     if (type === "officer") {
@@ -490,13 +494,13 @@ export class AdminManageUnitsController {
       data: {
         statusId: data.status,
         departmentId: data.department,
-        divisionId: data.division,
+        divisionId: type === "officer" ? undefined : data.division,
         rankId: data.rank,
         position: data.position,
-        suspended: data.suspended,
+        suspended: data.suspended ?? false,
         callsign2: data.callsign2,
         callsign: data.callsign,
-        badgeNumber: data.badgeNumber,
+        badgeNumberString: data.badgeNumberString,
         imageId: validatedImageURL,
         imageBlurData: await generateBlurPlaceholder(validatedImageURL),
         userId: data.userId,
