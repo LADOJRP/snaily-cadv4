@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, AsyncListSearchField, Item } from "@snailycad/ui";
+import { Button, AsyncListSearchField, Item, Infofield } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
 import { Form, Formik, useFormikContext } from "formik";
@@ -14,14 +14,13 @@ import { useRouter } from "next/router";
 import { ArrowLeft, PersonFill } from "react-bootstrap-icons";
 import { useImageUrl } from "hooks/useImageUrl";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
-import { Infofield } from "components/shared/Infofield";
 import dynamic from "next/dynamic";
 import {
   LicenseInitialValues,
   ManageLicensesModal,
 } from "components/citizen/licenses/manage-licenses-modal";
 import { ManageCitizenFlagsModal } from "./ManageCitizenFlagsModal";
-import { CitizenImageModal } from "components/citizen/modals/CitizenImageModal";
+import { CitizenImageModal } from "components/citizen/modals/citizen-image-modal";
 import { ManageCustomFieldsModal } from "./ManageCustomFieldsModal";
 import { CustomFieldsArea } from "../CustomFieldsArea";
 import { useBolos } from "hooks/realtime/useBolos";
@@ -33,6 +32,7 @@ import { shallow } from "zustand/shallow";
 import { SpeechAlert } from "./speech-alert";
 import { ImageWrapper } from "components/shared/image-wrapper";
 import { ManageLicensePointsModal } from "./sections/license-points/manage-license-points-modal";
+import { Permissions, usePermission } from "hooks/usePermission";
 
 const VehicleSearchModal = dynamic(
   async () => (await import("components/leo/modals/VehicleSearchModal")).VehicleSearchModal,
@@ -42,8 +42,8 @@ const WeaponSearchModal = dynamic(
   async () => (await import("components/leo/modals/weapon-search-modal")).WeaponSearchModal,
 );
 
-const CreateCitizenModal = dynamic(
-  async () => (await import("./CreateCitizenModal")).CreateCitizenModal,
+const CreateOrManageCitizenModal = dynamic(
+  async () => (await import("./CreateCitizenModal")).CreateOrManageCitizenModal,
 );
 
 const ManageCitizenAddressFlagsModal = dynamic(
@@ -74,9 +74,12 @@ export function NameSearchModal() {
   const { state, execute } = useFetch();
   const router = useRouter();
   const { makeImageUrl } = useImageUrl();
-  const { SOCIAL_SECURITY_NUMBERS, CREATE_USER_CITIZEN_LEO } = useFeatureEnabled();
+  const { SOCIAL_SECURITY_NUMBERS, CREATE_USER_CITIZEN_LEO, LEO_EDITABLE_CITIZEN_PROFILE } =
+    useFeatureEnabled();
   const { bolos } = useBolos();
+  const { hasPermissions } = usePermission();
 
+  const hasManageCitizenProfilePermissions = hasPermissions([Permissions.LeoManageCitizenProfile]);
   const { openModal } = useModal();
   const isLeo = router.pathname === "/officer";
   const isDispatch = router.pathname === "/dispatch";
@@ -118,13 +121,7 @@ export function NameSearchModal() {
     const { json } = await execute<PutSearchActionsLicensesData>({
       path: `/search/actions/licenses/${currentResult.id}`,
       method: "PUT",
-      data: {
-        ...values,
-        driversLicenseCategory: values.driversLicenseCategory?.map((v) => v.value),
-        pilotLicenseCategory: values.pilotLicenseCategory?.map((v) => v.value),
-        waterLicenseCategory: values.waterLicenseCategory?.map((v) => v.value),
-        firearmLicenseCategory: values.firearmLicenseCategory?.map((v) => v.value),
-      },
+      data: values,
     });
 
     if (json) {
@@ -436,7 +433,10 @@ export function NameSearchModal() {
             <AutoSubmit />
             <VehicleSearchModal id={ModalIds.VehicleSearchWithinName} />
             <WeaponSearchModal id={ModalIds.WeaponSearchWithinName} />
-            {CREATE_USER_CITIZEN_LEO && isLeo ? <CreateCitizenModal /> : null}
+            {(CREATE_USER_CITIZEN_LEO && isLeo) ||
+            (LEO_EDITABLE_CITIZEN_PROFILE && hasManageCitizenProfilePermissions) ? (
+              <CreateOrManageCitizenModal />
+            ) : null}
             {currentResult && !currentResult.isConfidential ? (
               <>
                 <ManageLicensePointsModal />

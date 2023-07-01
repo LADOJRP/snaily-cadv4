@@ -1,8 +1,13 @@
 import * as React from "react";
 import { RecordType } from "@snailycad/types";
 import type { PostEmsFdDeclareCitizenById } from "@snailycad/types/api";
-import { Button } from "@snailycad/ui";
-import { Dropdown } from "components/Dropdown";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@snailycad/ui";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import useFetch from "lib/useFetch";
 import { normalizeValue } from "lib/values/normalize-value";
@@ -22,12 +27,13 @@ interface Props {
 export function NameSearchFooterActions(props: Props) {
   const [type, setType] = React.useState<RecordType | null>(null);
 
-  const { CREATE_USER_CITIZEN_LEO } = useFeatureEnabled();
+  const { CREATE_USER_CITIZEN_LEO, LEO_EDITABLE_CITIZEN_PROFILE } = useFeatureEnabled();
   const { openModal } = useModal();
   const t = useTranslations();
   const { state, execute } = useFetch();
   const { hasPermissions } = usePermission();
   const hasDeclarePermissions = hasPermissions([Permissions.DeclareCitizenDead]);
+  const hasManageCitizenProfilePermissions = hasPermissions([Permissions.LeoManageCitizenProfile]);
 
   const { currentResult, setCurrentResult } = useNameSearch(
     (state) => ({
@@ -83,51 +89,67 @@ export function NameSearchFooterActions(props: Props) {
 
   return (
     <div className="flex items-center">
-      <Dropdown
-        extra={{ maxWidth: 200 }}
-        sideOffset={3}
-        alignOffset={0}
-        modal={false}
-        trigger={
-          <Button>
-            <ThreeDotsVertical />
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button className="flex items-center justify-center w-8 h-7 p-0">
+            <ThreeDotsVertical
+              aria-label="Options"
+              className="fill-neutral-800 dark:fill-gray-300"
+              width={16}
+              height={16}
+            />
           </Button>
-        }
-      >
-        {CREATE_USER_CITIZEN_LEO ? (
-          <Dropdown.Item className="px-1.5" onPress={() => openModal(ModalIds.CreateCitizen)}>
-            {t("Leo.createCitizen")}
-          </Dropdown.Item>
-        ) : null}
+        </DropdownMenuTrigger>
 
-        {showExtraActions ? (
-          <>
-            {hasDeclarePermissions ? (
-              <Dropdown.Item
+        <DropdownMenuContent side="right" sideOffset={3} alignOffset={0}>
+          {CREATE_USER_CITIZEN_LEO ? (
+            <DropdownMenuItem
+              className="px-1.5"
+              onClick={() => openModal(ModalIds.CreateOrManageCitizen)}
+            >
+              {t("Leo.createCitizen")}
+            </DropdownMenuItem>
+          ) : null}
+
+          {showExtraActions ? (
+            <>
+              {hasDeclarePermissions ? (
+                <DropdownMenuItem
+                  size="xs"
+                  onClick={handleDeclare}
+                  disabled={state === "loading"}
+                  variant="cancel"
+                  className="px-1.5"
+                >
+                  {currentResult.dead ? t("Ems.declareAlive") : t("Ems.declareDead")}
+                </DropdownMenuItem>
+              ) : null}
+
+              <DropdownMenuItem
                 size="xs"
-                type="button"
-                onPress={handleDeclare}
+                onClick={handleDeclareMissing}
                 disabled={state === "loading"}
                 variant="cancel"
                 className="px-1.5"
               >
-                {currentResult.dead ? t("Ems.declareAlive") : t("Ems.declareDead")}
-              </Dropdown.Item>
-            ) : null}
+                {currentResult.missing ? t("Leo.declareFound") : t("Leo.declareMissing")}
+              </DropdownMenuItem>
 
-            <Dropdown.Item
-              size="xs"
-              type="button"
-              onPress={handleDeclareMissing}
-              disabled={state === "loading"}
-              variant="cancel"
-              className="px-1.5"
-            >
-              {currentResult.missing ? t("Leo.declareFound") : t("Leo.declareMissing")}
-            </Dropdown.Item>
-          </>
-        ) : null}
-      </Dropdown>
+              {hasManageCitizenProfilePermissions && LEO_EDITABLE_CITIZEN_PROFILE ? (
+                <DropdownMenuItem
+                  disabled={state === "loading"}
+                  variant="cancel"
+                  className="px-1.5"
+                  size="xs"
+                  onClick={() => openModal(ModalIds.CreateOrManageCitizen)}
+                >
+                  {t("Leo.manageCitizenProfile")}
+                </DropdownMenuItem>
+              ) : null}
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {showExtraActions ? (
         <div className="ml-2">
@@ -135,7 +157,7 @@ export function NameSearchFooterActions(props: Props) {
             <Button
               key={type}
               type="button"
-              onPress={() => handleOpenCreateRecord(type)}
+              onClick={() => handleOpenCreateRecord(type)}
               variant="cancel"
               className="px-1.5"
             >

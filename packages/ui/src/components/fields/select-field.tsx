@@ -2,10 +2,10 @@ import * as React from "react";
 import type { AriaSelectProps } from "@react-types/select";
 import { Item } from "@react-stately/collections";
 import { ModalProvider } from "@react-aria/overlays";
-import { classNames } from "../../utils/classNames";
+import { cn } from "mxcn";
 import { Popover } from "../overlays/popover";
 import { ListBox } from "../list/select/list-box";
-import { buttonSizes, buttonVariants } from "../button";
+import { buttonVariants } from "../button/button";
 import { useMultiSelectState } from "../../hooks/select/useMultiSelectState";
 import { useMultiSelect } from "../../hooks/select/useMultiSelect";
 import { getSelectedKeyOrKeys } from "../../utils/select/getSelectedKeyOrKeys";
@@ -19,6 +19,7 @@ export interface SelectValue {
   value: string;
   label: React.ReactNode;
   isDisabled?: boolean;
+  description?: string | null;
 }
 
 export type SelectFieldProps<T extends SelectValue> = Omit<
@@ -28,6 +29,7 @@ export type SelectFieldProps<T extends SelectValue> = Omit<
   label: string;
   isClearable?: boolean;
   isOptional?: boolean;
+  isLoading?: boolean;
   children?: React.ReactNode;
   options: T[];
   className?: string;
@@ -81,33 +83,40 @@ export function SelectField<T extends SelectValue>(props: SelectFieldProps<T>) {
 
   return (
     <ModalProvider>
-      <div className={classNames("flex flex-col mb-3", props.className)}>
+      <div className={cn("flex flex-col mb-3", props.className)}>
         <Label {...props} labelProps={labelProps} />
         <div className="relative group">
           <div className="flex">
             <div
               role="button"
               {...buttonProps}
-              className={classNames(
-                buttonVariants.default,
-                buttonSizes.sm,
-                "transition-colors cursor-default rounded-md !rounded-r-none w-full h-10 flex items-center justify-between border !bg-white dark:!bg-secondary hover:dark:!bg-secondary hover:dark:!brightness-100 group-hover:dark:!border-gray-500 group-hover:!border-gray-500",
-                props.errorMessage &&
-                  "!border-red-500 focus:!border-red-700 dark:focus:!border-red-700",
-
-                state.isOpen && "dark:!border-gray-500 !border-gray-500",
-                props.isDisabled && "!cursor-not-allowed opacity-80",
+              className={cn(
+                buttonVariants({
+                  variant: "default",
+                  size: "sm",
+                  className: cn(
+                    "px-2 cursor-default !rounded-r-none w-full min-h-[39px] h-auto flex items-center justify-between border !bg-white dark:!bg-secondary hover:dark:!bg-secondary hover:dark:!brightness-100 group-hover:dark:!border-gray-500 group-hover:!border-gray-500",
+                    props.errorMessage &&
+                      "!border-red-500 focus:!border-red-700 dark:focus:!border-red-700",
+                    state.isOpen && "dark:!border-gray-500 !border-gray-500",
+                    props.isDisabled && "!cursor-not-allowed opacity-60",
+                  ),
+                }),
               )}
               ref={ref}
             >
               <div
                 {...valueProps}
-                className={classNames(
-                  "flex items-center gap-2",
+                className={cn(
+                  "flex items-center gap-2 flex-wrap",
                   !(selectedItems || selectedItem) && "text-neutral-700 dark:text-gray-400",
                 )}
               >
-                <SelectedItems selectionMode={selectionMode} state={state} />
+                <SelectedItems
+                  options={props.options}
+                  selectionMode={selectionMode}
+                  state={state}
+                />
               </div>
             </div>
             <SelectActions
@@ -116,6 +125,7 @@ export function SelectField<T extends SelectValue>(props: SelectFieldProps<T>) {
               isClearable={props.isClearable}
               errorMessage={props.errorMessage}
               isDisabled={props.isDisabled}
+              isLoading={props.isLoading}
             />
           </div>
           {state.isOpen && (

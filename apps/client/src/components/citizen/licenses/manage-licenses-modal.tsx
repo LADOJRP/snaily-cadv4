@@ -4,7 +4,6 @@ import { LICENSE_SCHEMA } from "@snailycad/schemas";
 import { useModal } from "state/modalState";
 import { Modal } from "components/modal/Modal";
 import { ModalIds } from "types/modal-ids";
-import type { SelectValue } from "components/form/Select";
 import { Button, Loader } from "@snailycad/ui";
 import { handleValidate } from "lib/handleValidate";
 import type { Citizen, SuspendedCitizenLicenses } from "@snailycad/types";
@@ -25,10 +24,10 @@ export interface LicenseInitialValues {
   waterLicense: string | null;
   suspended: Omit<SuspendedCitizenLicenses, "id">;
 
-  driversLicenseCategory: SelectValue[] | null;
-  pilotLicenseCategory: SelectValue[] | null;
-  waterLicenseCategory: SelectValue[] | null;
-  firearmLicenseCategory: SelectValue[] | null;
+  driversLicenseCategory: string[];
+  pilotLicenseCategory: string[];
+  waterLicenseCategory: string[];
+  firearmLicenseCategory: string[];
 }
 
 export function ManageLicensesModal({
@@ -55,7 +54,7 @@ export function ManageLicensesModal({
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
         {({ isValid }) => (
           <>
-            <ManageLicensesFormFields flexType="row" allowRemoval={allowRemoval} isLeo={isLeo} />
+            <ManageLicensesFormFields allowRemoval={allowRemoval} isLeo={isLeo} />
 
             <Form>
               <footer className="flex justify-end mt-5">

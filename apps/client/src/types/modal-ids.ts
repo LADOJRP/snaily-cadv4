@@ -10,7 +10,7 @@ export const enum ModalIds {
   ManageOccupation = "ManageOccupationModal",
   CitizenImage = "CitizenImageModal",
   TransferVehicle = "TransferVehicleModal",
-  CreatePet = "CreatePetModal",
+  ManagePet = "ManagePetModal",
   ManagePetMedicalRecord = "ManagePetMedicalRecordModal",
   Followers = "FollowersModal",
   Following = "FollowingModal",
@@ -67,7 +67,7 @@ export const enum ModalIds {
   NameSearch = "NameSearchModal",
   VehicleSearchWithinName = "VehicleSearchWithinNameModal",
   WeaponSearchWithinName = "WeaponSearchWithinNameModal",
-  CreateCitizen = "CreateCitizenModal",
+  CreateOrManageCitizen = "CreateOrManageCitizenModal",
 
   SwitchDivisionCallsign = "SwitchDivisionCallsignModal",
   VehicleSearch = "VehicleSearchModal",
@@ -154,4 +154,5 @@ export const enum ModalIds {
   AlertCancelExpungementRequest = "AlertCancelExpungementRequestModal",
   AlertDeleteBusinessRole = "AlertDeleteBusinessRoleModal",
   AlertDeclareCitizenAlive = "AlertDeclareCitizenAliveModal",
+  AlertDeletePet = "AlertDeletePetModal",
 }

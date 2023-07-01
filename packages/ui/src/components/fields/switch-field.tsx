@@ -2,8 +2,8 @@ import { AriaSwitchProps, useSwitch } from "@react-aria/switch";
 import { VisuallyHidden } from "@react-aria/visually-hidden";
 import { useToggleState } from "@react-stately/toggle";
 import * as React from "react";
-import { classNames } from "../../utils/classNames";
-import { HoverCard } from "../hover-card";
+import { cn } from "mxcn";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../hover-card";
 import { InfoCircle } from "react-bootstrap-icons";
 
 interface SwitchFieldProps extends AriaSwitchProps {
@@ -18,7 +18,7 @@ export function SwitchField(props: SwitchFieldProps) {
 
   return (
     <label
-      className={classNames(
+      className={cn(
         "flex items-center mb-3 gap-1.5 font-medium",
         props.isDisabled || (props.isReadOnly && "opacity-50 cursor-not-allowed"),
         props.className,
@@ -28,7 +28,7 @@ export function SwitchField(props: SwitchFieldProps) {
         <input {...inputProps} ref={ref} />
       </VisuallyHidden>
       <svg
-        className={classNames(
+        className={cn(
           "relative h-6 transition-all rounded-full shadow-sm min-w-[44px] w-11",
           (!props.isDisabled || !props.isReadOnly) && "cursor-pointer",
         )}
@@ -40,16 +40,14 @@ export function SwitchField(props: SwitchFieldProps) {
           width={44}
           height={24}
           rx={8}
-          className={classNames(
-            state.isSelected ? "fill-blue-400" : "fill-gray-200 dark:fill-secondary",
-          )}
+          className={cn(state.isSelected ? "fill-blue-400" : "fill-gray-200 dark:fill-secondary")}
         />
         <circle
           cx={state.isSelected ? 32 : 12}
           cy={12}
           r={8}
           fill="white"
-          className={classNames(
+          className={cn(
             "block w-4 h-4 transition-all rounded-full switch-component bg-white dark:bg-gray-200",
           )}
         />
@@ -58,8 +56,12 @@ export function SwitchField(props: SwitchFieldProps) {
 
       {props.description ? (
         <span className="ml-1">
-          <HoverCard portal={false} trigger={<InfoCircle width={14} height={14} />}>
-            {props.description}
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoCircle width={14} height={14} />
+            </HoverCardTrigger>
+
+            <HoverCardContent pointerEvents>{props.description}</HoverCardContent>
           </HoverCard>
         </span>
       ) : null}

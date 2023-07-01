@@ -1,17 +1,23 @@
 import * as React from "react";
 import { useTranslations } from "use-intl";
-import { Button, Loader, TabsContent } from "@snailycad/ui";
+import {
+  Button,
+  FullDate,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Loader,
+  Status,
+  TabsContent,
+} from "@snailycad/ui";
 import { Record, RecordType } from "@snailycad/types";
 import { Table, useAsyncTable, useTableState } from "components/shared/Table";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
-import { FullDate } from "components/shared/FullDate";
 import { makeUnitName } from "lib/utils";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/modal-ids";
 import { ManageRecordModal } from "../modals/manage-record/manage-record-modal";
 import useFetch from "lib/useFetch";
-import { Status } from "components/shared/Status";
-import { HoverCard } from "components/shared/HoverCard";
 import { ViolationsColumn } from "../ViolationsColumn";
 import type {
   GetManagePendingArrestReports,
@@ -76,7 +82,7 @@ export function ArrestReportsTab({ arrestReports }: Props) {
 
   return (
     <TabsContent value="arrest-reports-tab">
-      {asyncTable.isLoading && asyncTable.items.length >= 0 ? (
+      {asyncTable.isLoading && asyncTable.items.length <= 0 ? (
         <Loader />
       ) : asyncTable.noItemsAvailable ? (
         <p className="mt-5">{t("noCitizenLogs")}</p>
@@ -100,14 +106,14 @@ export function ArrestReportsTab({ arrestReports }: Props) {
               officer: officer ? `${callsign} ${officerName}` : common("none"),
               postal: record.postal || common("none"),
               notes: (
-                <HoverCard
-                  trigger={
+                <HoverCard>
+                  <HoverCardTrigger asChild>
                     <span className="block max-w-[300px] truncate cursor-help">
                       {record.notes || common("none")}
                     </span>
-                  }
-                >
-                  {record.notes}
+                  </HoverCardTrigger>
+
+                  <HoverCardContent>{record.notes}</HoverCardContent>
                 </HoverCard>
               ),
               violations: <ViolationsColumn violations={record.violations} />,

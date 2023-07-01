@@ -1,17 +1,23 @@
 import * as React from "react";
-import * as Accordion from "@radix-ui/react-accordion";
-import { FormField } from "components/form/FormField";
 import { useAuth } from "context/AuthContext";
 import { Form, Formik } from "formik";
 import useFetch from "lib/useFetch";
 import { useTranslations } from "use-intl";
 import { StatusViewMode, TableActionsAlignment } from "@snailycad/types";
-import { Select } from "components/form/Select";
-import { Button, Loader, SelectField, TabsContent, SwitchField } from "@snailycad/ui";
+import {
+  Button,
+  Loader,
+  SelectField,
+  TabsContent,
+  SwitchField,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@snailycad/ui";
 import { i18n } from "../../../i18n.config.mjs";
 import type { Sounds } from "lib/server/getAvailableSounds.server";
 import { soundCamelCaseToKebabCase } from "lib/utils";
-import { CaretDownFill } from "react-bootstrap-icons";
 import { useRouter } from "next/router";
 import type { PatchUserData } from "@snailycad/types/api";
 import { useAudio } from "react-use";
@@ -98,7 +104,7 @@ export function AppearanceTab({ availableSounds }: Props) {
       <TabsContent aria-label={t("appearanceSettings")} value="appearanceSettings">
         <h1 className="text-2xl font-semibold">{t("appearanceSettings")}</h1>
         <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-          {({ handleChange, setFieldValue, values, errors }) => (
+          {({ setFieldValue, values, errors }) => (
             <Form className="mt-3">
               <SwitchField
                 isSelected={values.developerMode}
@@ -160,18 +166,19 @@ export function AppearanceTab({ availableSounds }: Props) {
                       {t("speech")}
                     </SwitchField>
 
-                    <FormField label={t("speechVoice")}>
-                      <Select
-                        disabled={!values.soundSettings.speech}
-                        values={voices.map((voice) => ({
-                          label: voice.name,
-                          value: voice.voiceURI,
-                        }))}
-                        value={values.soundSettings.speechVoice}
-                        onChange={handleChange}
-                        name="soundSettings.speechVoice"
-                      />
-                    </FormField>
+                    <SelectField
+                      isClearable
+                      label={t("speechVoice")}
+                      isDisabled={!values.soundSettings.speech}
+                      options={voices.map((voice) => ({
+                        label: voice.name,
+                        value: voice.voiceURI,
+                      }))}
+                      selectedKey={values.soundSettings.speechVoice}
+                      onSelectionChange={(value) =>
+                        setFieldValue("soundSettings.speechVoice", value)
+                      }
+                    />
                   </section>
                 ) : null}
 
@@ -181,7 +188,7 @@ export function AppearanceTab({ availableSounds }: Props) {
                   {availableSoundsArr.map((_name) => {
                     const fieldName = _name as keyof typeof INITIAL_VALUES.soundSettings;
                     const kebabCase = soundCamelCaseToKebabCase(fieldName);
-                    const soundAvailable = !!availableSounds[kebabCase];
+                    const soundAvailable = Boolean(availableSounds[kebabCase]);
 
                     if (!soundAvailable) return null;
                     if (["speech", "speechVoice"].includes(fieldName)) return null;
@@ -216,22 +223,13 @@ export function AppearanceTab({ availableSounds }: Props) {
 
                 <section>
                   {unAvailableSoundsArr.length <= 0 ? null : (
-                    <Accordion.Root className="mt-4" type="multiple">
-                      <Accordion.Item value="unavailable-sounds">
-                        <Accordion.Trigger
-                          title="Click to expand"
-                          className="accordion-state gap-2 flex items-center justify-between pt-1 text-lg font-semibold text-left"
-                        >
+                    <Accordion className="mt-4" type="multiple">
+                      <AccordionItem value="unavailable-sounds">
+                        <AccordionTrigger title="Click to expand">
                           <h3 className="text-xl font-semibold mb-3">{t("unavailableSounds")}</h3>
+                        </AccordionTrigger>
 
-                          <CaretDownFill
-                            width={16}
-                            height={16}
-                            className="transform w-4 h-4 transition-transform accordion-state-transform"
-                          />
-                        </Accordion.Trigger>
-
-                        <Accordion.Content className="mt-3">
+                        <AccordionContent className="mt-3">
                           {unAvailableSoundsArr.map((sound) => (
                             <p key={sound}>{t(sound)}</p>
                           ))}
@@ -244,9 +242,9 @@ export function AppearanceTab({ availableSounds }: Props) {
                           >
                             {t("unavailableSoundsMessage")}
                           </a>
-                        </Accordion.Content>
-                      </Accordion.Item>
-                    </Accordion.Root>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   )}
                 </section>
               </div>

@@ -1,15 +1,18 @@
 import * as React from "react";
-import * as Accordion from "@radix-ui/react-accordion";
 import { makeUnitName } from "lib/utils";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import { ModalIds } from "types/modal-ids";
-import { Button } from "@snailycad/ui";
+import {
+  Button,
+  AccordionItem,
+  AccordionContent,
+  AccordionTrigger,
+  Infofield,
+} from "@snailycad/ui";
 import { useModal } from "state/modalState";
-import { CaretDownFill } from "react-bootstrap-icons";
 import type { Full911Call } from "state/dispatch/dispatch-state";
 import type { MapCallProps } from "./active-map-calls";
 import { useTranslations } from "next-intl";
-import { Infofield } from "components/shared/Infofield";
 import { isUnitCombined } from "@snailycad/utils";
 import { useCall911State } from "state/dispatch/call-911-state";
 import { CallDescription } from "components/dispatch/active-calls/CallDescription";
@@ -52,22 +55,13 @@ export function CallItem({ call, hasMarker, setMarker }: CallItemProps) {
 
   return (
     <div className="p-2">
-      <Accordion.Item value={call.id}>
-        <Accordion.Trigger
-          title="Click to expand"
-          className="accordion-state flex justify-between w-full pt-1 text-lg font-semibold text-left"
-        >
+      <AccordionItem value={call.id}>
+        <AccordionTrigger title="Click to expand">
           <p>
             {call.location} / {call.name}
           </p>
-
-          <CaretDownFill
-            width={16}
-            height={16}
-            className="transform w-5 h-5 transition-transform accordion-state-transform"
-          />
-        </Accordion.Trigger>
-        <Accordion.Content className="pt-2 text-base text-neutral-800 dark:text-white">
+        </AccordionTrigger>
+        <AccordionContent className="pt-2 text-base text-neutral-800 dark:text-white">
           <div className="map-column">
             <Infofield label={common("name")}>{call.name}</Infofield>
             <Infofield label={t("location")}>{call.location}</Infofield>
@@ -92,8 +86,8 @@ export function CallItem({ call, hasMarker, setMarker }: CallItemProps) {
               </div>
             </div>
           </div>
-        </Accordion.Content>
-      </Accordion.Item>
+        </AccordionContent>
+      </AccordionItem>
     </div>
   );
 }

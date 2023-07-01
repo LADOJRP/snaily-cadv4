@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Select, SelectValue } from "components/form/Select";
 import type { PenalCode, PenalCodeGroup } from "@snailycad/types";
-import { FormRow } from "components/form/FormRow";
+import { FormRow } from "@snailycad/ui";
 import { usePenalCodeGroups } from "hooks/values/use-penal-code-groups";
+import { parseCurrentValue } from "./table-item-form";
 
 interface Props {
   value: SelectValue<PenalCode>[];
@@ -42,7 +43,7 @@ export function SelectPenalCode({ value, handleChange, penalCodes, isReadOnly }:
   }
 
   return (
-    <FormRow flexLike>
+    <FormRow useFlex>
       <Select
         disabled={isReadOnly}
         className="w-[200px]"
@@ -66,7 +67,7 @@ export function SelectPenalCode({ value, handleChange, penalCodes, isReadOnly }:
           .filter((v) => !value.some((vio) => vio.value?.id === v.id))
           .map((value) => ({
             label: value.title,
-            value,
+            value: parseCurrentValue(value),
           }))}
       />
     </FormRow>

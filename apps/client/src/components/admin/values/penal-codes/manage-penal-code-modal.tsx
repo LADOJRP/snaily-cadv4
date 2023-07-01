@@ -1,6 +1,6 @@
 import { PENAL_CODE_SCHEMA } from "@snailycad/schemas";
 import { FormField } from "components/form/FormField";
-import { Loader, Button, SelectField, TextField, Input } from "@snailycad/ui";
+import { Loader, Button, SelectField, TextField, CheckboxField, FormRow } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { Form, Formik, useFormikContext } from "formik";
 import { handleValidate } from "lib/handleValidate";
@@ -8,11 +8,9 @@ import useFetch from "lib/useFetch";
 import { useModal } from "state/modalState";
 import { PenalCode, ValueType, PenalCodeType } from "@snailycad/types";
 import { useTranslations } from "use-intl";
-import { FormRow } from "components/form/FormRow";
 import { dataToSlate, Editor } from "components/editor/editor";
 import { ModalIds } from "types/modal-ids";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
-import { Checkbox } from "components/form/inputs/Checkbox";
 import type { PatchValueByIdData, PostValuesData } from "@snailycad/types/api";
 
 interface Props {
@@ -85,8 +83,8 @@ export function ManagePenalCode({ onCreate, onUpdate, onClose, groupId, type, pe
     description: penalCode?.description ?? "",
     descriptionData: dataToSlate(penalCode),
     groupId: penalCode?.groupId ?? groupId,
-    warningApplicable: !!penalCode?.warningApplicableId,
-    warningNotApplicable: !!penalCode?.warningNotApplicableId,
+    warningApplicable: Boolean(penalCode?.warningApplicableId),
+    warningNotApplicable: Boolean(penalCode?.warningNotApplicableId),
     fines1: {
       enabled: (penalCode?.warningApplicable?.fines.length ?? 0) > 0,
       values: penalCode?.warningApplicable?.fines ?? [],
@@ -139,14 +137,12 @@ export function ManagePenalCode({ onCreate, onUpdate, onClose, groupId, type, pe
               selectedKey={values.type}
             />
 
-            <FormField checkbox errorMessage={errors.isPrimary} label="Is Primary">
-              <Input
-                checked={values.isPrimary}
-                name="type"
-                onChange={(e) => setFieldValue("isPrimary", e.target.checked)}
-                type="checkbox"
-              />
-            </FormField>
+            <CheckboxField
+              onChange={(isSelected) => setFieldValue("isPrimary", isSelected)}
+              isSelected={values.isPrimary}
+            >
+              Is Primary
+            </CheckboxField>
 
             <FormField errorMessage={errors.description} label="Description">
               <Editor
@@ -157,12 +153,12 @@ export function ManagePenalCode({ onCreate, onUpdate, onClose, groupId, type, pe
 
             <FormRow>
               <div className="flex flex-col mr-2.5">
-                <FormField checkbox label="Warning applicable">
-                  <Checkbox
-                    checked={values.warningApplicable}
-                    onChange={() => setFieldValue("warningApplicable", !values.warningApplicable)}
-                  />
-                </FormField>
+                <CheckboxField
+                  onChange={(isSelected) => setFieldValue("warningApplicable", isSelected)}
+                  isSelected={values.warningApplicable}
+                >
+                  Warning Applicable
+                </CheckboxField>
 
                 <div>
                   <FieldsRow keyValue="fines1" />
@@ -170,14 +166,12 @@ export function ManagePenalCode({ onCreate, onUpdate, onClose, groupId, type, pe
               </div>
 
               <div className="ml-2.5">
-                <FormField checkbox label="Warning not applicable">
-                  <Checkbox
-                    checked={values.warningNotApplicable}
-                    onChange={() =>
-                      setFieldValue("warningNotApplicable", !values.warningNotApplicable)
-                    }
-                  />
-                </FormField>
+                <CheckboxField
+                  onChange={(isSelected) => setFieldValue("warningNotApplicable", isSelected)}
+                  isSelected={values.warningNotApplicable}
+                >
+                  Warning not applicable
+                </CheckboxField>
 
                 <div>
                   <FieldsRow keyValue="fines2" />
@@ -220,16 +214,16 @@ function FieldsRow({ keyValue }: { keyValue: `fines${number}` | "prisonTerm" | "
   const isBailDisabled = keyValue === "bail" ? !values.prisonTerm.enabled : false;
 
   return (
-    <FormRow className="mb-0">
-      <FormField className="mb-0" checkbox label={label}>
-        <Checkbox
-          disabled={isBailDisabled || disabled}
-          onChange={() => setFieldValue(`${keyValue}.enabled`, !values[keyValue].enabled)}
-          checked={values[keyValue].enabled}
-        />
-      </FormField>
+    <FormRow>
+      <CheckboxField
+        onChange={(isSelected) => setFieldValue(`${keyValue}.enabled`, isSelected)}
+        isSelected={values[keyValue].enabled}
+        isDisabled={isBailDisabled || disabled}
+      >
+        {label}
+      </CheckboxField>
 
-      <FormRow className="items-center" flexLike>
+      <FormRow className="items-center" useFlex>
         <TextField
           label="Min."
           onChange={(value) => setFieldValue(`${keyValue}.values[0]`, value)}
@@ -242,7 +236,7 @@ function FieldsRow({ keyValue }: { keyValue: `fines${number}` | "prisonTerm" | "
           isDisabled={isDisabled}
         />
 
-        <span className="mb-2.5">{" - "}</span>
+        <span className="mt-2.5">{" - "}</span>
         <TextField
           label="Max."
           onChange={(value) => setFieldValue(`${keyValue}.values[1]`, value)}

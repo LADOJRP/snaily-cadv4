@@ -1,9 +1,15 @@
 import type { CombinedEmsFdUnit, CombinedLeoUnit, EmsFdDeputy, Officer } from "@snailycad/types";
 import { replaceTemplateVariables } from "./utils/replace-template-variables";
 
-type P = "callsign" | "callsign2" | "department" | "citizenId" | "incremental";
+type P =
+  | "callsign"
+  | "callsign2"
+  | "department"
+  | "citizenId"
+  | "incremental"
+  | "userDefinedCallsign";
 type Unit =
-  | Pick<Officer, P | "divisions" | "callsigns">
+  | Pick<Officer, P | "divisions">
   | Pick<EmsFdDeputy, P | "division">
   | CombinedLeoUnit
   | CombinedEmsFdUnit;
@@ -16,7 +22,7 @@ type Unit =
  */
 export function generateCallsign(unit: Unit, template: string | null) {
   const isCombined = !("citizenId" in unit) || "officers" in unit || "deputies" in unit;
-  const _template = isCombined && unit.pairedUnitTemplate ? unit.pairedUnitTemplate : template;
+  const _template = getTemplateFromUnit({ template, unit });
 
   if (isCombined && unit.userDefinedCallsign) {
     return unit.userDefinedCallsign;
@@ -39,4 +45,19 @@ export function generateCallsign(unit: Unit, template: string | null) {
   };
 
   return replaceTemplateVariables(_template, replacers);
+}
+
+interface GetTemplateOptions {
+  unit: Unit;
+  template: string | null;
+}
+
+function getTemplateFromUnit({ unit, template }: GetTemplateOptions) {
+  const isCombined = !("citizenId" in unit) || "officers" in unit || "deputies" in unit;
+
+  if (isCombined) {
+    return unit.userDefinedCallsign || unit.pairedUnitTemplate || template;
+  }
+
+  return unit.userDefinedCallsign || unit.department?.customTemplate || template;
 }

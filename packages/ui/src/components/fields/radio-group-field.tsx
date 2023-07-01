@@ -4,6 +4,7 @@ import { useRadioGroupState } from "@react-stately/radio";
 import { RadioContext, useRadioFieldContext } from "../../context/radio-field-context";
 import { ErrorMessage } from "../error-message";
 import { Label } from "../label";
+import { cn } from "mxcn";
 
 interface Props extends AriaRadioGroupProps {
   children: React.ReactNode;
@@ -35,12 +36,14 @@ export function RadioGroupField(props: Props) {
 export function Radio(props: AriaRadioProps) {
   const state = useRadioFieldContext();
   const ref = React.useRef(null);
-  const { inputProps } = useRadio(props, state, ref);
+  const { inputProps, isDisabled } = useRadio(props, state, ref);
 
   return (
-    <label className="block">
+    <label className="block dark:text-gray-200 my-0.5">
       <input {...inputProps} ref={ref} />
-      <span className="ml-1">{props.children}</span>
+      <span className={cn("ml-1", isDisabled && "opacity-80 cursor-not-allowed")}>
+        {props.children}
+      </span>
     </label>
   );
 }

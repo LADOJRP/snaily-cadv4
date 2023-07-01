@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CadFeatureOptions, Feature, LicenseExamType } from "@snailycad/types";
+import { CadFeatureOptions, CourthouseType, Feature, LicenseExamType } from "@snailycad/types";
 import { useAuth } from "context/AuthContext";
 
 export const DEFAULT_DISABLED_FEATURES = {
@@ -23,10 +23,13 @@ export const DEFAULT_DISABLED_FEATURES = {
   SIGNAL_100_CITIZEN: { isEnabled: false },
   FORCE_ACCOUNT_PASSWORD: { isEnabled: false },
   USER_DEFINED_CALLSIGN_COMBINED_UNIT: { isEnabled: false },
+  REQUIRED_CITIZEN_IMAGE: { isEnabled: false },
+  LEO_EDITABLE_CITIZEN_PROFILE: { isEnabled: false },
 } satisfies Partial<Record<Feature, { isEnabled: boolean }>>;
 
 export const DEFAULT_FEATURE_OPTIONS = {
   [Feature.LICENSE_EXAMS]: Object.values(LicenseExamType),
+  [Feature.COURTHOUSE]: Object.values(CourthouseType),
 } satisfies CadFeatureOptions;
 
 export function useFeatureEnabled(
@@ -38,12 +41,15 @@ export function useFeatureEnabled(
   const options = React.useMemo(() => {
     const obj = {} as CadFeatureOptions;
 
-    const cadFeatures = _features?.options ?? DEFAULT_FEATURE_OPTIONS;
-    for (const _key in cadFeatures) {
+    const cadFeatures = _features;
+    for (const _key in _features) {
       const typedKey = _key as keyof CadFeatureOptions;
-      const option = cadFeatures[typedKey] ?? DEFAULT_FEATURE_OPTIONS[typedKey];
+      const option = cadFeatures?.options?.[typedKey] ?? DEFAULT_FEATURE_OPTIONS[typedKey];
 
-      obj[typedKey] = option;
+      if (option) {
+        // @ts-expect-error the types are overlapping, however, it will correctly assign the correct value
+        obj[typedKey] = option;
+      }
     }
 
     return obj;
@@ -52,7 +58,7 @@ export function useFeatureEnabled(
   const featuresObj = React.useMemo(() => {
     const obj: Record<Feature, boolean> = {} as Record<Feature, boolean>;
 
-    Object.keys(Feature).map((feature) => {
+    Object.keys(Feature).forEach((feature) => {
       const cadFeature = _features?.[feature as Feature];
 
       // @ts-expect-error - this is fine

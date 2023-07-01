@@ -13,6 +13,7 @@ export enum Permissions {
   ViewCitizenLogs = "ViewCitizenLogs",
   ViewLicenseExams = "ViewLicenseExams",
   ManageLicenseExams = "ManageLicenseExams",
+  SetUserDefinedCallsignOnOfficer = "SetUserDefinedCallsignOnOfficer",
 
   ViewCustomFields = "ViewCustomFields",
   ManageCustomFields = "ManageCustomFields",
@@ -25,6 +26,7 @@ export enum Permissions {
   ManageAwardsAndQualifications = "ManageAwardsAndQualifications",
   PurgeLeoIncidents = "PurgeLeoIncidents",
   LeoManageCustomFields = "LeoManageCustomFields",
+  LeoManageCitizenProfile = "LeoManageCitizenProfile",
 
   Dispatch = "Dispatch",
 
@@ -36,6 +38,7 @@ export enum Permissions {
   PurgeEmsFdIncidents = "PurgeEmsFdIncidents",
   ViewDeadCitizens = "ViewDeadCitizens",
   ManageDeadCitizens = "ManageDeadCitizens",
+  SetUserDefinedCallsignOnEmsFd = "SetUserDefinedCallsignOnEmsFd",
 
   //  citizen related
   ViewTaxiCalls = "ViewTaxiCalls",

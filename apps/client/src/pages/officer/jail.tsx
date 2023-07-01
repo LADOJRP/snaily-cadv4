@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useTranslations } from "use-intl";
-import { Button, Input } from "@snailycad/ui";
+import { Button, CheckboxField, FullDate } from "@snailycad/ui";
 import { Layout } from "components/Layout";
 import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
@@ -14,7 +14,6 @@ import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import compareDesc from "date-fns/compareDesc";
 import { ReleaseCitizenModal } from "components/leo/jail/ReleaseCitizenModal";
 import { Title } from "components/shared/Title";
-import { FullDate } from "components/shared/FullDate";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { NameSearchModal } from "components/leo/modals/NameSearchModal/NameSearchModal";
@@ -22,7 +21,6 @@ import { useAsyncTable } from "hooks/shared/table/use-async-table";
 import type { GetJailedCitizensData } from "@snailycad/types/api";
 import { useLoadValuesClientSide } from "hooks/useLoadValuesClientSide";
 import { RecordsCaseNumberColumn } from "components/leo/records-case-number-column";
-import { FormField } from "components/form/FormField";
 
 interface Props {
   data: GetJailedCitizensData;
@@ -102,18 +100,17 @@ export default function Jail({ data }: Props) {
       <header className="flex flex-col flex-start">
         <Title>{t("jail")}</Title>
 
-        <FormField className="w-full" label={t("showActiveOnly")} checkbox>
-          <Input
-            checked={Boolean(asyncTable.filters?.activeOnly)}
-            onChange={() => {
-              asyncTable.setFilters((prev) => ({
-                ...prev,
-                activeOnly: !prev?.activeOnly,
-              }));
-            }}
-            type="checkbox"
-          />
-        </FormField>
+        <CheckboxField
+          onChange={(isSelected) =>
+            asyncTable.setFilters((prev) => ({
+              ...prev,
+              activeOnly: isSelected,
+            }))
+          }
+          isSelected={Boolean(asyncTable.filters?.activeOnly)}
+        >
+          {t("showActiveOnly")}
+        </CheckboxField>
       </header>
 
       {_itemsWithArrestReportSortedByCreatedAt.length <= 0 ? (

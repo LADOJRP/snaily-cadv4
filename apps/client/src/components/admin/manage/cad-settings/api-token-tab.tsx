@@ -1,7 +1,5 @@
 import type * as React from "react";
-import { PasswordInput } from "components/form/inputs/Input";
-import { Toggle } from "components/form/Toggle";
-import { Button, Loader, TabsContent } from "@snailycad/ui";
+import { Button, Loader, SwitchField, TabsContent, TextField } from "@snailycad/ui";
 import { useAuth } from "context/AuthContext";
 import { Form, Formik, FormikHelpers } from "formik";
 import useFetch from "lib/useFetch";
@@ -56,11 +54,6 @@ export function ApiTokenTab() {
     }
   }
 
-  function handleClick(e: React.MouseEvent<HTMLInputElement>) {
-    const t = e.target as HTMLInputElement;
-    t.select();
-  }
-
   const INITIAL_VALUES = {
     enabled: cad?.apiToken?.enabled ?? false,
     token: cad?.apiToken?.token ?? "",
@@ -74,8 +67,32 @@ export function ApiTokenTab() {
       <h2 className="mt-2 text-2xl font-semibold">{t("publicAPIAccess")}</h2>
 
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-        {({ handleChange, setFieldValue, values }) => (
+        {({ setFieldValue, values }) => (
           <Form className="mt-3 space-y-5">
+            <SettingsFormField
+              action="checkbox"
+              description={t.rich("readMorePublicAPI", {
+                a: (children) => (
+                  <a
+                    rel="noreferrer"
+                    target="_blank"
+                    className="text-blue-600 underline"
+                    href="https://docs.snailycad.org/docs/developer/public-api"
+                  >
+                    {children}
+                  </a>
+                ),
+              })}
+              label={common("enabled")}
+            >
+              <SwitchField
+                aria-label={common("enabled")}
+                isSelected={values.enabled}
+                onChange={(isSelected) => setFieldValue("enabled", isSelected)}
+                name="enabled"
+              />
+            </SettingsFormField>
+
             <SettingsFormField
               description={t.rich("tokenDescription", {
                 a: (children) => (
@@ -91,7 +108,15 @@ export function ApiTokenTab() {
               })}
               label="Token"
             >
-              <PasswordInput onClick={handleClick} readOnly value={values.token} />
+              <TextField
+                label="Token"
+                type="password"
+                inputElementType="input"
+                onFocus={(event) => (event.target as HTMLInputElement).select()}
+                isReadOnly
+                value={values.token}
+                isDisabled={!values.enabled}
+              />
             </SettingsFormField>
 
             <SettingsFormField
@@ -109,26 +134,15 @@ export function ApiTokenTab() {
               })}
               label={t("discordBotCommand")}
             >
-              <PasswordInput onClick={handleClick} readOnly value={discordCommand} />
-            </SettingsFormField>
-
-            <SettingsFormField
-              action="checkbox"
-              description={t.rich("readMorePublicAPI", {
-                a: (children) => (
-                  <a
-                    rel="noreferrer"
-                    target="_blank"
-                    className="text-blue-600 underline"
-                    href="https://docs.snailycad.org/docs/developer/public-api"
-                  >
-                    {children}
-                  </a>
-                ),
-              })}
-              label={common("enabled")}
-            >
-              <Toggle value={values.enabled} onCheckedChange={handleChange} name="enabled" />
+              <TextField
+                label={t("discordBotCommand")}
+                type="password"
+                inputElementType="input"
+                onFocus={(event) => (event.target as HTMLInputElement).select()}
+                isReadOnly
+                value={discordCommand}
+                isDisabled={!values.enabled}
+              />
             </SettingsFormField>
 
             <div className="flex">

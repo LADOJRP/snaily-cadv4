@@ -1,11 +1,11 @@
 import * as React from "react";
-import { AriaTextFieldOptions, useTextField } from "@react-aria/textfield";
-import { classNames } from "../../utils/classNames";
+import { AriaTextFieldOptions, TextFieldAria, useTextField } from "@react-aria/textfield";
+import { cn } from "mxcn";
 import { Input } from "../inputs/input";
 import { Textarea } from "../inputs/textarea";
 import { ErrorMessage } from "../error-message";
 import { Label } from "../label";
-import { PasswordInput } from "../inputs/password-input";
+import { PasswordInputButton } from "../inputs/password-input-button";
 
 interface Props extends AriaTextFieldOptions<"input"> {
   label: React.ReactNode;
@@ -21,7 +21,7 @@ interface Props extends AriaTextFieldOptions<"input"> {
 }
 
 export function TextField(props: Props) {
-  const _ref = React.useRef<any>(null);
+  const _ref = React.useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const ref = props.inputRef ?? _ref;
 
   const { labelProps, inputProps, errorMessageProps } = useTextField(
@@ -30,17 +30,27 @@ export function TextField(props: Props) {
   );
 
   return (
-    <div className={classNames("relative text-field flex flex-col mb-3", props.className)}>
+    <div className={cn("relative text-field flex flex-col mb-3", props.className)}>
       <Label {...props} labelProps={labelProps} />
 
       {props.isTextarea ? (
-        <Textarea ref={ref} errorMessage={props.errorMessage} {...(inputProps as any)} />
+        <Textarea
+          errorMessage={props.errorMessage}
+          ref={ref as React.RefObject<HTMLTextAreaElement>}
+          {...(inputProps as TextFieldAria<"textarea">["inputProps"])}
+        />
       ) : (
-        <Input ref={ref} errorMessage={props.errorMessage} {...(inputProps as any)} />
+        <Input
+          errorMessage={props.errorMessage}
+          ref={ref as React.RefObject<HTMLInputElement>}
+          {...(inputProps as TextFieldAria["inputProps"])}
+        />
       )}
       {props.children}
 
-      {props.type === "password" ? <PasswordInput inputRef={ref} /> : null}
+      {props.type === "password" && !props.isTextarea ? (
+        <PasswordInputButton inputRef={ref as React.RefObject<HTMLInputElement>} />
+      ) : null}
 
       {props.errorMessage && (
         <ErrorMessage errorMessage={props.errorMessage} errorMessageProps={errorMessageProps} />

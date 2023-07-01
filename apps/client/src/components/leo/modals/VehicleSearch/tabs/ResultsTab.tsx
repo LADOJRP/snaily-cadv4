@@ -1,12 +1,9 @@
-import { Button, TabsContent } from "@snailycad/ui";
+import { Button, FullDate, Infofield, Status, TabsContent } from "@snailycad/ui";
 import { useTranslations } from "use-intl";
 import { yesOrNoText } from "lib/utils";
 import { classNames } from "lib/classNames";
-import { Infofield } from "components/shared/Infofield";
-import { FullDate } from "components/shared/FullDate";
 import { useVehicleSearch } from "state/search/vehicle-search-state";
 import { Pencil } from "react-bootstrap-icons";
-import { Status } from "components/shared/Status";
 import { TruckLogsTable } from "../TruckLogsTable";
 import { CustomFieldsArea } from "../../CustomFieldsArea";
 import { useVehicleLicenses } from "hooks/locale/useVehicleLicenses";
@@ -14,6 +11,7 @@ import { useModal } from "state/modalState";
 import { useRouter } from "next/router";
 import { ModalIds } from "types/modal-ids";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
+import { hasSearchResults } from "../../VehicleSearchModal";
 
 export function ResultsTab() {
   const currentResult = useVehicleSearch((state) => state.currentResult);
@@ -29,13 +27,14 @@ export function ResultsTab() {
   const isLeo = router.pathname === "/officer";
 
   function handleEditVehicleFlags() {
-    if (!currentResult) return;
+    if (!hasSearchResults(currentResult)) return;
 
     openModal(ModalIds.ManageVehicleFlags);
   }
 
   function handleNameClick() {
-    if (!currentResult?.citizen) return;
+    if (!hasSearchResults(currentResult)) return;
+    if (!currentResult.citizen) return;
 
     openModal(ModalIds.NameSearch, {
       ...currentResult.citizen,
@@ -44,7 +43,7 @@ export function ResultsTab() {
     closeModal(ModalIds.VehicleSearchWithinName);
   }
 
-  if (!currentResult) {
+  if (!hasSearchResults(currentResult)) {
     return null;
   }
 

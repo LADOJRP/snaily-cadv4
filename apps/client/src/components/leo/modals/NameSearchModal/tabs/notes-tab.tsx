@@ -1,7 +1,6 @@
 import * as React from "react";
 import type { Note } from "@snailycad/types";
-import { Button, TabsContent } from "@snailycad/ui";
-import { FullDate } from "components/shared/FullDate";
+import { Button, FullDate, TabsContent } from "@snailycad/ui";
 import { Table, useTableState } from "components/shared/Table";
 import { useTranslations } from "next-intl";
 import { useModal } from "state/modalState";
@@ -16,7 +15,7 @@ import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
 
 interface Props<T extends VehicleSearchResult | NameSearchResult> {
   currentResult: VehicleSearchResult | NameSearchResult;
-  setCurrentResult(value: T | null | undefined): void;
+  setCurrentResult(value: T | null | "initial"): void;
   type: "CITIZEN" | "VEHICLE";
 }
 

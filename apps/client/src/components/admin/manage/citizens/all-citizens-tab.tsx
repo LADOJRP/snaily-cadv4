@@ -2,15 +2,11 @@ import * as React from "react";
 import { useModal } from "state/modalState";
 import useFetch from "lib/useFetch";
 import { ModalIds } from "types/modal-ids";
-import { Loader, Button, buttonVariants, TextField } from "@snailycad/ui";
+import { Loader, Button, buttonVariants, TextField, SelectField, FullDate } from "@snailycad/ui";
 import { useTranslations } from "next-intl";
-import { FormField } from "components/form/FormField";
 import { Table, useTableState } from "components/shared/Table";
-import { Select } from "components/form/Select";
 import Link from "next/link";
-import { FullDate } from "components/shared/FullDate";
 import { usePermission, Permissions } from "hooks/usePermission";
-import { classNames } from "lib/classNames";
 import { useAsyncTable } from "hooks/shared/table/use-async-table";
 import type { DeleteManageCitizenByIdData, GetManageCitizensData } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
@@ -98,22 +94,22 @@ export function AllCitizensTab({ citizens: initialData, totalCount, setCitizens 
               ) : null}
             </TextField>
 
-            <FormField className="w-40" label={t("filter")}>
-              <Select
-                isClearable
-                value={asyncTable.filters?.userId ?? null}
-                onChange={(e) =>
-                  asyncTable.setFilters((prevFilters) => ({
-                    ...prevFilters,
-                    userId: e?.target.value,
-                  }))
-                }
-                values={users.map((u) => ({
-                  label: u.username,
-                  value: u.id,
-                }))}
-              />
-            </FormField>
+            <SelectField
+              className="w-64"
+              label={t("filter")}
+              isClearable
+              selectedKey={asyncTable.filters?.userId ?? null}
+              options={users.map((u) => ({
+                value: u.id,
+                label: u.username,
+              }))}
+              onSelectionChange={(value) => {
+                asyncTable.setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  userId: value,
+                }));
+              }}
+            />
           </div>
 
           {search && asyncTable.pagination.totalDataCount !== totalCount ? (
@@ -146,7 +142,7 @@ export function AllCitizensTab({ citizens: initialData, totalCount, setCitizens 
                   {hasPermissions([Permissions.ManageCitizens]) ? (
                     <Link
                       href={`/admin/manage/citizens/${citizen.id}`}
-                      className={classNames(buttonVariants.success, "p-0.5 px-2 rounded-md")}
+                      className={buttonVariants({ variant: "success", size: "xs" })}
                     >
                       {common("edit")}
                     </Link>

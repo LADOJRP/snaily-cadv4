@@ -78,7 +78,11 @@
     "citizenRecordsChannel": "Канал записей о гражданах",
     "citizenRecordsChannelInfo": "Канал Discord, куда будут отправлены записи о новых отчетах об аресте, штрафах, ордерах и письменных предупреждениях.",
     "warrantsChannel": "Канал ордеров",
-    "warrantsChannelInfo": "Канал Discord, куда будут отправлены записи о новых ордерах."
+    "warrantsChannelInfo": "Канал Discord, куда будут отправлены записи о новых ордерах.",
+    "bleeterPostChannelInfo": "Канал, куда будут отправлены новые посты Bleeter.",
+    "bleeterPostChannel": "Канал Постов Bleeter",
+    "citizenDeclaredDeadChannelInfo": "Канал, куда будут отправлены уведомления о гражданах, которые были объявлены мертвыми.",
+    "citizenDeclaredDeadChannel": "Канал объявления о смерти граждан"
   },
   "RawWebhooksTab": {
     "rawWebhooks": "Raw Вебхуки",
@@ -184,6 +188,9 @@
   "Features": {
     "enableOrDisableFeatures": "Включить или отключить функции",
     "searchFeatures": "Поиск Функций...",
+    "types": "Типы",
+    "EXPUNGEMENT_REQUEST": "Запрос на удаление",
+    "NAME_CHANGE_REQUEST": "Запрос на смену имени",
     "TOW": "Эвакуатор",
     "TOW-description": "Если включено, это позволит гражданам создавать вызовы эвакуатора.",
     "TAXI": "Такси",
@@ -296,7 +303,11 @@
     "MEDICAL_RECORDS_CITIZEN_MANAGEABLE": "Редактирование Медицинских Записей",
     "MEDICAL_RECORDS_CITIZEN_MANAGEABLE-description": "Если включено, то граждане смогут редактировать свои медицинские записи. Если выключено, то только пожарные и EMS смогут редактировать медицинские записи граждан.",
     "PETS": "Питомцы",
-    "PETS-description": "Если включено, граждане смогут созавать себе питомцев."
+    "PETS-description": "Если включено, граждане смогут созавать себе питомцев.",
+    "REQUIRED_CITIZEN_IMAGE": "Требуется Изображение Гражданина",
+    "REQUIRED_CITIZEN_IMAGE-description": "Если включено, то пользователям нужно будет загрузить фото своего гражданина при создании.",
+    "LEO_EDITABLE_CITIZEN_PROFILE": "Редактирование Профиля Гражданина",
+    "LEO_EDITABLE_CITIZEN_PROFILE-description": "Если включено, то сотрудники структур смогут редактировать профили граждан, у которых указаны права на редактирование."
   },
   "Permissions": {
     "defaultPermissions": "Стандартные Разрешения",
@@ -402,6 +413,8 @@
     "ViewDLExams": "Просмотр Экзаменов",
     "ManageDLExams": "Управление Экзаменами",
     "ViewWeaponExams": "Просмотр Экзаменов на Оружие",
-    "ManageWeaponExams": "Управление Экзаменами на Оружие"
+    "ManageWeaponExams": "Управление Экзаменами на Оружие",
+    "SetUserDefinedCallsignOnOfficer": "Установка Пользовательского Позывного на Офицера",
+    "SetUserDefinedCallsignOnEmsFd": "Установка Пользовательского Позывного на EMS/FD"
   }
 }

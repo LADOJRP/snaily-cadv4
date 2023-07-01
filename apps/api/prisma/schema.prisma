@@ -437,6 +437,7 @@ model Pet {
   dateOfBirth DateTime
   citizen     Citizen  @relation(fields: [citizenId], references: [id])
   citizenId   String
+  imageId     String?
 
   notes          Note[]
   medicalRecords PetMedicalRecord[]
@@ -703,6 +704,7 @@ model DepartmentValue {
   value                 Value                   @relation("departmentToValue", fields: [valueId], references: [id], onDelete: Cascade)
   valueId               String
   callsign              String?
+  customTemplate        String?
   whitelisted           Boolean                 @default(false)
   isDefaultDepartment   Boolean                 @default(false)
   type                  DepartmentType          @default(LEO)
@@ -949,6 +951,7 @@ model Officer {
   activeDivisionCallsign      IndividualDivisionCallsign?  @relation("divisionCallsign", fields: [activeDivisionCallsignId], references: [id])
   activeDivisionCallsignId    String?
   incremental                 Int?
+  userDefinedCallsign         String?
   divisions                   DivisionValue[]              @relation("officerDivisionsToDivision")
   rank                        Value?                       @relation("officerRankToValue", fields: [rankId], references: [id])
   rankId                      String?
@@ -957,7 +960,7 @@ model Officer {
   statusId                    String?
   suspended                   Boolean                      @default(false)
   badgeNumber                 Int?
-  badgeNumberString            String?
+  badgeNumberString           String?
   imageId                     String?                      @db.VarChar(255)
   imageBlurData               String?                      @db.Text
   citizen                     Citizen                      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
@@ -1489,6 +1492,7 @@ model EmsFdDeputy {
   callsign                  String                 @db.VarChar(255)
   callsign2                 String                 @db.VarChar(255)
   incremental               Int?
+  userDefinedCallsign       String?
   division                  DivisionValue?         @relation("emsFdDivisionToDivision", fields: [divisionId], references: [id])
   divisionId                String?
   position                  String?                @db.Text
@@ -1498,7 +1502,7 @@ model EmsFdDeputy {
   statusId                  String?
   suspended                 Boolean                @default(false)
   badgeNumber               Int?
-  badgeNumberString          String?
+  badgeNumberString         String?
   imageId                   String?                @db.VarChar(255)
   imageBlurData             String?                @db.Text
   citizen                   Citizen                @relation(fields: [citizenId], references: [id], onDelete: Cascade)
@@ -1847,6 +1851,8 @@ enum DiscordWebhookType {
   CITIZEN_RECORD
   VEHICLE_IMPOUNDED
   WARRANTS
+  BLEETER_POST
+  CITIZEN_DECLARED_DEAD
 }
 
 enum JailTimeScale {
@@ -1928,4 +1934,6 @@ enum Feature {
   HOSPITAL_SERVICES // see #1602
   MEDICAL_RECORDS_CITIZEN_MANAGEABLE
   PETS // see #1640
+  REQUIRED_CITIZEN_IMAGE // see #1681
+  LEO_EDITABLE_CITIZEN_PROFILE // see #1698
 }

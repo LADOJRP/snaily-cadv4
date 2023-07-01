@@ -1,5 +1,13 @@
 import { LEO_INCIDENT_SCHEMA } from "@snailycad/schemas";
-import { Loader, Button, Input, SwitchField } from "@snailycad/ui";
+import {
+  Loader,
+  Button,
+  SwitchField,
+  CheckboxField,
+  FormRow,
+  Infofield,
+  FullDate,
+} from "@snailycad/ui";
 import { FormField } from "components/form/FormField";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
@@ -8,7 +16,6 @@ import { handleValidate } from "lib/handleValidate";
 import useFetch from "lib/useFetch";
 import { ModalIds } from "types/modal-ids";
 import { useTranslations } from "use-intl";
-import { FormRow } from "components/form/FormRow";
 import { useRouter } from "next/router";
 import { dataToSlate, Editor } from "components/editor/editor";
 import { IncidentEventsArea } from "./IncidentEventsArea";
@@ -20,9 +27,7 @@ import type { PostIncidentsData, PutIncidentByIdData } from "@snailycad/types/ap
 import { AddressPostalSelect } from "components/form/select/PostalSelect";
 import { InvolvedUnitsTable } from "./involved-units/involved-units-table";
 import { ValueSelectField } from "components/form/inputs/value-select-field";
-import { Infofield } from "components/shared/Infofield";
 import { useAuth } from "context/AuthContext";
-import { FullDate } from "components/shared/FullDate";
 
 interface Props<T extends LeoIncident | EmsFdIncident> {
   incident?: T | null;
@@ -154,11 +159,12 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
               ) : null}
 
               <div>
-                <FormRow>
+                <FormRow className="mb-3" useFlex>
                   <SwitchField
                     isDisabled={areFieldsDisabled}
                     isSelected={values.firearmsInvolved}
                     onChange={(isSelected) => setFieldValue("firearmsInvolved", isSelected)}
+                    className="w-full"
                   >
                     {t("firearmsInvolved")}
                   </SwitchField>
@@ -167,6 +173,7 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
                     isDisabled={areFieldsDisabled}
                     isSelected={values.injuriesOrFatalities}
                     onChange={(isSelected) => setFieldValue("injuriesOrFatalities", isSelected)}
+                    className="w-full"
                   >
                     {t("injuriesOrFatalities")}
                   </SwitchField>
@@ -175,6 +182,7 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
                     isDisabled={areFieldsDisabled}
                     isSelected={values.arrestsMade}
                     onChange={(isSelected) => setFieldValue("arrestsMade", isSelected)}
+                    className="w-full"
                   >
                     {t("arrestsMade")}
                   </SwitchField>
@@ -188,7 +196,7 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
                   />
                 </FormField>
 
-                <FormRow flexLike>
+                <FormRow useFlex>
                   <ValueSelectField
                     className="w-full"
                     isOptional
@@ -215,20 +223,13 @@ export function ManageIncidentModal<T extends LeoIncident | EmsFdIncident>({
 
               <footer className="flex items-center justify-end mt-5">
                 {isDispatch && !incident ? (
-                  <FormField
-                    className="!mb-0 mr-2"
-                    labelClassName="min-w-fit"
-                    label="Open Manage incident modal after call creation?"
-                    checkbox
+                  <CheckboxField
+                    className="mb-0 mr-2"
+                    isSelected={values.openModalAfterCreation}
+                    onChange={(isSelected) => setFieldValue("openModalAfterCreation", isSelected)}
                   >
-                    <Input
-                      checked={values.openModalAfterCreation}
-                      onChange={() =>
-                        setFieldValue("openModalAfterCreation", !values.openModalAfterCreation)
-                      }
-                      type="checkbox"
-                    />
-                  </FormField>
+                    Open Manage incident modal after call creation?
+                  </CheckboxField>
                 ) : null}
 
                 <Button type="reset" onPress={handleClose} variant="cancel">

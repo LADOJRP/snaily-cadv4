@@ -78,7 +78,11 @@
     "citizenRecordsChannel": "Citizen Records channel",
     "citizenRecordsChannelInfo": "The Discord channel where new arrest reports, tickets, warrants and written warnings will be sent to.",
     "warrantsChannel": "Warrants channel",
-    "warrantsChannelInfo": "The Discord channel where new warrants will be sent to."
+    "warrantsChannelInfo": "The Discord channel where new warrants will be sent to.",
+    "bleeterPostChannelInfo": "The Discord channel where new bleeter posts will be sent to.",
+    "bleeterPostChannel": "Bleeter Post channel",
+    "citizenDeclaredDeadChannelInfo": "The Discord channel where dead citizen notifications will be sent to.",
+    "citizenDeclaredDeadChannel": "Citizen Declared Dead channel"
   },
   "RawWebhooksTab": {
     "rawWebhooks": "Raw Webhooks",
@@ -184,6 +188,9 @@
   "Features": {
     "enableOrDisableFeatures": "Enable or Disable Features",
     "searchFeatures": "Search Features...",
+    "types": "Types",
+    "EXPUNGEMENT_REQUEST": "Expungement Request",
+    "NAME_CHANGE_REQUEST": "Name change request",
     "TOW": "Tow",
     "TOW-description": "When enabled, this will allow citizens to create tow calls",
     "TAXI": "Taxi",
@@ -296,7 +303,11 @@
     "MEDICAL_RECORDS_CITIZEN_MANAGEABLE": "Medical Records Citizen Manageable",
     "MEDICAL_RECORDS_CITIZEN_MANAGEABLE-description": "When enabled, this will allow citizens to manage their own medical records. When disabled, this will only allow EMS/FD to manage citizen medical records.",
     "PETS": "Pets",
-    "PETS-description": "When enabled, this will allow citizens to create pets."
+    "PETS-description": "When enabled, this will allow citizens to create pets.",
+    "REQUIRED_CITIZEN_IMAGE": "Required Citizen Image",
+    "REQUIRED_CITIZEN_IMAGE-description": "When enabled, this will require citizens to upload an image when creating a citizen.",
+    "LEO_EDITABLE_CITIZEN_PROFILE": "LEO Editable Citizen Profile",
+    "LEO_EDITABLE_CITIZEN_PROFILE-description": "When enabled, this will allow LEO/EMS/FD/Dispatch to edit citizen profiles if the user has the 'Manage Citizen Profile (non-admin)' permission."
   },
   "Permissions": {
     "defaultPermissions": "Default Permissions",
@@ -402,6 +413,9 @@
     "ViewDLExams": "View Exams",
     "ManageDLExams": "Manage Exams",
     "ViewWeaponExams": "View Weapon Exams",
-    "ManageWeaponExams": "Manage Weapon Exams"
+    "ManageWeaponExams": "Manage Weapon Exams",
+    "SetUserDefinedCallsignOnOfficer": "Set User Defined Callsign On Officer",
+    "SetUserDefinedCallsignOnEmsFd": "Set User Defined Callsign On EMS/FD Deputy",
+    "LeoManageCitizenProfile": "Manage Citizen Profile (non-admin)"
   }
 }

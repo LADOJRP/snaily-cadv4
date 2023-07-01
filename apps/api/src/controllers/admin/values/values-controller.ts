@@ -63,9 +63,10 @@ export class ValuesController {
   @Get("/")
   @Description("Get all the values by the specified types")
   async getValueByPath(
-    @PathParams("path") path: (string & {}) | "all",
+    @PathParams({ expression: "path", paramType: "string", useType: String })
+    path: ValueType | "all",
     @QueryParams() queryParams: any,
-    @QueryParams("paths") rawPaths: string,
+    @QueryParams("paths") rawPaths: ValueType,
     @QueryParams("skip", Number) skip = 0,
     @QueryParams("query", String) query = "",
     @QueryParams("includeAll", Boolean) includeAll = true,
@@ -411,7 +412,7 @@ export class ValuesController {
     @Context("sessionUserId") sessionUserId: string,
   ): Promise<APITypes.DeleteValueByIdData> {
     const type = getTypeFromPath(path);
-    return !!this.deleteById(type, id, sessionUserId);
+    return Boolean(this.deleteById(type, id, sessionUserId));
   }
 
   @Patch("/:id")

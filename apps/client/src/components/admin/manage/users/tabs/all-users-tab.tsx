@@ -3,13 +3,11 @@ import { useTranslations } from "use-intl";
 import Link from "next/link";
 import { yesOrNoText } from "lib/utils";
 import { Table, useTableState } from "components/shared/Table";
-import { Status } from "components/shared/Status";
 import { useAuth } from "context/AuthContext";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
-import { classNames } from "lib/classNames";
 import { useAsyncTable } from "hooks/shared/table/use-async-table";
-import { buttonVariants, TabsContent } from "@snailycad/ui";
+import { buttonVariants, Status, TabsContent } from "@snailycad/ui";
 import type { GetManageUsersData } from "@snailycad/types/api";
 import { SearchArea } from "components/shared/search/search-area";
 import dynamic from "next/dynamic";
@@ -81,7 +79,7 @@ export function AllUsersTab({ users, totalCount }: GetManageUsersData) {
             whitelistStatus: <Status>{user.whitelistStatus}</Status>,
             actions: (
               <Link
-                className={classNames(buttonVariants.default, "p-0.5 px-2 rounded-md")}
+                className={buttonVariants({ size: "xs" })}
                 href={`/admin/manage/users/${user.id}`}
               >
                 {common("manage")}

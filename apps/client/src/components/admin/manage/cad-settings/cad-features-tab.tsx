@@ -3,9 +3,14 @@ import { Form, Formik } from "formik";
 import { useTranslations } from "use-intl";
 import { useAuth } from "context/AuthContext";
 import useFetch from "lib/useFetch";
-import { Toggle } from "components/form/Toggle";
-import { CadFeature, CadFeatureOptions, Feature, LicenseExamType } from "@snailycad/types";
-import { Button, Loader, TextField, TabsContent, SelectField } from "@snailycad/ui";
+import {
+  CadFeature,
+  CadFeatureOptions,
+  CourthouseType,
+  Feature,
+  LicenseExamType,
+} from "@snailycad/types";
+import { Button, Loader, TextField, TabsContent, SelectField, SwitchField } from "@snailycad/ui";
 import { SettingsFormField } from "components/form/SettingsFormField";
 import { SettingsTabs } from "src/pages/admin/manage/cad-settings";
 import { toastMessage } from "lib/toastMessage";
@@ -72,12 +77,15 @@ export function CADFeaturesTab() {
   function createInitialOptions() {
     const obj = {} as CadFeatureOptions;
 
-    const cadFeatures = cad?.features?.options ?? DEFAULT_FEATURE_OPTIONS;
+    const cadFeatures = cad?.features;
     for (const _key in cadFeatures) {
       const typedKey = _key as keyof CadFeatureOptions;
-      const option = cadFeatures[typedKey] ?? DEFAULT_FEATURE_OPTIONS[typedKey];
+      const option = cadFeatures.options?.[typedKey] ?? DEFAULT_FEATURE_OPTIONS[typedKey];
 
-      obj[typedKey] = option;
+      if (option) {
+        // @ts-expect-error the types are overlapping, however, it will correctly assign the correct value
+        obj[typedKey] = option;
+      }
     }
 
     return obj;
@@ -86,7 +94,8 @@ export function CADFeaturesTab() {
   async function onSubmit(values: typeof INITIAL_VALUES) {
     if (!cad) return;
     const featuresArr = Object.entries(values.features).map(([key, value]) => {
-      const extraFields = key === Feature.LICENSE_EXAMS ? values.options[key] : undefined;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      const extraFields = values.options[key as keyof CadFeatureOptions] ?? undefined;
 
       return {
         feature: key as Feature,
@@ -134,7 +143,7 @@ export function CADFeaturesTab() {
       />
 
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-        {({ handleChange, setFieldValue, values }) => (
+        {({ setFieldValue, values }) => (
           <Form>
             {filteredFeatures.map((feature) => {
               return (
@@ -160,7 +169,22 @@ export function CADFeaturesTab() {
                                 label="Types"
                                 options={Object.values(LicenseExamType).map((v) => ({
                                   label: v.toLowerCase(),
-                                  value: v.toString(),
+                                  value: v,
+                                }))}
+                              />
+                            ) : Feature.COURTHOUSE === feature.feature ? (
+                              <SelectField
+                                isDisabled={!values.features[feature.feature]?.isEnabled}
+                                isClearable
+                                selectedKeys={values.options[feature.feature]}
+                                onSelectionChange={(keys) =>
+                                  setFieldValue(`options.${feature.feature}`, keys)
+                                }
+                                selectionMode="multiple"
+                                label={tFeature("types")}
+                                options={Object.values(CourthouseType).map((v) => ({
+                                  label: tFeature(v),
+                                  value: v,
                                 }))}
                               />
                             ) : null}
@@ -185,17 +209,18 @@ export function CADFeaturesTab() {
                       </span>
                     }
                   >
-                    <Toggle
-                      value={
+                    <SwitchField
+                      aria-label={feature.name}
+                      isSelected={
                         values.features[feature.feature]?.isEnabled ??
                         // @ts-expect-error - this is fine
                         DEFAULT_DISABLED_FEATURES[key]?.isEnabled ??
                         true
                       }
-                      onCheckedChange={(v) => {
-                        handleChange(v);
-                      }}
-                      name={`features.${feature.feature}.isEnabled`}
+                      onChange={(isSelected) =>
+                        setFieldValue(`features.${feature.feature}.isEnabled`, isSelected)
+                      }
+                      name="enabled"
                     />
                   </SettingsFormField>
                 </div>

@@ -44,6 +44,7 @@ export function LoginForm({ onFormSubmitted, isWithinModal }: Props) {
     userBanned: tError("userBanned"),
     whitelistPending: tError("whitelistPending"),
     whitelistDeclined: tError("whitelistDeclined"),
+    ownerCannotDiscordAuth: tError("ownerCannotDiscordAuth"),
   } as const;
 
   const errorMessage = authMessages[router.query.error as keyof typeof authMessages];
@@ -100,7 +101,8 @@ export function LoginForm({ onFormSubmitted, isWithinModal }: Props) {
   const showSteamOAuth = STEAM_OAUTH && useThirdPartyConnectionsAbility;
   const showDiscordOAuth = DISCORD_AUTH && useThirdPartyConnectionsAbility;
 
-  const showHorizontalLine = ALLOW_REGULAR_LOGIN && (showSteamOAuth || showDiscordOAuth || !!user);
+  const showHorizontalLine =
+    ALLOW_REGULAR_LOGIN && (showSteamOAuth || showDiscordOAuth || Boolean(user));
 
   return (
     <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>

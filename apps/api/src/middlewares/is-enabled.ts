@@ -32,6 +32,8 @@ export const DEFAULT_DISABLED_FEATURES: Partial<
   SIGNAL_100_CITIZEN: { isEnabled: false },
   FORCE_ACCOUNT_PASSWORD: { isEnabled: false },
   USER_DEFINED_CALLSIGN_COMBINED_UNIT: { isEnabled: false },
+  REQUIRED_CITIZEN_IMAGE: { isEnabled: false },
+  LEO_EDITABLE_CITIZEN_PROFILE: { isEnabled: false },
 };
 
 export type CadFeatures = Record<TypesFeature | DatabaseFeature, boolean> & {
@@ -42,11 +44,14 @@ export function createFeaturesObject(features?: CadFeature[] | undefined) {
   const obj: CadFeatures = {} as CadFeatures;
   const featureExtraOptions: CadFeatureOptions = {} as CadFeatureOptions;
 
-  Object.keys(Feature).map((feature) => {
+  Object.keys(Feature).forEach((feature) => {
     const cadFeature = features?.find((v) => v.feature === feature);
 
-    if (cadFeature?.extraFields && feature === Feature.LICENSE_EXAMS) {
-      featureExtraOptions[feature] = cadFeature.extraFields
+    if (
+      cadFeature?.extraFields &&
+      ([Feature.LICENSE_EXAMS, Feature.COURTHOUSE] as string[]).includes(feature)
+    ) {
+      featureExtraOptions[feature as keyof CadFeatureOptions] = cadFeature.extraFields
         ? JSON.parse(cadFeature.extraFields as any)
         : null;
     }

@@ -1,9 +1,9 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { classNames } from "../utils/classNames";
+import { cn } from "mxcn";
 import type { FocusableElement } from "@react-types/shared";
 import { InfoCircle } from "react-bootstrap-icons";
-import { HoverCard } from "../components/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card";
 
 interface Props {
   label: React.ReactNode;
@@ -24,7 +24,7 @@ export function Label(props: Props) {
     elementType,
     {
       ...props.labelProps,
-      className: classNames(
+      className: cn(
         "mb-1 dark:text-white flex items-center gap-1",
         props.hiddenLabel && "sr-only",
         props.labelClassnames,
@@ -35,8 +35,12 @@ export function Label(props: Props) {
       {props.isOptional ? <span className="text-sm italic">({optionalText})</span> : null}
       {props.description ? (
         <span className="ml-1">
-          <HoverCard portal={false} trigger={<InfoCircle width={14} height={14} />}>
-            {props.description}
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoCircle width={14} height={14} />
+            </HoverCardTrigger>
+
+            <HoverCardContent pointerEvents>{props.description}</HoverCardContent>
           </HoverCard>
         </span>
       ) : null}

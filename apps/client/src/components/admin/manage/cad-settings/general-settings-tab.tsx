@@ -1,10 +1,8 @@
 import * as React from "react";
 import { useAuth } from "context/AuthContext";
 import { useTranslations } from "use-intl";
-import { PasswordInput } from "components/form/inputs/Input";
-import { Toggle } from "components/form/Toggle";
 import useFetch from "lib/useFetch";
-import { Button, Input, Loader, TabsContent } from "@snailycad/ui";
+import { Button, Input, Loader, SwitchField, TabsContent, TextField } from "@snailycad/ui";
 import { handleValidate } from "lib/handleValidate";
 import { CAD_SETTINGS_SCHEMA } from "@snailycad/schemas";
 import { ImageSelectInput, validateFile } from "components/form/inputs/ImageSelectInput";
@@ -94,7 +92,7 @@ export function GeneralSettingsTab() {
       <h2 className="text-2xl font-semibold">{t("generalSettings")}</h2>
 
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-        {({ handleSubmit, handleChange, values, errors }) => (
+        {({ handleSubmit, handleChange, setFieldValue, values, errors }) => (
           <form autoComplete="off" className="mt-3" onSubmit={handleSubmit}>
             <SettingsFormField
               errorMessage={errors.name}
@@ -141,11 +139,15 @@ export function GeneralSettingsTab() {
               label={t("registrationCode")}
               description={t("registrationCodeDescription")}
             >
-              <PasswordInput
-                onChange={handleChange}
+              <TextField
+                label={t("registrationCode")}
+                type="password"
+                inputElementType="input"
+                onFocus={(event) => (event.target as HTMLInputElement).select()}
                 value={String(values.registrationCode)}
-                name="registrationCode"
+                onChange={(value) => setFieldValue("registrationCode", value)}
                 autoComplete="off"
+                isOptional
               />
             </SettingsFormField>
 
@@ -155,10 +157,10 @@ export function GeneralSettingsTab() {
               label={t("roleplayEnabled")}
               description={t("roleplayEnabledDescription")}
             >
-              <Toggle
-                name="roleplayEnabled"
-                onCheckedChange={handleChange}
-                value={values.roleplayEnabled}
+              <SwitchField
+                aria-label={t("roleplayEnabled")}
+                isSelected={values.roleplayEnabled}
+                onChange={(isSelected) => setFieldValue("roleplayEnabled", isSelected)}
               />
             </SettingsFormField>
 
@@ -171,10 +173,10 @@ export function GeneralSettingsTab() {
                 label={t("cadWhitelist")}
                 description={t("cadWhitelistDescription")}
               >
-                <Toggle
-                  name="whitelisted"
-                  onCheckedChange={handleChange}
-                  value={values.whitelisted}
+                <SwitchField
+                  aria-label={t("cadWhitelist")}
+                  isSelected={values.whitelisted}
+                  onChange={(isSelected) => setFieldValue("whitelisted", isSelected)}
                 />
               </SettingsFormField>
 
@@ -184,10 +186,10 @@ export function GeneralSettingsTab() {
                 label={t("towWhitelist")}
                 description={t("towWhitelistDescription")}
               >
-                <Toggle
-                  name="towWhitelisted"
-                  onCheckedChange={handleChange}
-                  value={values.towWhitelisted}
+                <SwitchField
+                  aria-label={t("towWhitelist")}
+                  isSelected={values.towWhitelisted}
+                  onChange={(isSelected) => setFieldValue("towWhitelisted", isSelected)}
                 />
               </SettingsFormField>
 
@@ -197,10 +199,10 @@ export function GeneralSettingsTab() {
                 label={t("taxiWhitelist")}
                 description={t("taxiWhitelistDescription")}
               >
-                <Toggle
-                  name="taxiWhitelisted"
-                  onCheckedChange={handleChange}
-                  value={values.taxiWhitelisted}
+                <SwitchField
+                  aria-label={t("taxiWhitelist")}
+                  isSelected={values.taxiWhitelisted}
+                  onChange={(isSelected) => setFieldValue("taxiWhitelisted", isSelected)}
                 />
               </SettingsFormField>
 
@@ -210,10 +212,10 @@ export function GeneralSettingsTab() {
                 label={t("businessWhitelist")}
                 description={t("businessWhitelistDescription")}
               >
-                <Toggle
-                  name="businessWhitelisted"
-                  onCheckedChange={handleChange}
-                  value={values.businessWhitelisted}
+                <SwitchField
+                  aria-label={t("businessWhitelist")}
+                  isSelected={values.businessWhitelisted}
+                  onChange={(isSelected) => setFieldValue("businessWhitelisted", isSelected)}
                 />
               </SettingsFormField>
             </section>

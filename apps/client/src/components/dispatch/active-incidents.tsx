@@ -1,16 +1,15 @@
 import * as React from "react";
 import { useTranslations } from "use-intl";
-import { Button, Droppable } from "@snailycad/ui";
+import { Button, Droppable, FullDate } from "@snailycad/ui";
 import { useActiveDispatchers } from "hooks/realtime/use-active-dispatchers";
 import { Table, useTableState } from "components/shared/Table";
 import { yesOrNoText } from "lib/utils";
-import { FullDate } from "components/shared/FullDate";
 import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import { useActiveIncidentsTable } from "hooks/realtime/use-active-incidents-table";
 import { AlertModal } from "components/modal/AlertModal";
 import useFetch from "lib/useFetch";
-import type { LeoIncident } from "@snailycad/types";
+import type { IncidentInvolvedUnit, LeoIncident } from "@snailycad/types";
 import { InvolvedUnitsColumn } from "./active-incidents/InvolvedUnitsColumn";
 import { DndActions } from "types/dnd-actions";
 import { classNames } from "lib/classNames";
@@ -31,7 +30,7 @@ export function ActiveIncidents() {
   /**
    * undefined = hide modal. It will otherwise open 2 modals, 1 with the incorrect data.
    */
-  const [tempIncident, setTempIncident] = React.useState<LeoIncident | null | undefined>(undefined);
+  const [tempIncident, setTempIncident] = React.useState<LeoIncident | "create" | "hide">("hide");
 
   const t = useTranslations("Leo");
   const common = useTranslations("Common");
@@ -65,7 +64,7 @@ export function ActiveIncidents() {
   }
 
   async function handleDismissIncident() {
-    if (!tempIncident) return;
+    if (tempIncident === "create" || tempIncident === "hide") return;
 
     const { json } = await execute<PutIncidentByIdData<"leo">>({
       path: `/incidents/${tempIncident.id}`,
@@ -81,7 +80,7 @@ export function ActiveIncidents() {
       asyncTable.remove(json.id);
 
       closeModal(ModalIds.AlertDeleteIncident);
-      setTempIncident(undefined);
+      setTempIncident("hide");
     }
   }
 
@@ -97,7 +96,7 @@ export function ActiveIncidents() {
 
   function handleCreateIncident() {
     openModal(ModalIds.ManageIncident);
-    setTempIncident(null);
+    setTempIncident("create");
   }
 
   return (
@@ -181,10 +180,11 @@ export function ActiveIncidents() {
         />
       )}
 
-      <Droppable
-        onDrop={({ incident, unit }) =>
-          handleAssignUnassignToIncident(incident, unit.unit?.id, "unassign")
-        }
+      <Droppable<{ incident: LeoIncident; unit: IncidentInvolvedUnit }>
+        onDrop={({ incident, unit }) => {
+          if (!unit.unit?.id) return;
+          handleAssignUnassignToIncident(incident, unit.unit.id, "unassign");
+        }}
         accepts={[DndActions.UnassignUnitFromIncident]}
       >
         <div
@@ -199,7 +199,7 @@ export function ActiveIncidents() {
         </div>
       </Droppable>
 
-      {typeof tempIncident === "undefined" ? null : (
+      {tempIncident === "hide" ? null : (
         <ManageIncidentModal
           type="leo"
           onCreate={(incident) => {
@@ -209,7 +209,7 @@ export function ActiveIncidents() {
               setTempIncident(incident as LeoIncident);
               openModal(ModalIds.ManageIncident);
             } else {
-              setTempIncident(undefined);
+              setTempIncident("hide");
             }
           }}
           onUpdate={(old, incident) => {
@@ -219,8 +219,8 @@ export function ActiveIncidents() {
               asyncTable.remove(incident.id);
             }
           }}
-          onClose={() => setTempIncident(undefined)}
-          incident={tempIncident}
+          onClose={() => setTempIncident("hide")}
+          incident={tempIncident === "create" ? null : tempIncident}
         />
       )}
 
@@ -231,7 +231,7 @@ export function ActiveIncidents() {
         onDeleteClick={handleDismissIncident}
         id={ModalIds.AlertDeleteIncident}
         deleteText={t("endIncident")}
-        onClose={() => setTempIncident(undefined)}
+        onClose={() => setTempIncident("hide")}
       />
     </div>
   );

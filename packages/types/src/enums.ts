@@ -51,6 +51,8 @@ export const Feature = {
   HOSPITAL_SERVICES: "HOSPITAL_SERVICES",
   MEDICAL_RECORDS_CITIZEN_MANAGEABLE: "MEDICAL_RECORDS_CITIZEN_MANAGEABLE",
   PETS: "PETS",
+  REQUIRED_CITIZEN_IMAGE: "REQUIRED_CITIZEN_IMAGE",
+  LEO_EDITABLE_CITIZEN_PROFILE: "LEO_EDITABLE_CITIZEN_PROFILE",
 } as const;
 
 export type Feature = (typeof Feature)[keyof typeof Feature];
@@ -71,6 +73,8 @@ export const DiscordWebhookType = {
   CITIZEN_RECORD: "CITIZEN_RECORD",
   VEHICLE_IMPOUNDED: "VEHICLE_IMPOUNDED",
   WARRANTS: "WARRANTS",
+  BLEETER_POST: "BLEETER_POST",
+  CITIZEN_DECLARED_DEAD: "CITIZEN_DECLARED_DEAD",
 } as const;
 
 export type DiscordWebhookType = (typeof DiscordWebhookType)[keyof typeof DiscordWebhookType];
@@ -312,3 +316,10 @@ export const ActiveToneType = {
 } as const;
 
 export type ActiveToneType = (typeof ActiveToneType)[keyof typeof ActiveToneType];
+
+export const CourthouseType = {
+  EXPUNGEMENT_REQUEST: "EXPUNGEMENT_REQUEST",
+  NAME_CHANGE_REQUEST: "NAME_CHANGE_REQUEST",
+} as const;
+
+export type CourthouseType = (typeof CourthouseType)[keyof typeof CourthouseType];
