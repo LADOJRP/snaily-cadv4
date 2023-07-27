@@ -110,6 +110,7 @@ export enum Permissions {
   ManageValueEmergencyVehicle = "ManageValueEmergencyVehicle",
   ManageValueAddressFlag = "ManageValueAddressFlag",
   ManageValueVehicleTrimLevel = "ManageValueVehicleTrimLevel",
+  ManageValueWeaponFlag = "ManageValueWeaponFlag",
 
   // other
   UsePersonalApiToken = "UsePersonalApiToken",
@@ -122,4 +123,4 @@ export enum Permissions {
   ManageWeaponExams = "ManageWeaponExams",
 }
 
-export const allPermissions = Object.values(Permissions);
+export const allPermissions = Object.keys(Permissions);

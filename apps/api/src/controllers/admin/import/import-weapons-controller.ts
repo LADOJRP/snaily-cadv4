@@ -72,7 +72,7 @@ export class ImportWeaponsController {
     permissions: [Permissions.ImportRegisteredWeapons, Permissions.ManageCitizens],
   })
   async getRandomWeapon(@QueryParams("userRegisteredOnly", Boolean) userRegisteredOnly?: boolean) {
-    const where: Prisma.CitizenWhereInput = {};
+    const where: Prisma.WeaponWhereInput = {};
     if (typeof userRegisteredOnly === "boolean") {
       where.userId = userRegisteredOnly ? { not: { equals: null } } : { equals: null };
     }
@@ -121,6 +121,7 @@ export async function importWeaponsHandler(body: unknown[]) {
     data.map((weapon) =>
       prisma.weapon.create({
         data: {
+          userId: weapon.userId,
           citizenId: weapon.ownerId,
           registrationStatusId: weapon.registrationStatusId,
           modelId: weapon.modelId,

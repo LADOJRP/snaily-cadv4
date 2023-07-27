@@ -1,4 +1,4 @@
-import { Feature, CourtDate, CourtEntry, Officer, SeizedItem, Violation } from "@prisma/client";
+import { Feature, CourtDate, CourtEntry, SeizedItem, Violation } from "@prisma/client";
 import type { CREATE_TICKET_SCHEMA, CREATE_TICKET_SCHEMA_BUSINESS } from "@snailycad/schemas";
 import { PaymentStatus, RecordType, WhitelistStatus } from "@snailycad/types";
 import { NotFound } from "@tsed/exceptions";
@@ -17,7 +17,7 @@ interface UpsertRecordOptions {
   data: z.infer<typeof CREATE_TICKET_SCHEMA | typeof CREATE_TICKET_SCHEMA_BUSINESS>;
   recordId: string | null;
   cad: { features?: Record<Feature, boolean> };
-  officer: Officer | null;
+  officerId?: string | null;
 }
 
 export async function upsertRecord(options: UpsertRecordOptions) {
@@ -82,7 +82,7 @@ export async function upsertRecord(options: UpsertRecordOptions) {
       type: options.data.type as RecordType,
       citizenId: citizen?.id,
       businessId: business?.id,
-      officerId: options.officer?.id ?? null,
+      officerId: options.officerId,
       notes: options.data.notes,
       postal: String(options.data.postal),
       status: recordStatus,
@@ -94,6 +94,7 @@ export async function upsertRecord(options: UpsertRecordOptions) {
       vehiclePlate: options.data.plateOrVin || options.data.plateOrVinSearch,
       call911Id: options.data.call911Id || null,
       incidentId: options.data.incidentId || null,
+      descriptionData: options.data.descriptionData || undefined,
     },
     update: {
       notes: options.data.notes,
@@ -106,6 +107,7 @@ export async function upsertRecord(options: UpsertRecordOptions) {
       vehiclePlate: options.data.plateOrVin || options.data.plateOrVinSearch,
       call911Id: options.data.call911Id || null,
       incidentId: options.data.incidentId || null,
+      descriptionData: options.data.descriptionData || undefined,
     },
     include: {
       officer: { include: leoProperties },
@@ -174,12 +176,6 @@ export async function upsertRecord(options: UpsertRecordOptions) {
   );
 
   if (Object.keys(errors).length >= 1) {
-    captureException({
-      name: "InvalidViolations",
-      message: "Invalid violations appended to record",
-      violations: JSON.stringify(errors),
-    });
-
     await prisma.record.delete({ where: { id: ticket.id } });
     throw new ExtendedBadRequest(errors);
   }

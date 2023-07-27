@@ -64,7 +64,8 @@
     "importVehicles": "Import Vehicles",
     "importWeapons": "Import Weapons",
     "customCallsignTemplate": "Custom Callsign Template",
-    "customCallsignTemplateDescription": "When set, it will use this template over the global callsign template. You can use the following variables: {variables}"
+    "customCallsignTemplateDescription": "When set, it will use this template over the global callsign template. You can use the following variables: {variables}",
+    "category": "Category"
   },
   "PENAL_CODE_GROUP": {
     "MANAGE": "Manage Penal Code Groups",
@@ -206,5 +207,11 @@
     "ADD": "Add trim level",
     "DELETE": "Delete trim level",
     "EDIT": "Edit trim level"
+  },
+  "WEAPON_FLAG": {
+    "MANAGE": "Manage Weapon flags",
+    "ADD": "Add weapon flag",
+    "DELETE": "Delete weapon flag",
+    "EDIT": "Edit weapon flag"
   }
 }

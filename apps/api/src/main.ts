@@ -7,7 +7,6 @@ import { importProviders } from "@tsed/components-scan";
 
 import { getCADVersion } from "@snailycad/utils/version";
 import * as Sentry from "@sentry/node";
-import { ProfilingIntegration } from "@sentry/profiling-node";
 
 import { prisma } from "lib/data/prisma";
 import { registerDiscordRolesMetadata } from "lib/discord/register-metadata";
@@ -18,12 +17,11 @@ Sentry.init({
   integrations: [
     new Sentry.Integrations.Http({ tracing: true }),
     new Sentry.Integrations.Prisma({ client: prisma }),
-    new ProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
   attachStacktrace: true,
-  ignoreErrors: [/invocation: Can't reach database server at/gi],
+  ignoreErrors: [/can't reach database server at/gim],
   denyUrls: [/localhost/],
 });
 

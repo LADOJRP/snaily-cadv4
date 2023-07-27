@@ -8,7 +8,7 @@ datasource db {
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["jsonProtocol"]
+  previewFeatures = []
 }
 
 model cad {
@@ -74,6 +74,10 @@ model MiscCadSettings {
   authScreenHeaderImageId   String?
   inactivityTimeout         Int?
   jailTimeScale             JailTimeScale?
+  // How many times a signal 100 should be repeated.
+  signal100RepeatAmount     Int?           @default(1)
+  // The amount between each signal 100 repeat.
+  signal100RepeatIntervalMs Int?           @default(1000)
 
   call911InactivityTimeout           Int?
   incidentInactivityTimeout          Int?
@@ -504,6 +508,7 @@ model Weapon {
   serialNumber         String             @unique @db.VarChar(255)
   registrationStatus   Value              @relation("weaponRegistrationStatusToValue", fields: [registrationStatusId], references: [id])
   registrationStatusId String
+  flags                Value[]            @relation("weaponFlags")
   bofStatus            WhitelistStatus?
   model                WeaponValue        @relation("weaponModelToValue", fields: [modelId], references: [id])
   modelId              String
@@ -520,10 +525,11 @@ model MedicalRecord {
   updatedAt DateTime @default(now()) @updatedAt
 
   // type = diseases
-  type         String? @db.Text
-  description  String? @db.Text
-  bloodGroup   Value?  @relation(fields: [bloodGroupId], references: [id])
-  bloodGroupId String?
+  type            String? @db.Text
+  description     String? @db.Text
+  descriptionData Json?
+  bloodGroup      Value?  @relation(fields: [bloodGroupId], references: [id])
+  bloodGroupId    String?
 }
 
 model PetMedicalRecord {
@@ -609,6 +615,7 @@ model Value {
   CitizenAddressFlags             Citizen[]                     @relation("citizenAddressFlags")
   VehicleTrimLevels               VehicleValue[]                @relation("vehicleTrimLevels")
   RegisteredVehicle               RegisteredVehicle[]           @relation("registeredVehicleTrimLevels")
+  Weapon                          Weapon[]                      @relation("weaponFlags")
 }
 
 model AddressValue {
@@ -1366,7 +1373,7 @@ model Record {
   type                 RecordType
   citizen              Citizen?            @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   citizenId            String?
-  officer              Officer?            @relation(fields: [officerId], references: [id], onDelete: Cascade)
+  officer              Officer?            @relation(fields: [officerId], references: [id], onDelete: SetNull)
   officerId            String?
   violations           Violation[]
   createdAt            DateTime            @default(now())
@@ -1374,9 +1381,10 @@ model Record {
   postal               String              @db.VarChar(255)
   address              String?             @db.Text
   notes                String?             @db.Text
-  release              RecordRelease?      @relation(fields: [releaseId], references: [id])
+  descriptionData      Json?
+  release              RecordRelease?      @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   releaseId            String?
-  courtEntry           CourtEntry?         @relation(fields: [CourtEntryId], references: [id])
+  courtEntry           CourtEntry?         @relation(fields: [CourtEntryId], references: [id], onDelete: SetNull)
   CourtEntryId         String?
   RecordLog            RecordLog[]
   ExpungementRequest   ExpungementRequest? @relation(fields: [expungementRequestId], references: [id])
@@ -1411,7 +1419,7 @@ model Warrant {
   id                   String                   @id @default(uuid())
   citizen              Citizen                  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   citizenId            String
-  officer              Officer?                 @relation(fields: [officerId], references: [id], onDelete: Cascade)
+  officer              Officer?                 @relation(fields: [officerId], references: [id], onDelete: SetNull)
   officerId            String?
   assignedOfficers     AssignedWarrantOfficer[]
   description          String                   @db.Text
@@ -1430,9 +1438,9 @@ model RecordLog {
   citizenId  String?
   business   Business? @relation(fields: [businessId], references: [id])
   businessId String?
-  records    Record?   @relation(fields: [recordId], references: [id])
+  records    Record?   @relation(fields: [recordId], references: [id], onDelete: Cascade)
   recordId   String?
-  warrant    Warrant?  @relation(fields: [warrantId], references: [id])
+  warrant    Warrant?  @relation(fields: [warrantId], references: [id], onDelete: Cascade)
   warrantId  String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
@@ -1762,6 +1770,7 @@ enum ValueType {
   EMERGENCY_VEHICLE
   ADDRESS_FLAG
   VEHICLE_TRIM_LEVEL
+  WEAPON_FLAG
 }
 
 enum DriversLicenseCategoryType {
@@ -1936,4 +1945,5 @@ enum Feature {
   PETS // see #1640
   REQUIRED_CITIZEN_IMAGE // see #1681
   LEO_EDITABLE_CITIZEN_PROFILE // see #1698
+  ALLOW_MULTIPLE_UNITS_DEPARTMENTS_PER_USER // see #1722
 }

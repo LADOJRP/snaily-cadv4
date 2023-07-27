@@ -145,7 +145,7 @@ export function ManageCustomRolesModal({ role, onClose, onCreate, onUpdate }: Pr
               errorMessage={errors.permissions}
               selectionMode="multiple"
               selectedKeys={values.permissions}
-              options={Object.values(Permissions).map((permission) => ({
+              options={Object.keys(Permissions).map((permission) => ({
                 value: permission,
                 label: tPermission(permission),
               }))}
@@ -162,6 +162,7 @@ export function ManageCustomRolesModal({ role, onClose, onCreate, onUpdate }: Pr
                 label: role.name,
               }))}
               selectedKey={values.discordRoleId}
+              onSelectionChange={(key) => setFieldValue("discordRoleId", key)}
             />
 
             <ImageSelectInput image={image} setImage={setImage} />

@@ -131,7 +131,7 @@ export class RecordsController {
     const warrant = await prisma.warrant.create({
       data: {
         citizenId: citizen.id,
-        officerId: officer?.id ?? null,
+        officerId: officer?.id ?? data.officerId ?? null,
         description: data.description,
         status: data.status as WarrantStatus,
         approvalStatus,
@@ -245,7 +245,7 @@ export class RecordsController {
     const recordItem = await upsertRecord({
       data,
       cad,
-      officer,
+      officerId: officer?.id ?? data.officerId ?? null,
       recordId: null,
     });
 
@@ -279,7 +279,6 @@ export class RecordsController {
       data,
       cad,
       recordId,
-      officer: null,
     });
 
     return recordItem;

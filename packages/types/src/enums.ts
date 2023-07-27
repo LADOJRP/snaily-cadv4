@@ -53,6 +53,7 @@ export const Feature = {
   PETS: "PETS",
   REQUIRED_CITIZEN_IMAGE: "REQUIRED_CITIZEN_IMAGE",
   LEO_EDITABLE_CITIZEN_PROFILE: "LEO_EDITABLE_CITIZEN_PROFILE",
+  ALLOW_MULTIPLE_UNITS_DEPARTMENTS_PER_USER: "ALLOW_MULTIPLE_UNITS_DEPARTMENTS_PER_USER",
 } as const;
 
 export type Feature = (typeof Feature)[keyof typeof Feature];
@@ -149,6 +150,7 @@ export const ValueType = {
   EMERGENCY_VEHICLE: "EMERGENCY_VEHICLE",
   ADDRESS_FLAG: "ADDRESS_FLAG",
   VEHICLE_TRIM_LEVEL: "VEHICLE_TRIM_LEVEL",
+  WEAPON_FLAG: "WEAPON_FLAG",
 } as const;
 
 export type ValueType = (typeof ValueType)[keyof typeof ValueType];

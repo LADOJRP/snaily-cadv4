@@ -140,7 +140,7 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
       title={t("plateSearch")}
       onClose={() => closeModal(id)}
       isOpen={isOpen(id)}
-      className="w-[750px]"
+      className={currentResult ? "w-[900px]" : "w-[650px]"}
     >
       <Formik initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
         {({ setValues, errors, values, isValid }) => (
@@ -149,14 +149,15 @@ export function VehicleSearchModal({ id = ModalIds.VehicleSearch }: Props) {
               allowsCustomValue
               autoFocus
               setValues={({ localValue, node }) => {
-                const vinNumber = localValue ? { vinNumber: localValue } : {};
+                const searchValue =
+                  typeof localValue !== "undefined" ? { vinNumber: localValue } : {};
                 const plateOrVin = node ? { plateOrVin: node.key as string } : {};
 
                 if (node) {
                   setCurrentResult(node.value);
                 }
 
-                setValues({ ...values, ...vinNumber, ...plateOrVin });
+                setValues({ ...values, ...searchValue, ...plateOrVin });
               }}
               localValue={values.vinNumber}
               errorMessage={errors.plateOrVin}

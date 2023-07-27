@@ -25,6 +25,7 @@ export const CREATE_TICKET_SCHEMA = z.object({
   seizedItems: z.array(SEIZED_ITEM_SCHEMA).optional(),
   postal: z.string().min(1).max(255),
   notes: z.string().nullish(),
+  descriptionData: z.any(),
   paymentStatus: z
     .string()
     .regex(/PAID|UNPAID/)
@@ -39,6 +40,7 @@ export const CREATE_TICKET_SCHEMA = z.object({
   vehicleColor: z.string().nullish(),
   call911Id: z.string().nullish(),
   incidentId: z.string().nullish(),
+  officerId: z.string().nullish(),
 });
 
 export const CREATE_TICKET_SCHEMA_BUSINESS = CREATE_TICKET_SCHEMA.omit({ citizenId: true }).extend({
@@ -59,6 +61,7 @@ export const CREATE_WARRANT_SCHEMA = z.object({
     .regex(/ACTIVE|INACTIVE/),
   description: z.string(),
   assignedOfficers: z.array(z.any()).nullish(),
+  officerId: z.string().nullish(),
 });
 
 export const UPDATE_WARRANT_SCHEMA = CREATE_WARRANT_SCHEMA.pick({

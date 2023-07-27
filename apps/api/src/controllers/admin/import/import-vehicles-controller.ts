@@ -93,7 +93,7 @@ export class ImportVehiclesController {
     permissions: [Permissions.ImportRegisteredVehicles, Permissions.ManageCitizens],
   })
   async getRandomVehicle(@QueryParams("userRegisteredOnly", Boolean) userRegisteredOnly?: boolean) {
-    const where: Prisma.CitizenWhereInput = {};
+    const where: Prisma.RegisteredVehicleWhereInput = {};
     if (typeof userRegisteredOnly === "boolean") {
       where.userId = userRegisteredOnly ? { not: { equals: null } } : { equals: null };
     }
@@ -151,6 +151,7 @@ export async function importVehiclesHandler(body: unknown[]) {
     data.map(async (data) => {
       const vehicle = await prisma.registeredVehicle.create({
         data: {
+          userId: data.userId,
           citizenId: data.ownerId,
           plate: data.plate,
           color: data.color,
