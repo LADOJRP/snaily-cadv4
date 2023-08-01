@@ -34,7 +34,10 @@ export async function requestAll(
         isSsr: true,
       })
         .then((v) => (typeof v.data === "undefined" ? defaultValue : v.data))
-        .catch(() => defaultValue);
+        .catch((error) => {
+          console.error(error);
+          return defaultValue;
+        });
     }),
   );
 }
