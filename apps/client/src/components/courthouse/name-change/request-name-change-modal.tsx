@@ -1,6 +1,5 @@
 import { NAME_CHANGE_REQUEST_SCHEMA } from "@snailycad/schemas";
-import { Input, Loader, Button, FormRow } from "@snailycad/ui";
-import { FormField } from "components/form/FormField";
+import { Loader, Button, FormRow, TextField } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
 import { useModal } from "state/modalState";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -16,7 +15,7 @@ interface Props {
 }
 
 export function RequestNameChangeModal({ onCreate }: Props) {
-  const { closeModal, isOpen } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const { state, execute } = useFetch();
   const t = useTranslations("Courthouse");
@@ -27,6 +26,7 @@ export function RequestNameChangeModal({ onCreate }: Props) {
     citizenName: "",
     newName: "",
     newSurname: "",
+    description: "",
   };
 
   async function onSubmit(
@@ -42,19 +42,19 @@ export function RequestNameChangeModal({ onCreate }: Props) {
 
     if (json.id) {
       onCreate?.(json);
-      closeModal(ModalIds.RequestNameChange);
+      modalState.closeModal(ModalIds.RequestNameChange);
     }
   }
 
   return (
     <Modal
-      onClose={() => closeModal(ModalIds.RequestNameChange)}
-      isOpen={isOpen(ModalIds.RequestNameChange)}
+      onClose={() => modalState.closeModal(ModalIds.RequestNameChange)}
+      isOpen={modalState.isOpen(ModalIds.RequestNameChange)}
       title={t("requestNameChange")}
       className="w-[600px]"
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
-        {({ values, errors, isValid, handleChange }) => (
+        {({ values, errors, isValid, setFieldValue }) => (
           <Form>
             <CitizenSuggestionsField
               allowsCustomValue
@@ -66,18 +66,33 @@ export function RequestNameChangeModal({ onCreate }: Props) {
             />
 
             <FormRow>
-              <FormField label={t("newName")} errorMessage={errors.newName}>
-                <Input name="newName" value={values.newName} onChange={handleChange} />
-              </FormField>
+              <TextField
+                label={t("newName")}
+                onChange={(value) => setFieldValue("newName", value)}
+                value={values.newName}
+                errorMessage={errors.newName}
+              />
 
-              <FormField label={t("newSurname")} errorMessage={errors.newSurname}>
-                <Input name="newSurname" value={values.newSurname} onChange={handleChange} />
-              </FormField>
+              <TextField
+                label={t("newSurname")}
+                onChange={(value) => setFieldValue("newSurname", value)}
+                value={values.newSurname}
+                errorMessage={errors.newSurname}
+              />
             </FormRow>
+
+            <TextField
+              isOptional
+              isTextarea
+              errorMessage={errors.description}
+              value={values.description}
+              onChange={(value) => setFieldValue("description", value)}
+              label={common("description")}
+            />
 
             <footer className="flex justify-end mt-5">
               <Button
-                onPress={() => closeModal(ModalIds.RequestNameChange)}
+                onPress={() => modalState.closeModal(ModalIds.RequestNameChange)}
                 variant="cancel"
                 type="reset"
               >

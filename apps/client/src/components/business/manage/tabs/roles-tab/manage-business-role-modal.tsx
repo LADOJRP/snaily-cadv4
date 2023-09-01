@@ -8,7 +8,6 @@ import { EmployeeAsEnum, EmployeeValue } from "@snailycad/types";
 import { useTranslations } from "use-intl";
 import { ModalIds } from "types/modal-ids";
 import { getValueStrFromValue } from "lib/admin/values/utils";
-import { shallow } from "zustand/shallow";
 import { useBusinessState } from "state/business-state";
 import { BUSINESSES_BUSINESS_ROLE_SCHEMA } from "@snailycad/schemas";
 
@@ -31,16 +30,13 @@ const BUSINESS_VALUES = [
 ];
 
 export function ManageBusinessRoleModal({ onCreate, onUpdate, onClose, value }: Props) {
-  const { currentBusiness, currentEmployee } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+  }));
 
   const { state, execute } = useFetch();
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations("Business");
   const common = useTranslations("Common");
 
@@ -49,7 +45,7 @@ export function ManageBusinessRoleModal({ onCreate, onUpdate, onClose, value }: 
 
   function handleClose() {
     onClose();
-    closeModal(ModalIds.ManageBusinessRole);
+    modalState.closeModal(ModalIds.ManageBusinessRole);
   }
 
   async function onSubmit(
@@ -65,7 +61,7 @@ export function ManageBusinessRoleModal({ onCreate, onUpdate, onClose, value }: 
       });
 
       if (json?.id) {
-        closeModal(ModalIds.ManageBusinessRole);
+        modalState.closeModal(ModalIds.ManageBusinessRole);
         onUpdate(value, json);
       }
     } else {
@@ -77,7 +73,7 @@ export function ManageBusinessRoleModal({ onCreate, onUpdate, onClose, value }: 
       });
 
       if (json?.id) {
-        closeModal(ModalIds.ManageBusinessRole);
+        modalState.closeModal(ModalIds.ManageBusinessRole);
         onCreate(json);
       }
     }
@@ -95,7 +91,7 @@ export function ManageBusinessRoleModal({ onCreate, onUpdate, onClose, value }: 
       className="w-[600px]"
       title={title}
       onClose={handleClose}
-      isOpen={isOpen(ModalIds.ManageBusinessRole)}
+      isOpen={modalState.isOpen(ModalIds.ManageBusinessRole)}
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
         {({ setFieldValue, values, errors }) => (

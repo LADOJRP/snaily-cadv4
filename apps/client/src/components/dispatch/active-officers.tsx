@@ -20,12 +20,11 @@ import { classNames } from "lib/classNames";
 import { useActiveUnitsState } from "state/active-unit-state";
 import { useActiveUnitsFilter } from "hooks/shared/useActiveUnitsFilter";
 import { OfficerColumn } from "./active-units/officers/officer-column";
-import { isUnitOfficer } from "@snailycad/utils/typeguards";
+import { isUnitCombined, isUnitOfficer } from "@snailycad/utils/typeguards";
 import { ActiveIncidentColumn } from "./active-units/officers/active-incident-column";
 import { ActiveCallColumn } from "./active-units/officers/active-call-column";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
-import { useMounted } from "@casper124578/useful";
-import { shallow } from "zustand/shallow";
+import { useMounted } from "@casperiv/useful";
 import { generateContrastColor } from "lib/table/get-contrasting-text-color";
 import dynamic from "next/dynamic";
 import { Permissions } from "@snailycad/permissions";
@@ -62,7 +61,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
   });
 
   const { activeOfficers: _activeOfficers, setActiveOfficers } = useActiveOfficers();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const { generateCallsign } = useGenerateCallsign();
   const { user } = useAuth();
   const { hasPermissions } = usePermission();
@@ -80,28 +79,22 @@ function ActiveOfficers({ initialOfficers }: Props) {
   const hasDispatchPerms = hasPermissions([Permissions.Dispatch]);
   const showCreateTemporaryUnitButton = isDispatch && hasDispatchPerms;
 
-  const { leoSearch, showLeoFilters, setShowFilters } = useActiveUnitsState(
-    (state) => ({
-      leoSearch: state.leoSearch,
-      showLeoFilters: state.showLeoFilters,
-      setShowFilters: state.setShowFilters,
-    }),
-    shallow,
-  );
+  const { leoSearch, showLeoFilters, setShowFilters } = useActiveUnitsState((state) => ({
+    leoSearch: state.leoSearch,
+    showLeoFilters: state.showLeoFilters,
+    setShowFilters: state.setShowFilters,
+  }));
 
-  const { activeOfficer, setActiveOfficer } = useLeoState(
-    (state) => ({
-      activeOfficer: state.activeOfficer,
-      setActiveOfficer: state.setActiveOfficer,
-    }),
-    shallow,
-  );
+  const { activeOfficer, setActiveOfficer } = useLeoState((state) => ({
+    activeOfficer: state.activeOfficer,
+    setActiveOfficer: state.setActiveOfficer,
+  }));
 
   const [tempOfficer, officerState] = useTemporaryItem(activeOfficers);
 
   function handleEditClick(officer: ActiveOfficer | CombinedLeoUnit) {
     officerState.setTempId(officer.id);
-    openModal(ModalIds.ManageUnit);
+    modalState.openModal(ModalIds.ManageUnit);
   }
 
   return (
@@ -116,7 +109,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
               className={classNames(
                 "px-1.5 dark:border dark:border-quinary dark:bg-tertiary dark:hover:brightness-125 group",
               )}
-              onPress={() => openModal(ModalIds.CreateTemporaryUnit, "officer")}
+              onPress={() => modalState.openModal(ModalIds.CreateTemporaryUnit, "officer")}
             >
               {t("createTemporaryUnit")}
             </Button>
@@ -125,7 +118,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
           <Button
             variant="cancel"
             className={classNames(
-              "px-1.5 py-2 dark:border dark:border-quinary dark:bg-tertiary dark:hover:brightness-125 group",
+              "px-2 py-2 dark:border dark:border-quinary dark:bg-tertiary dark:hover:brightness-125 group",
               showLeoFilters && "dark:!bg-secondary !bg-gray-500",
             )}
             onPress={() => setShowFilters("leo", !showLeoFilters)}
@@ -135,6 +128,7 @@ function ActiveOfficers({ initialOfficers }: Props) {
             <Filter
               className={classNames("group-hover:fill-white", showLeoFilters && "text-white")}
               aria-label={common("filters")}
+              size={18}
             />
           </Button>
         </div>
@@ -176,7 +170,9 @@ function ActiveOfficers({ initialOfficers }: Props) {
                   ),
                   badgeNumberString: isUnitOfficer(officer) && officer.badgeNumberString,
                   department:
-                    (isUnitOfficer(officer) && officer.department?.value.value) ?? common("none"),
+                    ((isUnitCombined(officer) && officer.officers[0]?.department?.value.value) ||
+                      (isUnitOfficer(officer) && officer.department?.value.value)) ??
+                    common("none"),
                   division: (
                     <HoverCard>
                       <HoverCardTrigger asChild>

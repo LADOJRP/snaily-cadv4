@@ -13,20 +13,16 @@ import type {
   PostCitizenImageByIdData,
   PostSearchActionsCreateCitizen,
 } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 
 export function CreateOrManageCitizenModal() {
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations("Leo");
   const { state, execute } = useFetch();
-  const { currentResult, setCurrentResult, setResults } = useNameSearch(
-    (state) => ({
-      setCurrentResult: state.setCurrentResult,
-      setResults: state.setResults,
-      currentResult: state.currentResult,
-    }),
-    shallow,
-  );
+  const { currentResult, setCurrentResult, setResults } = useNameSearch((state) => ({
+    setCurrentResult: state.setCurrentResult,
+    setResults: state.setResults,
+    currentResult: state.currentResult,
+  }));
   const { CREATE_USER_CITIZEN_LEO, LEO_EDITABLE_CITIZEN_PROFILE } = useFeatureEnabled();
   const { isLoading } = useLoadValuesClientSide({
     enabled: CREATE_USER_CITIZEN_LEO || LEO_EDITABLE_CITIZEN_PROFILE,
@@ -34,7 +30,7 @@ export function CreateOrManageCitizenModal() {
   });
 
   function handleClose() {
-    closeModal(ModalIds.CreateOrManageCitizen);
+    modalState.closeModal(ModalIds.CreateOrManageCitizen);
   }
 
   async function onSubmit({
@@ -121,7 +117,7 @@ export function CreateOrManageCitizenModal() {
   return (
     <Modal
       title={t("createCitizen")}
-      isOpen={isOpen(ModalIds.CreateOrManageCitizen)}
+      isOpen={modalState.isOpen(ModalIds.CreateOrManageCitizen)}
       onClose={handleClose}
       className="w-[1000px]"
     >

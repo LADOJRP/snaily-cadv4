@@ -14,7 +14,7 @@ import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { useImageUrl } from "hooks/useImageUrl";
-import { useMounted } from "@casper124578/useful";
+import { useMounted } from "@casperiv/useful";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
 import dynamic from "next/dynamic";
@@ -57,7 +57,7 @@ export function ModalButtons({ initialActiveOfficer }: { initialActiveOfficer: A
   const { generateCallsign } = useGenerateCallsign();
   const { state: activeDispatchersState, hasActiveDispatchers } = useActiveDispatchers();
   const { state, execute } = useFetch();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const { TONES, PANIC_BUTTON } = useFeatureEnabled();
   const { makeImageUrl } = useImageUrl();
 
@@ -161,7 +161,10 @@ export function ModalButtons({ initialActiveOfficer }: { initialActiveOfficer: A
 
         {activeDispatchersState === "loading" ? null : !hasActiveDispatchers && TONES ? (
           <>
-            <Button disabled={isButtonDisabled} onPress={() => openModal(ModalIds.Tones)}>
+            <Button
+              disabled={isButtonDisabled}
+              onPress={() => modalState.openModal(ModalIds.Tones)}
+            >
               {t("Leo.tones")}
             </Button>
             <TonesModal types={[ActiveToneType.LEO]} />

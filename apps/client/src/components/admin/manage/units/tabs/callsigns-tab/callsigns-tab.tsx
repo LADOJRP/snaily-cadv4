@@ -46,14 +46,14 @@ export function CallsignsTab({ units }: Props) {
   const t = useTranslations();
   const common = useTranslations("Common");
   const { generateCallsign } = useGenerateCallsign();
-  const { openModal } = useModal();
-  const tableState = useTableState();
+  const modalState = useModal();
+  const tableState = useTableState(asyncTable);
   const hasViewUsersPermissions = hasPermissions([Permissions.ViewUsers]);
   const { department } = useValues();
 
   function handleManageClick(unit: Unit) {
     unitState.setTempId(unit.id);
-    openModal(ModalIds.ManageUnitCallsign);
+    modalState.openModal(ModalIds.ManageUnitCallsign);
   }
 
   const LABELS = {
@@ -67,9 +67,9 @@ export function CallsignsTab({ units }: Props) {
         search={{ search, setSearch }}
         asyncTable={asyncTable}
         totalCount={units.totalCount}
+        className="grid grid-cols-3"
       >
         <SelectField
-          className="min-w-[15rem]"
           label={t("Leo.department")}
           isClearable
           selectedKey={asyncTable.filters?.departmentId ?? null}
@@ -84,7 +84,7 @@ export function CallsignsTab({ units }: Props) {
       </SearchArea>
 
       {asyncTable.noItemsAvailable ? (
-        <p>{t("Management.noUnits")}</p>
+        <p className="my-2">{t("Management.noUnits")}</p>
       ) : (
         <Table
           tableState={tableState}

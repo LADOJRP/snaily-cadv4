@@ -1,12 +1,14 @@
 {
   "name": "@snailycad/types",
-  "version": "1.66.0",
+  "version": "1.70.0",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
       "import": "./dist/index.mjs"
     },
     "./api": {
+      "types": "./dist/api.d.ts",
       "require": "./dist/api.js",
       "import": "./dist/api.mjs"
     },
@@ -15,6 +17,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "typesVersions": {
     "*": {
       "api": [
@@ -26,13 +31,14 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "yarn workspace @snailycad/api generate && yarn tsup",
-    "watch": "yarn tsup --watch --silent=false",
-    "typecheck": "yarn workspace @snailycad/api generate && yarn tsc --noEmit"
+    "build": "pnpm --filter \"@snailycad/api\" generate && pnpm tsup",
+    "watch": "pnpm tsup --watch --silent=false",
+    "typecheck": "pnpm --filter \"@snailycad/api\" generate && pnpm tsc --noEmit",
+    "prepublish": "pnpm build"
   },
   "devDependencies": {
-    "@snailycad/permissions": "workspace:*",
-    "discord-api-types": "0.37.47",
+    "@snailycad/permissions": "^1.70.0",
+    "discord-api-types": "0.37.51",
     "tsup": "6.6.2",
     "typescript": "^5.1.6"
   },

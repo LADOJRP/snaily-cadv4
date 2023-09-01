@@ -15,7 +15,6 @@ import type {
 
 import dynamic from "next/dynamic";
 import { useCall911State } from "state/dispatch/call-911-state";
-import { shallow } from "zustand/shallow";
 import { ActiveToneType } from "@snailycad/types";
 import { useActiveDispatcherState } from "state/dispatch/active-dispatcher-state";
 
@@ -55,14 +54,11 @@ export function DispatchModalButtons() {
   const setUserActiveDispatcher = useActiveDispatcherState((s) => s.setUserActiveDispatcher);
 
   const { ACTIVE_DISPATCHERS, TONES } = useFeatureEnabled();
-  const { openModal } = useModal();
-  const { calls, setCalls } = useCall911State(
-    (state) => ({
-      calls: state.calls,
-      setCalls: state.setCalls,
-    }),
-    shallow,
-  );
+  const modalState = useModal();
+  const { calls, setCalls } = useCall911State((state) => ({
+    calls: state.calls,
+    setCalls: state.setCalls,
+  }));
 
   const isActive = ACTIVE_DISPATCHERS ? Boolean(userActiveDispatcher) : true;
 
@@ -88,7 +84,7 @@ export function DispatchModalButtons() {
 
       setCalls(calls.map((call) => ({ ...call, isSignal100: false })));
     } else {
-      openModal(ModalIds.EnableSignal100);
+      modalState.openModal(ModalIds.EnableSignal100);
     }
   }
 
@@ -103,7 +99,7 @@ export function DispatchModalButtons() {
       </Button>
 
       {TONES ? (
-        <Button disabled={!isActive} onPress={() => openModal(ModalIds.Tones)}>
+        <Button disabled={!isActive} onPress={() => modalState.openModal(ModalIds.Tones)}>
           {t("Leo.tones")}
         </Button>
       ) : null}

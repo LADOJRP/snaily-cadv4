@@ -16,7 +16,6 @@ import { useModal } from "state/modalState";
 import { useNameSearch } from "state/search/name-search-state";
 import { ModalIds } from "types/modal-ids";
 import { useTranslations } from "use-intl";
-import { shallow } from "zustand/shallow";
 import { ManageRecordModal } from "../../manage-record/manage-record-modal";
 import { Permissions, usePermission } from "hooks/usePermission";
 
@@ -28,20 +27,17 @@ export function NameSearchFooterActions(props: Props) {
   const [type, setType] = React.useState<RecordType | null>(null);
 
   const { CREATE_USER_CITIZEN_LEO, LEO_EDITABLE_CITIZEN_PROFILE } = useFeatureEnabled();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations();
   const { state, execute } = useFetch();
   const { hasPermissions } = usePermission();
   const hasDeclarePermissions = hasPermissions([Permissions.DeclareCitizenDead]);
   const hasManageCitizenProfilePermissions = hasPermissions([Permissions.LeoManageCitizenProfile]);
 
-  const { currentResult, setCurrentResult } = useNameSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const { currentResult, setCurrentResult } = useNameSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
 
   async function handleDeclare() {
     if (!currentResult || !hasDeclarePermissions) return;
@@ -79,7 +75,7 @@ export function NameSearchFooterActions(props: Props) {
     };
 
     setType(type);
-    openModal(modalId[type], {
+    modalState.openModal(modalId[type], {
       citizenName: `${currentResult.name} ${currentResult.surname}`,
       citizenId: currentResult.id,
     });
@@ -105,7 +101,7 @@ export function NameSearchFooterActions(props: Props) {
           {CREATE_USER_CITIZEN_LEO ? (
             <DropdownMenuItem
               className="px-1.5"
-              onClick={() => openModal(ModalIds.CreateOrManageCitizen)}
+              onClick={() => modalState.openModal(ModalIds.CreateOrManageCitizen)}
             >
               {t("Leo.createCitizen")}
             </DropdownMenuItem>
@@ -141,7 +137,7 @@ export function NameSearchFooterActions(props: Props) {
                   variant="cancel"
                   className="px-1.5"
                   size="xs"
-                  onClick={() => openModal(ModalIds.CreateOrManageCitizen)}
+                  onClick={() => modalState.openModal(ModalIds.CreateOrManageCitizen)}
                 >
                   {t("Leo.manageCitizenProfile")}
                 </DropdownMenuItem>

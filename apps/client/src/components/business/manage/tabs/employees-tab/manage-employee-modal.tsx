@@ -11,7 +11,6 @@ import { handleValidate } from "lib/handleValidate";
 import { useValues } from "context/ValuesContext";
 import { Employee, EmployeeAsEnum } from "@snailycad/types";
 import type { PutBusinessEmployeesData } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 
 interface Props {
   isAdmin?: boolean;
@@ -21,15 +20,12 @@ interface Props {
 }
 
 export function ManageEmployeeModal({ onClose, onUpdate, employee, isAdmin }: Props) {
-  const { currentBusiness, currentEmployee } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+  }));
 
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const { state, execute } = useFetch();
   const common = useTranslations("Common");
   const t = useTranslations("Business");
@@ -44,7 +40,7 @@ export function ManageEmployeeModal({ onClose, onUpdate, employee, isAdmin }: Pr
   }
 
   function handleClose() {
-    closeModal(ModalIds.ManageEmployee);
+    modalState.closeModal(ModalIds.ManageEmployee);
     onClose?.();
   }
 
@@ -70,7 +66,7 @@ export function ManageEmployeeModal({ onClose, onUpdate, employee, isAdmin }: Pr
     });
 
     if (json.id) {
-      closeModal(ModalIds.ManageEmployee);
+      modalState.closeModal(ModalIds.ManageEmployee);
       onUpdate(employee, { ...employee, ...json });
     }
   }
@@ -93,7 +89,7 @@ export function ManageEmployeeModal({ onClose, onUpdate, employee, isAdmin }: Pr
     <Modal
       className="w-[600px]"
       title={t("manageEmployee")}
-      isOpen={isOpen(ModalIds.ManageEmployee)}
+      isOpen={modalState.isOpen(ModalIds.ManageEmployee)}
       onClose={handleClose}
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>

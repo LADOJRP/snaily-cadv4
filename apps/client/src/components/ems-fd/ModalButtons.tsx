@@ -10,7 +10,7 @@ import useFetch from "lib/useFetch";
 import type { PostEmsFdTogglePanicButtonData } from "@snailycad/types/api";
 import { useActiveDispatchers } from "hooks/realtime/use-active-dispatchers";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
-import { useMounted } from "@casper124578/useful";
+import { useMounted } from "@casperiv/useful";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions } from "@snailycad/permissions";
 import { useValues } from "context/ValuesContext";
@@ -58,7 +58,7 @@ export function ModalButtons({
 }) {
   const _activeDeputy = useEmsFdState((s) => s.activeDeputy);
   const isMounted = useMounted();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations();
   const { generateCallsign } = useGenerateCallsign();
   const { execute } = useFetch();
@@ -142,7 +142,7 @@ export function ModalButtons({
             key={idx}
             disabled={isButtonDisabled}
             title={isButtonDisabled ? "Go on-duty before continuing" : button.nameKey[1]}
-            onPress={() => openModal(button.modalId)}
+            onPress={() => modalState.openModal(button.modalId)}
           >
             {t(button.nameKey.join("."))}
           </Button>
@@ -161,7 +161,10 @@ export function ModalButtons({
 
         {!hasActiveDispatchers && TONES ? (
           <>
-            <Button disabled={isButtonDisabled} onPress={() => openModal(ModalIds.Tones)}>
+            <Button
+              disabled={isButtonDisabled}
+              onPress={() => modalState.openModal(ModalIds.Tones)}
+            >
               {t("Leo.tones")}
             </Button>
 

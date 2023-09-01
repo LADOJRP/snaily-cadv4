@@ -11,6 +11,11 @@ generator client {
   previewFeatures = []
 }
 
+generator types {
+  provider = "prisma-generator-redundant-types"
+  output   = "../../../packages/types/src/prisma"
+}
+
 model cad {
   id                      String                 @id @default(cuid())
   name                    String                 @db.VarChar(255)
@@ -489,12 +494,15 @@ model RegisteredVehicle {
   dmvStatus            WhitelistStatus?
   notes                Note[]
   appearance           String?
+  imageId              String?
   trimLevels           Value[]                  @relation("registeredVehicleTrimLevels")
 
   TruckLog         TruckLog[]
   ImpoundedVehicle ImpoundedVehicle[]
   Business         Business[]         @relation("registeredBusinessVehicles")
   Record           Record[]
+
+  @@index([plate, vinNumber])
 }
 
 model Weapon {
@@ -513,6 +521,8 @@ model Weapon {
   model                WeaponValue        @relation("weaponModelToValue", fields: [modelId], references: [id])
   modelId              String
   customFields         CustomFieldValue[]
+
+  @@index([serialNumber])
 }
 
 model MedicalRecord {
@@ -616,6 +626,8 @@ model Value {
   VehicleTrimLevels               VehicleValue[]                @relation("vehicleTrimLevels")
   RegisteredVehicle               RegisteredVehicle[]           @relation("registeredVehicleTrimLevels")
   Weapon                          Weapon[]                      @relation("weaponFlags")
+
+  @@index([type])
 }
 
 model AddressValue {
@@ -765,6 +777,7 @@ model VehicleValue {
   valueId           String
   value             Value               @relation("vehicleValueToValue", fields: [valueId], references: [id], onDelete: Cascade)
   hash              String?
+  imageId           String?
   trimLevels        Value[]             @relation("vehicleTrimLevels")
   RegisteredVehicle RegisteredVehicle[]
 }
@@ -1004,6 +1017,8 @@ model Officer {
   isTemporary                 Boolean                      @default(false)
   identifiers                 String[]
   ChatCreator                 ChatCreator[]
+
+  @@index([callsign, callsign2, statusId])
 }
 
 model IndividualDivisionCallsign {
@@ -1167,6 +1182,8 @@ model CombinedLeoUnit {
   EmsFdIncident             EmsFdIncident?           @relation(fields: [emsFdIncidentId], references: [id])
   emsFdIncidentId           String?
   ChatCreator               ChatCreator[]
+
+  @@index([statusId])
 }
 
 model CombinedEmsFdUnit {
@@ -1195,6 +1212,8 @@ model CombinedEmsFdUnit {
   AssignedUnit         AssignedUnit[]
   IncidentInvolvedUnit IncidentInvolvedUnit[]
   ChatCreator          ChatCreator[]
+
+  @@index([statusId])
 }
 
 // dispatching
@@ -1276,6 +1295,8 @@ model Call911 {
   EmsFdIncident     EmsFdIncident?      @relation(fields: [emsFdIncidentId], references: [id])
   emsFdIncidentId   String?
   DispatchChat      DispatchChat[]
+
+  @@index([caseNumber])
 }
 
 model GTAMapPosition {
@@ -1364,6 +1385,8 @@ model Bolo {
   name        String?  @db.VarChar(255)
   officer     Officer? @relation("bolosToOfficer", fields: [officerId], references: [id])
   officerId   String?
+
+  @@index([type, plate, name])
 }
 
 // tickets, arrest reports, warrants, written warnings
@@ -1448,29 +1471,31 @@ model RecordLog {
 
 // Expungement requests
 model ExpungementRequest {
-  id        String                   @id @default(uuid())
-  citizen   Citizen                  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  citizenId String
-  user      User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String?
-  status    ExpungementRequestStatus @default(PENDING)
-  createdAt DateTime                 @default(now())
-  updatedAt DateTime                 @default(now()) @updatedAt
-  warrants  Warrant[]
-  records   Record[]
+  id          String                   @id @default(uuid())
+  citizen     Citizen                  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizenId   String
+  user        User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String?
+  status      ExpungementRequestStatus @default(PENDING)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @default(now()) @updatedAt
+  description String?                  @db.Text
+  warrants    Warrant[]
+  records     Record[]
 }
 
 model NameChangeRequest {
-  id         String          @id @default(uuid())
-  citizen    Citizen         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  citizenId  String
-  user       User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String?
-  newName    String
-  newSurname String
-  status     WhitelistStatus @default(PENDING)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @default(now()) @updatedAt
+  id          String          @id @default(uuid())
+  citizen     Citizen         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizenId   String
+  user        User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String?
+  newName     String
+  newSurname  String
+  description String?         @db.Text
+  status      WhitelistStatus @default(PENDING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now()) @updatedAt
 }
 
 model CourtEntry {
@@ -1539,6 +1564,8 @@ model EmsFdDeputy {
   combinedEmsFdUnitId       String?
   EmsFdIncident             EmsFdIncident[]        @relation("emsFdIncidentCreator")
   ChatCreator               ChatCreator[]
+
+  @@index([callsign, callsign2, statusId])
 }
 
 model EmsFdIncident {
@@ -1791,11 +1818,6 @@ enum StatusValueType {
   SITUATION_CODE
 }
 
-enum StatusEnum {
-  ON_DUTY
-  OFF_DUTY
-}
-
 enum WhatPages {
   DISPATCH
   EMS_FD
@@ -1862,6 +1884,8 @@ enum DiscordWebhookType {
   WARRANTS
   BLEETER_POST
   CITIZEN_DECLARED_DEAD
+  DEPARTMENT_WHITELIST_STATUS
+  USER_WHITELIST_STATUS
 }
 
 enum JailTimeScale {

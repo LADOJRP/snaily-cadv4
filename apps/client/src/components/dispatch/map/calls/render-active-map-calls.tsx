@@ -11,7 +11,6 @@ import type { Put911CallByIdData } from "@snailycad/types/api";
 import { useCall911State } from "state/dispatch/call-911-state";
 import { CallDescription } from "components/dispatch/active-calls/CallDescription";
 import { MapItem, useDispatchMapState } from "state/mapState";
-import { shallow } from "zustand/shallow";
 
 const CALL_ICON_SIZE = 30;
 
@@ -24,19 +23,17 @@ const CALL_ICON = leafletIcon({
 });
 
 export function RenderActiveCalls() {
-  const map = useMap();
-  const { execute } = useFetch();
-  const { setCalls, calls } = useCall911State(
-    (state) => ({
-      setCalls: state.setCalls,
-      calls: state.calls,
-    }),
-    shallow,
-  );
-
-  const t = useTranslations("Calls");
   const [openItems, setOpenItems] = React.useState<string[]>([]);
-  const { hiddenItems } = useDispatchMapState();
+
+  const map = useMap();
+  const t = useTranslations("Calls");
+  const { execute } = useFetch();
+
+  const hiddenItems = useDispatchMapState((state) => state.hiddenItems);
+  const { setCalls, calls } = useCall911State((state) => ({
+    setCalls: state.setCalls,
+    calls: state.calls,
+  }));
 
   const callsWithPosition = React.useMemo(() => {
     return calls.filter((v) => v.gtaMapPosition || (v.position?.lat && v.position.lng));
@@ -162,9 +159,7 @@ export function RenderActiveCalls() {
       <ActiveMapCalls
         openItems={openItems}
         setOpenItems={setOpenItems}
-        hasMarker={(callId: string) => {
-          return callsWithPosition.some((v) => v.id === callId);
-        }}
+        hasMarker={(callId: string) => callsWithPosition.some((v) => v.id === callId)}
         setMarker={handleMarkerChange}
       />
     </>

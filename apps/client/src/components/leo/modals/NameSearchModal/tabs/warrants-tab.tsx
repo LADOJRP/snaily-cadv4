@@ -13,7 +13,6 @@ import { Warrant, WarrantStatus } from "@snailycad/types";
 import type { DeleteRecordsByIdData, PutWarrantsData } from "@snailycad/types/api";
 import { Permissions, usePermission } from "hooks/usePermission";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
-import { shallow } from "zustand/shallow";
 
 const values = [
   { label: "Inactive", value: WarrantStatus.INACTIVE },
@@ -22,17 +21,14 @@ const values = [
 
 export function NameSearchWarrantsTab() {
   const common = useTranslations("Common");
-  const { openModal, closeModal, getPayload } = useModal();
+  const modalState = useModal();
   const t = useTranslations();
   const { generateCallsign } = useGenerateCallsign();
   const { state, execute } = useFetch();
-  const { currentResult, setCurrentResult } = useNameSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const { currentResult, setCurrentResult } = useNameSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
   const tableState = useTableState();
   const { WARRANT_STATUS_APPROVAL } = useFeatureEnabled();
 
@@ -45,7 +41,7 @@ export function NameSearchWarrantsTab() {
     : hasManageWarrantsPermissions;
 
   async function handleDelete() {
-    const warrant = getPayload<Warrant>(ModalIds.AlertRevokeWarrant);
+    const warrant = modalState.getPayload<Warrant>(ModalIds.AlertRevokeWarrant);
     if (!warrant) return;
     if (!currentResult || currentResult.isConfidential) return;
 
@@ -60,12 +56,12 @@ export function NameSearchWarrantsTab() {
         ...currentResult,
         warrants: currentResult.warrants.filter((v) => v.id !== warrant.id),
       });
-      closeModal(ModalIds.AlertRevokeWarrant);
+      modalState.closeModal(ModalIds.AlertRevokeWarrant);
     }
   }
 
   function handleDeleteClick(warrant: Warrant) {
-    openModal(ModalIds.AlertRevokeWarrant, warrant);
+    modalState.openModal(ModalIds.AlertRevokeWarrant, warrant);
   }
 
   async function handleChange(value: string, warrant: Warrant) {

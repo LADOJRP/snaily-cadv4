@@ -12,7 +12,7 @@ import type { Full911Call } from "state/dispatch/dispatch-state";
 import { Loader, Button, TextField, FullDate } from "@snailycad/ui";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/modal-ids";
-import { LinkCallToIncidentModal } from "components/leo/call-history/LinkCallToIncidentModal";
+import { LinkCallToIncidentModal } from "components/leo/call-history/link-call-to-citizen-modal";
 import useFetch from "lib/useFetch";
 import { Title } from "components/shared/Title";
 import { AlertModal } from "components/modal/AlertModal";
@@ -58,7 +58,7 @@ export default function CallHistory({ data, incidents }: Props) {
   const { state, execute } = useFetch();
   const [tempCall, callState] = useTemporaryItem(asyncTable.items);
 
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations("Calls");
   const leo = useTranslations("Leo");
   const common = useTranslations("Common");
@@ -66,13 +66,13 @@ export default function CallHistory({ data, incidents }: Props) {
 
   function handleLinkClick(call: Full911Call) {
     callState.setTempId(call.id);
-    openModal(ModalIds.LinkCallToIncident);
+    modalState.openModal(ModalIds.LinkCallToIncident);
     setCurrentlySelectedCall(call);
   }
 
   function handleViewClick(call: Full911Call) {
     callState.setTempId(call.id);
-    openModal(ModalIds.Manage911Call);
+    modalState.openModal(ModalIds.Manage911Call);
     setCurrentlySelectedCall(call);
   }
 
@@ -88,7 +88,7 @@ export default function CallHistory({ data, incidents }: Props) {
 
     if (json) {
       asyncTable.remove(...selectedRows);
-      closeModal(ModalIds.AlertPurgeCalls);
+      modalState.closeModal(ModalIds.AlertPurgeCalls);
     }
   }
 
@@ -122,7 +122,7 @@ export default function CallHistory({ data, incidents }: Props) {
             />
             {hasManagePermissions ? (
               <Button
-                onPress={() => openModal(ModalIds.AlertPurgeCalls)}
+                onPress={() => modalState.openModal(ModalIds.AlertPurgeCalls)}
                 className="flex items-center gap-2 min-w-fit h-10 mt-3.5"
                 disabled={state === "loading" || isEmpty(tableState.rowSelection)}
               >

@@ -1,18 +1,19 @@
 import { join } from "node:path";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import readline from "node:readline";
-import { bold, green, underline } from "colorette";
-import prettier from "prettier";
-const { format } = prettier;
+import { green, underline } from "colorette";
+import { format } from "prettier";
 
 const PACKAGES_PATH = join(process.cwd(), "packages");
 const APPS_PATH = join(process.cwd(), "apps");
+const [, , version] = process.argv;
+
+if (!version) {
+  throw new Error("Must specify a new version.");
+}
 
 const packages = readdirSync(PACKAGES_PATH).filter((v) => !v.endsWith(".md"));
 const apps = readdirSync(APPS_PATH).filter((v) => !v.endsWith(".md"));
 const allPackages = [...packages, ...apps];
-
-const version = await askNewVersion();
 
 for (const pkg of allPackages) {
   const isApp = apps.includes(pkg);
@@ -28,32 +29,24 @@ for (const pkg of allPackages) {
     const isInDevDep = packageJsonContentJSON.devDependencies?.[`@snailycad/${utilPkg}`];
 
     if (isInDep) {
-      packageJsonContentJSON.dependencies[`@snailycad/${utilPkg}`] = "workspace:*";
+      const isWorkspace = isInDep.startsWith("workspace:");
+      packageJsonContentJSON.dependencies[`@snailycad/${utilPkg}`] = isWorkspace
+        ? "workspace:*"
+        : `^${version}`;
     } else if (isInDevDep) {
-      packageJsonContentJSON.devDependencies[`@snailycad/${utilPkg}`] = "workspace:*";
+      const isWorkspace = isInDevDep.startsWith("workspace:");
+
+      packageJsonContentJSON.devDependencies[`@snailycad/${utilPkg}`] = isWorkspace
+        ? "workspace:*"
+        : `^${version}`;
     }
   }
 
-  writeFileSync(packageJsonPath, stringifyAndFormat(packageJsonContentJSON));
+  writeFileSync(packageJsonPath, await stringifyAndFormat(packageJsonContentJSON));
   console.log(`${green("INFO:")} Set version ${underline(version)} for ${underline(pkg)}\n`);
 }
 
-updateMainPackage();
-
-function askNewVersion() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve, reject) => {
-    rl.question(bold("- Enter new version: "), (answer) => {
-      if (!answer) reject();
-
-      resolve(answer);
-    });
-  });
-}
+await updateMainPackage();
 
 function getJson(path) {
   try {
@@ -66,17 +59,17 @@ function getJson(path) {
   }
 }
 
-function stringifyAndFormat(json) {
+async function stringifyAndFormat(json) {
   return format(JSON.stringify(json, null, 2), { parser: "json" });
 }
 
-function updateMainPackage() {
+async function updateMainPackage() {
   const packageJsonPath = join(process.cwd(), "package.json");
 
   const packageJsonContentJSON = getJson(packageJsonPath);
   packageJsonContentJSON.version = version;
 
-  writeFileSync(packageJsonPath, stringifyAndFormat(packageJsonContentJSON));
+  writeFileSync(packageJsonPath, await stringifyAndFormat(packageJsonContentJSON));
   console.log(
     `${green("INFO:")} Set version ${underline(version)} for ${underline("snailycad")}\n`,
   );

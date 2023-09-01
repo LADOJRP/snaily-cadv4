@@ -28,7 +28,6 @@ import { usePermission, Permissions } from "hooks/usePermission";
 import dynamic from "next/dynamic";
 import { SettingsFormField } from "components/form/SettingsFormField";
 import { ApiTokenArea } from "components/admin/manage/users/api-token-area";
-import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import type {
   GetCustomRolesData,
   GetManageUserByIdData,
@@ -68,9 +67,8 @@ export default function ManageCitizens(props: Props) {
   const { state, execute } = useFetch();
   const common = useTranslations("Common");
   const t = useTranslations("Management");
-  const { openModal } = useModal();
+  const modalState = useModal();
   const { hasPermissions } = usePermission();
-  const { USER_API_TOKENS } = useFeatureEnabled();
   const { cad } = useAuth();
 
   async function handleAcceptUser() {
@@ -189,7 +187,7 @@ export default function ManageCitizens(props: Props) {
                 <Button
                   disabled={isUserPendingApproval || isUserDenied || user.rank === Rank.OWNER}
                   type="button"
-                  onPress={() => openModal(ModalIds.ManagePermissions)}
+                  onPress={() => modalState.openModal(ModalIds.ManagePermissions)}
                 >
                   {t("managePermissions")}
                 </Button>
@@ -199,7 +197,7 @@ export default function ManageCitizens(props: Props) {
                   className="ml-2 text-base"
                   disabled={isUserPendingApproval || isUserDenied || user.rank === Rank.OWNER}
                   type="button"
-                  onPress={() => openModal(ModalIds.ManageRoles)}
+                  onPress={() => modalState.openModal(ModalIds.ManageRoles)}
                 >
                   {t("manageRoles")}
                 </Button>
@@ -250,9 +248,7 @@ export default function ManageCitizens(props: Props) {
           )}
         </Formik>
 
-        {USER_API_TOKENS && (!isUserPendingApproval || !isUserDenied) ? (
-          <ApiTokenArea user={user} />
-        ) : null}
+        {!isUserPendingApproval || !isUserDenied ? <ApiTokenArea user={user} /> : null}
 
         {user.rank !== Rank.OWNER && (!isUserPendingApproval || !isUserDenied) ? (
           <>

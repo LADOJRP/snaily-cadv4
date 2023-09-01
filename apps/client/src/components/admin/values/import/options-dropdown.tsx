@@ -9,7 +9,7 @@ import {
 } from "@snailycad/ui";
 import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
-import { useDownload } from "@casper124578/useful";
+import { useDownload } from "@casperiv/useful";
 import type { ValueType } from "@snailycad/types";
 import { isPenalCodeValue, isDivisionValue, isStatusValue } from "@snailycad/utils";
 import format from "date-fns/format";
@@ -24,7 +24,7 @@ interface Props {
 
 export function OptionsDropdown({ type, valueLength }: Props) {
   const t = useTranslations("Values");
-  const { openModal } = useModal();
+  const modalState = useModal();
   const download = useDownload();
   const { state, execute } = useFetch();
 
@@ -54,7 +54,7 @@ export function OptionsDropdown({ type, valueLength }: Props) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent alignOffset={0} align="end">
-        <DropdownMenuItem onClick={() => openModal(ModalIds.ImportValues)}>
+        <DropdownMenuItem onClick={() => modalState.openModal(ModalIds.ImportValues)}>
           {t("importValues")}
         </DropdownMenuItem>
         <DropdownMenuItem

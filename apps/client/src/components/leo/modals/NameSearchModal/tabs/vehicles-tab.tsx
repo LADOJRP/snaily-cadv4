@@ -12,15 +12,15 @@ export function NameSearchVehiclesTab() {
   const common = useTranslations("Common");
   const { DMV } = useFeatureEnabled();
   const currentResult = useNameSearch((state) => state.currentResult);
-  const { openModal } = useModal();
-  const { setCurrentResult: setVehicleResult } = useVehicleSearch();
+  const modalState = useModal();
+  const setVehicleResult = useVehicleSearch((state) => state.setCurrentResult);
   const tableState = useTableState();
 
   function handlePlateClick(vehicle: VehicleSearchResult) {
     if (!currentResult || currentResult.isConfidential) return;
 
     setVehicleResult({ ...vehicle, citizen: currentResult });
-    openModal(ModalIds.VehicleSearchWithinName);
+    modalState.openModal(ModalIds.VehicleSearchWithinName);
   }
 
   if (!currentResult || currentResult.isConfidential) {

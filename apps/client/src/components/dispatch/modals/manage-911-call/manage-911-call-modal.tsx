@@ -18,7 +18,6 @@ import { useCall911State } from "state/dispatch/call-911-state";
 import { Manage911CallForm } from "./manage-911-call-form";
 import { makeUnitName } from "lib/utils";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
-import { shallow } from "zustand/shallow";
 import { isUnitCombined } from "@snailycad/utils";
 import { useActiveDispatchers } from "hooks/realtime/use-active-dispatchers";
 import { useInvalidateQuery } from "hooks/use-invalidate-query";
@@ -36,16 +35,13 @@ interface Props {
 export function Manage911CallModal({ setCall, forceDisabled, forceOpen, call, onClose }: Props) {
   const [showAlert, setShowAlert] = React.useState(false);
 
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations("Calls");
   const { state, execute } = useFetch();
-  const { setCalls, calls } = useCall911State(
-    (state) => ({
-      setCalls: state.setCalls,
-      calls: state.calls,
-    }),
-    shallow,
-  );
+  const { setCalls, calls } = useCall911State((state) => ({
+    setCalls: state.setCalls,
+    calls: state.calls,
+  }));
 
   const router = useRouter();
   const { hasPermissions } = usePermission();
@@ -83,7 +79,7 @@ export function Manage911CallModal({ setCall, forceDisabled, forceOpen, call, on
     onClose?.();
 
     setShowAlert(false);
-    closeModal(ModalIds.Manage911Call);
+    modalState.closeModal(ModalIds.Manage911Call);
   }
 
   async function handleDelete() {
@@ -111,7 +107,7 @@ export function Manage911CallModal({ setCall, forceDisabled, forceOpen, call, on
 
   return (
     <Modal
-      isOpen={forceOpen ?? isOpen(ModalIds.Manage911Call)}
+      isOpen={forceOpen ?? modalState.isOpen(ModalIds.Manage911Call)}
       onClose={handleClose}
       title={call ? t("manage911Call") : t("create911Call")}
       className={call ? "!max-w-[100rem] w-full" : "w-[650px]"}

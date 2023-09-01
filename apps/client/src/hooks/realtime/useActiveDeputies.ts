@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useListener } from "@casper124578/use-socket.io";
+import { useListener } from "@casperiv/use-socket.io";
 import { SocketEvents } from "@snailycad/config";
 import { useAuth } from "context/AuthContext";
 import useFetch from "lib/useFetch";
@@ -8,27 +8,27 @@ import { useEmsFdState } from "state/ems-fd-state";
 import type { CombinedEmsFdUnit, EmsFdDeputy } from "@snailycad/types";
 import type { GetEmsFdActiveDeputies } from "@snailycad/types/api";
 import { useCall911State } from "state/dispatch/call-911-state";
-import { shallow } from "zustand/shallow";
 import { isUnitCombinedEmsFd } from "@snailycad/utils";
 import { useActiveIncidents } from "./useActiveIncidents";
 import { useMapPlayersStore } from "./use-map-players";
 import { findPlayerFromUnit } from "lib/map/create-map-units-from-active-units.ts";
+import { useQuery } from "@tanstack/react-query";
 
 export function useActiveDeputies() {
   const { user } = useAuth();
-  const { activeDeputies, setActiveDeputies } = useDispatchState();
+  const { activeDeputies, setActiveDeputies } = useDispatchState((state) => ({
+    activeDeputies: state.activeDeputies,
+    setActiveDeputies: state.setActiveDeputies,
+  }));
   const { state, execute } = useFetch();
   const setActiveDeputy = useEmsFdState((state) => state.setActiveDeputy);
   const playerState = useMapPlayersStore();
 
   const incidentsState = useActiveIncidents();
-  const call911State = useCall911State(
-    (state) => ({
-      calls: state.calls,
-      setCalls: state.setCalls,
-    }),
-    shallow,
-  );
+  const call911State = useCall911State((state) => ({
+    calls: state.calls,
+    setCalls: state.setCalls,
+  }));
 
   const handleIncidentsState = React.useCallback(
     (data: EmsFdDeputy[]) => {
@@ -114,31 +114,31 @@ export function useActiveDeputies() {
     [user?.id],
   );
 
-  const getActiveDeputies = React.useCallback(async () => {
-    const { json } = await execute<GetEmsFdActiveDeputies>({
-      path: "/ems-fd/active-deputies",
-      noToast: true,
-    });
+  const query = useQuery({
+    queryKey: ["ems-fd-active-deputies"],
+    queryFn: async () => {
+      const { json } = await execute<GetEmsFdActiveDeputies>({
+        path: "/ems-fd/active-deputies",
+        noToast: true,
+      });
 
-    if (json && Array.isArray(json)) {
-      handleState(json);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, handleState]);
+      if (json && Array.isArray(json)) {
+        handleState(json);
+        return json;
+      }
 
-  React.useEffect(() => {
-    getActiveDeputies();
-  }, [getActiveDeputies]);
+      return [];
+    },
+  });
 
   useListener(SocketEvents.UpdateEmsFdStatus, (data: EmsFdDeputy[] | null) => {
     if (data && Array.isArray(data)) {
       handleState(data);
       handleCallsState(data);
       handleIncidentsState(data);
-      return;
+    } else {
+      query.refetch();
     }
-
-    getActiveDeputies();
   });
 
   return { activeDeputies, setActiveDeputies, state };

@@ -4,7 +4,7 @@ import { classNames } from "lib/classNames";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTranslations } from "use-intl";
-import { useViewport } from "@casper124578/useful/hooks/useViewport";
+import { useViewport } from "@casperiv/useful/hooks/useViewport";
 import { importRoutes, managementRoutes, SidebarRoute, valueRoutes } from "./Sidebar/routes";
 import { usePermission } from "hooks/usePermission";
 import { defaultPermissions, Permissions } from "@snailycad/permissions";
@@ -182,6 +182,13 @@ interface ItemProps {
 function SidebarItem({ route, href, text, isActive, notificationCount, onRouteClick }: ItemProps) {
   const features = useFeatureEnabled();
   const { hasPermissions } = usePermission();
+  const ref = React.useRef<HTMLAnchorElement>(null);
+
+  React.useEffect(() => {
+    if (isActive) {
+      ref.current?.scrollIntoView();
+    }
+  }, [isActive]);
 
   if (route && (route.hidden?.(features) || !hasPermissions(route.permissions))) {
     return null;
@@ -190,6 +197,7 @@ function SidebarItem({ route, href, text, isActive, notificationCount, onRouteCl
   return (
     <li className="px-2">
       <Link
+        ref={ref}
         prefetch={false}
         onClick={onRouteClick}
         className={classNames(

@@ -1,6 +1,6 @@
 {
   "name": "@snailycad/audit-logger",
-  "version": "1.66.0",
+  "version": "1.70.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -19,15 +19,20 @@
     "dist"
   ],
   "scripts": {
-    "build": "npx rimraf ./dist && yarn workspace @snailycad/api generate && yarn tsup",
-    "watch": "yarn tsup --watch --silent=false",
-    "typecheck": "yarn tsc --noEmit"
+    "build": "npx rimraf ./dist && pnpm --filter \"@snailycad/api\" generate && pnpm tsup",
+    "watch": "pnpm tsup --watch --silent=false",
+    "typecheck": "pnpm tsc --noEmit"
   },
   "devDependencies": {
     "@snailycad/types": "workspace:*",
+    "rimraf": "^5.0.1",
     "tsup": "6.6.2",
     "typescript": "^5.1.6",
-    "vite": "^4.4.2"
+    "vite": "^4.4.8"
+  },
+  "peerDependencies": {
+    "@prisma/client": ">=5",
+    "@sentry/node": ">= 7.66.0"
   },
   "tsup": {
     "entry": [
@@ -46,7 +51,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "superjson": "^1.12.4"
+    "superjson": "^1.13.1"
   },
   "typesVersions": {
     "*": {

@@ -79,13 +79,13 @@ export function AllUnitsTab({ units }: Props) {
   const { generateCallsign } = useGenerateCallsign();
   const router = useRouter();
   const { DIVISIONS, BADGE_NUMBERS } = useFeatureEnabled();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { department } = useValues();
   const { makeImageUrl } = useImageUrl();
 
   function handleDeleteClick(unit: Unit) {
     unitState.setTempId(unit.id);
-    openModal(ModalIds.AlertDeleteUnit);
+    modalState.openModal(ModalIds.AlertDeleteUnit);
   }
 
   async function handleDeleteUnit() {
@@ -98,7 +98,7 @@ export function AllUnitsTab({ units }: Props) {
 
     if (json) {
       unitState.setTempId(null);
-      closeModal(ModalIds.AlertDeleteUnit);
+      modalState.closeModal(ModalIds.AlertDeleteUnit);
 
       router.replace({
         pathname: router.pathname,
@@ -152,7 +152,7 @@ export function AllUnitsTab({ units }: Props) {
       ) : null}
 
       {hasManagePermissions && asyncTable.items.length >= 1 ? (
-        <Button onPress={() => openModal(ModalIds.PruneUnits)} className="mt-3 ml-2">
+        <Button onPress={() => modalState.openModal(ModalIds.PruneUnits)} className="mt-3 ml-2">
           {t("Management.pruneUnits")}
         </Button>
       ) : null}
@@ -161,9 +161,9 @@ export function AllUnitsTab({ units }: Props) {
         search={{ search, setSearch }}
         asyncTable={asyncTable}
         totalCount={units.totalCount}
+        className="grid grid-cols-3"
       >
         <SelectField
-          className="min-w-[15rem]"
           label={t("Leo.department")}
           isClearable
           selectedKey={asyncTable.filters?.departmentId ?? null}

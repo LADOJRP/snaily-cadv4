@@ -22,13 +22,11 @@ import {
 import { ManageCitizenFlagsModal } from "./ManageCitizenFlagsModal";
 import { CitizenImageModal } from "components/citizen/modals/citizen-image-modal";
 import { ManageCustomFieldsModal } from "./ManageCustomFieldsModal";
-import { CustomFieldsArea } from "../CustomFieldsArea";
 import { useBolos } from "hooks/realtime/useBolos";
 import type { PostLeoSearchCitizenData, PutSearchActionsLicensesData } from "@snailycad/types/api";
 import { NameSearchBasicInformation } from "./sections/basic-information";
 import { NameSearchLicensesSection } from "./sections/licenses-section";
 import { NameSearchFooter } from "./sections/footer";
-import { shallow } from "zustand/shallow";
 import { SpeechAlert } from "./speech-alert";
 import { ImageWrapper } from "components/shared/image-wrapper";
 import { ManageLicensePointsModal } from "./sections/license-points/manage-license-points-modal";
@@ -51,8 +49,8 @@ const ManageCitizenAddressFlagsModal = dynamic(
 );
 
 function AutoSubmit() {
-  const { getPayload } = useModal();
-  const payloadCitizen = getPayload<Citizen>(ModalIds.NameSearch);
+  const modalState = useModal();
+  const payloadCitizen = modalState.getPayload<Citizen>(ModalIds.NameSearch);
   const { submitForm } = useFormikContext();
 
   // if there's a name, auto-submit the form.
@@ -66,7 +64,7 @@ function AutoSubmit() {
 }
 
 export function NameSearchModal() {
-  const { isOpen, closeModal, getPayload } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const cT = useTranslations("Citizen");
   const vT = useTranslations("Vehicles");
@@ -80,21 +78,17 @@ export function NameSearchModal() {
   const { hasPermissions } = usePermission();
 
   const hasManageCitizenProfilePermissions = hasPermissions([Permissions.LeoManageCitizenProfile]);
-  const { openModal } = useModal();
   const isLeo = router.pathname === "/officer";
   const isDispatch = router.pathname === "/dispatch";
 
-  const { results, currentResult, setCurrentResult, setResults } = useNameSearch(
-    (state) => ({
-      results: state.results,
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-      setResults: state.setResults,
-    }),
-    shallow,
-  );
+  const { results, currentResult, setCurrentResult, setResults } = useNameSearch((state) => ({
+    results: state.results,
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+    setResults: state.setResults,
+  }));
 
-  const payloadCitizen = getPayload<Citizen>(ModalIds.NameSearch);
+  const payloadCitizen = modalState.getPayload<Citizen>(ModalIds.NameSearch);
 
   const bolo = React.useMemo(() => {
     if (!currentResult) return null;
@@ -109,11 +103,11 @@ export function NameSearchModal() {
   }, [bolos, currentResult]);
 
   React.useEffect(() => {
-    if (!isOpen(ModalIds.NameSearch)) {
+    if (!modalState.isOpen(ModalIds.NameSearch)) {
       setResults(null);
       setCurrentResult(null);
     }
-  }, [isOpen, setCurrentResult, setResults]);
+  }, [modalState, setCurrentResult, setResults]);
 
   async function handleLicensesSubmit(values: LicenseInitialValues) {
     if (!currentResult) return;
@@ -126,7 +120,7 @@ export function NameSearchModal() {
 
     if (json) {
       setCurrentResult({ ...currentResult, ...json });
-      closeModal(ModalIds.ManageLicenses);
+      modalState.closeModal(ModalIds.ManageLicenses);
     }
   }
 
@@ -170,9 +164,9 @@ export function NameSearchModal() {
   return (
     <Modal
       title={t("nameSearch")}
-      onClose={() => closeModal(ModalIds.NameSearch)}
-      isOpen={isOpen(ModalIds.NameSearch)}
-      className={currentResult ? "w-[1200px]" : "w-[650px]"}
+      onClose={() => modalState.closeModal(ModalIds.NameSearch)}
+      isOpen={modalState.isOpen(ModalIds.NameSearch)}
+      className={currentResult ? "min-w-[1200px]" : "w-[650px]"}
     >
       <Formik initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
         {({ setValues, errors, values }) => (
@@ -356,7 +350,7 @@ export function NameSearchModal() {
                       {currentResult.imageId ? (
                         <button
                           type="button"
-                          onClick={() => openModal(ModalIds.CitizenImage)}
+                          onClick={() => modalState.openModal(ModalIds.CitizenImage)}
                           className="cursor-pointer"
                         >
                           <ImageWrapper
@@ -392,7 +386,7 @@ export function NameSearchModal() {
                             size="xs"
                             type="button"
                             className="mt-2"
-                            onPress={() => openModal(ModalIds.ManageCitizenFlags)}
+                            onPress={() => modalState.openModal(ModalIds.ManageCitizenFlags)}
                           >
                             {t("manageCitizenFlags")}
                           </Button>
@@ -410,14 +404,12 @@ export function NameSearchModal() {
                             size="xs"
                             type="button"
                             className="mt-2"
-                            onPress={() => openModal(ModalIds.ManageAddressFlags)}
+                            onPress={() => modalState.openModal(ModalIds.ManageAddressFlags)}
                           >
                             {t("manageAddressFlags")}
                           </Button>
                         ) : null}
                       </div>
-
-                      <CustomFieldsArea currentResult={currentResult} isLeo={isLeo} />
                     </div>
                   </div>
 

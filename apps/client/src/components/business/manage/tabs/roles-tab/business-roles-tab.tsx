@@ -12,7 +12,6 @@ import type {
   GetBusinessRolesByBusinessIdData,
 } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
-import { shallow } from "zustand/shallow";
 import { getValueStrFromValue } from "lib/admin/values/utils";
 import { ManageBusinessRoleModal } from "./manage-business-role-modal";
 
@@ -23,18 +22,15 @@ const initialData = {
 
 export function BusinessRolesTab() {
   const { state, execute } = useFetch();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Business");
 
-  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-      setCurrentBusiness: state.setCurrentBusiness,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+    setCurrentBusiness: state.setCurrentBusiness,
+  }));
 
   const returnNull = !currentBusiness || !currentEmployee;
 
@@ -73,18 +69,18 @@ export function BusinessRolesTab() {
       }
 
       roleState.setTempId(null);
-      closeModal(ModalIds.AlertDeleteBusinessRole);
+      modalState.closeModal(ModalIds.AlertDeleteBusinessRole);
     }
   }
 
   function handleManageClick(employee: EmployeeValue) {
     roleState.setTempId(employee.id);
-    openModal(ModalIds.ManageBusinessRole);
+    modalState.openModal(ModalIds.ManageBusinessRole);
   }
 
   function handleDeleteClick(employee: EmployeeValue) {
     roleState.setTempId(employee.id);
-    openModal(ModalIds.AlertDeleteBusinessRole);
+    modalState.openModal(ModalIds.AlertDeleteBusinessRole);
   }
 
   if (returnNull) {
@@ -96,7 +92,7 @@ export function BusinessRolesTab() {
       <header className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold">{t("businessRoles")}</h3>
 
-        <Button onPress={() => openModal(ModalIds.ManageBusinessRole)}>
+        <Button onPress={() => modalState.openModal(ModalIds.ManageBusinessRole)}>
           {t("addBusinessRole")}
         </Button>
       </header>

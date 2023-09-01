@@ -9,7 +9,6 @@ import { ModalIds } from "types/modal-ids";
 import { useTranslations } from "use-intl";
 
 import dynamic from "next/dynamic";
-import { shallow } from "zustand/shallow";
 import type { Record } from "@snailycad/types";
 
 const ManageIncidentModal = dynamic(
@@ -37,15 +36,12 @@ export function ConnectionsTab({
   const t = useTranslations("Leo");
   const { handleChange, errors, values } = useFormikContext<_FormikContext>();
 
-  const { calls, setCurrentlySelectedCall } = useCall911State(
-    (state) => ({
-      calls: state.calls,
-      setCurrentlySelectedCall: state.setCurrentlySelectedCall,
-    }),
-    shallow,
-  );
+  const { calls, setCurrentlySelectedCall } = useCall911State((state) => ({
+    calls: state.calls,
+    setCurrentlySelectedCall: state.setCurrentlySelectedCall,
+  }));
   const { activeIncidents } = useActiveIncidents();
-  const { openModal } = useModal();
+  const modalState = useModal();
 
   const incident =
     (values.incidentId && (record as any)?.incident) ??
@@ -87,7 +83,7 @@ export function ConnectionsTab({
             <>
               <Button
                 onClick={() => {
-                  openModal(ModalIds.ManageIncident);
+                  modalState.openModal(ModalIds.ManageIncident);
                 }}
                 className="min-w-fit"
               >
@@ -119,7 +115,7 @@ export function ConnectionsTab({
               <Button
                 onClick={() => {
                   setCurrentlySelectedCall(call);
-                  openModal(ModalIds.Manage911Call);
+                  modalState.openModal(ModalIds.Manage911Call);
                 }}
                 className="min-w-fit"
               >

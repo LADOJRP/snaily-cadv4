@@ -18,7 +18,6 @@ import { requestAll } from "lib/utils";
 import { Title } from "components/shared/Title";
 import type { DeleteBusinessPostsData, GetBusinessByIdData } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
-import { shallow } from "zustand/shallow";
 
 const AlertModal = dynamic(async () => (await import("components/modal/AlertModal")).AlertModal);
 const ManageBusinessPostModal = dynamic(
@@ -32,7 +31,7 @@ interface Props {
 
 export default function BusinessId(props: Props) {
   const { state: fetchState, execute } = useFetch();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
 
   const businessActions = useBusinessState((state) => ({
     setCurrentBusiness: state.setCurrentBusiness,
@@ -40,14 +39,11 @@ export default function BusinessId(props: Props) {
     setPosts: state.setPosts,
   }));
 
-  const { currentBusiness, currentEmployee, posts } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-      posts: state.posts,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee, posts } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+    posts: state.posts,
+  }));
 
   const common = useTranslations("Common");
   const t = useTranslations("Business");
@@ -65,17 +61,17 @@ export default function BusinessId(props: Props) {
     if (json) {
       businessActions.setPosts(posts.filter((p) => p.id !== tempPost.id));
       postState.setTempId(null);
-      closeModal(ModalIds.AlertDeleteBusinessPost);
+      modalState.closeModal(ModalIds.AlertDeleteBusinessPost);
     }
   }
 
   function handleEdit(post: BusinessPost) {
-    openModal(ModalIds.ManageBusinessPost);
+    modalState.openModal(ModalIds.ManageBusinessPost);
     postState.setTempId(post.id);
   }
 
   function handleDelete(post: BusinessPost) {
-    openModal(ModalIds.AlertDeleteBusinessPost);
+    modalState.openModal(ModalIds.AlertDeleteBusinessPost);
     postState.setTempId(post.id);
   }
 
@@ -133,7 +129,10 @@ export default function BusinessId(props: Props) {
 
         <div>
           {currentEmployee.canCreatePosts ? (
-            <Button onPress={() => openModal(ModalIds.ManageBusinessPost)} className="mr-2">
+            <Button
+              onPress={() => modalState.openModal(ModalIds.ManageBusinessPost)}
+              className="mr-2"
+            >
               {t("createPost")}
             </Button>
           ) : null}

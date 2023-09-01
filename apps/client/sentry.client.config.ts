@@ -1,4 +1,4 @@
-import { init } from "@sentry/nextjs";
+import { Replay, init } from "@sentry/nextjs";
 import { BrowserTracing } from "@sentry/browser";
 
 init({
@@ -6,6 +6,8 @@ init({
   tracesSampleRate: 0.4,
   attachStacktrace: true,
   denyUrls: [/localhost/],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0.4,
   ignoreErrors: [
     /loading chunk/i,
     /hydration failed because the initial UI does not match what was rendered on the server/i,
@@ -19,8 +21,9 @@ init({
     /Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node./gi,
     "Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.",
     "The object can not be found here.",
+    /AbortError/gi,
   ],
   integrations(integrations) {
-    return [...integrations, new BrowserTracing()];
+    return [...integrations, new BrowserTracing(), new Replay()];
   },
 });

@@ -1,4 +1,12 @@
-import { Rank, type cad, WhitelistStatus, Feature, User, Prisma, CustomRole } from "@prisma/client";
+/* eslint-disable unicorn/number-literal-case */
+import {
+  Rank,
+  WhitelistStatus,
+  User,
+  Prisma,
+  CustomRole,
+  DiscordWebhookType,
+} from "@prisma/client";
 import { PathParams, BodyParams, Context, QueryParams } from "@tsed/common";
 import { Controller } from "@tsed/di";
 import { BadRequest, NotFound } from "@tsed/exceptions";
@@ -20,11 +28,13 @@ import { citizenInclude } from "controllers/citizen/CitizenController";
 import { validateSchema } from "lib/data/validate-schema";
 import { ExtendedBadRequest } from "src/exceptions/extended-bad-request";
 import { UsePermissions, Permissions } from "middlewares/use-permissions";
-import { isFeatureEnabled } from "lib/upsert-cad";
 import { manyToManyHelper } from "lib/data/many-to-many";
 import type * as APITypes from "@snailycad/types/api";
 import { AuditLogActionType, createAuditLogEntry } from "@snailycad/audit-logger/server";
 import { isDiscordIdInUse } from "lib/discord/utils";
+import { getTranslator } from "~/utils/get-translator";
+import { sendDiscordWebhook } from "~/lib/discord/webhooks";
+import { APIEmbed } from "discord-api-types/v10";
 
 const manageUsersSelect = (selectCitizens: boolean) =>
   ({
@@ -33,7 +43,7 @@ const manageUsersSelect = (selectCitizens: boolean) =>
     apiToken: { include: { logs: { take: 35, orderBy: { createdAt: "desc" } } } },
     roles: true,
     User2FA: true,
-  } as const);
+  }) as const;
 
 @UseBeforeEach(IsAuth)
 @Controller("/admin/manage/users")
@@ -67,9 +77,9 @@ export class ManageUsersController {
               ? {
                   OR: [
                     { username: { contains: query, mode: Prisma.QueryMode.insensitive } },
-                    { id: query },
-                    { steamId: query },
-                    { discordId: query },
+                    { id: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                    { steamId: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                    { discordId: { contains: query, mode: Prisma.QueryMode.insensitive } },
                   ],
                 }
               : {}),
@@ -506,7 +516,7 @@ export class ManageUsersController {
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { whitelistStatus },
-      select: { id: true, username: true, whitelistStatus: true },
+      select: { id: true, username: true, whitelistStatus: true, locale: true, discordId: true },
     });
 
     await createAuditLogEntry({
@@ -518,6 +528,7 @@ export class ManageUsersController {
       prisma,
       executorId: sessionUserId,
     });
+    await sendUserWhitelistStatusChangeWebhook(updatedUser);
 
     return true;
   }
@@ -529,18 +540,7 @@ export class ManageUsersController {
   async revokeApiToken(
     @Context("sessionUserId") sessionUserId: string,
     @PathParams("userId") userId: string,
-    @Context("cad") cad: cad & { features?: Record<Feature, boolean> },
   ): Promise<APITypes.DeleteManageUserRevokeApiTokenData> {
-    const isUserAPITokensEnabled = isFeatureEnabled({
-      feature: Feature.USER_API_TOKENS,
-      features: cad.features,
-      defaultReturn: false,
-    });
-
-    if (!isUserAPITokensEnabled) {
-      throw new BadRequest("featureNotEnabled");
-    }
-
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
@@ -612,4 +612,41 @@ export class ManageUsersController {
 
     return permissions;
   }
+}
+
+export async function sendUserWhitelistStatusChangeWebhook(
+  user: Pick<User, "id" | "username" | "discordId" | "whitelistStatus">,
+) {
+  const t = await getTranslator({
+    type: "webhooks",
+    namespace: "WhitelistStatusChange",
+  });
+
+  const statuses = {
+    [WhitelistStatus.ACCEPTED]: { color: 0x00ff00, name: t("accepted") },
+    [WhitelistStatus.PENDING]: { color: 0xffa500, name: t("pending") },
+    [WhitelistStatus.DECLINED]: { color: 0xff0000, name: t("declined") },
+  } as const;
+
+  const status = statuses[user.whitelistStatus].name;
+  const color = statuses[user.whitelistStatus].color;
+
+  const description = t("userChangeDescription", {
+    status,
+    user: user.username,
+  });
+
+  const embeds: APIEmbed[] = [
+    {
+      description,
+      color,
+      title: t("userChangeTitle"),
+    },
+  ];
+
+  await sendDiscordWebhook({
+    data: { embeds },
+    type: DiscordWebhookType.USER_WHITELIST_STATUS,
+    extraMessageData: { userDiscordId: user.discordId },
+  });
 }

@@ -7,17 +7,13 @@ import { useCall911State } from "state/dispatch/call-911-state";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/modal-ids";
 import { useTranslations } from "use-intl";
-import { shallow } from "zustand/shallow";
 
 export function EnableSignal100Modal() {
-  const { isOpen, closeModal } = useModal();
-  const { setCalls, calls } = useCall911State(
-    (state) => ({
-      setCalls: state.setCalls,
-      calls: state.calls,
-    }),
-    shallow,
-  );
+  const modalState = useModal();
+  const { setCalls, calls } = useCall911State((state) => ({
+    setCalls: state.setCalls,
+    calls: state.calls,
+  }));
 
   const t = useTranslations();
   const { execute, state } = useFetch();
@@ -35,7 +31,7 @@ export function EnableSignal100Modal() {
     });
 
     if (json) {
-      closeModal(ModalIds.EnableSignal100);
+      modalState.closeModal(ModalIds.EnableSignal100);
 
       setCalls(
         calls.map((call) => {
@@ -52,8 +48,8 @@ export function EnableSignal100Modal() {
     <Modal
       className="w-[500px]"
       title={t("Leo.enableSignal100")}
-      isOpen={isOpen(ModalIds.EnableSignal100)}
-      onClose={() => closeModal(ModalIds.EnableSignal100)}
+      isOpen={modalState.isOpen(ModalIds.EnableSignal100)}
+      onClose={() => modalState.closeModal(ModalIds.EnableSignal100)}
     >
       <Formik initialValues={INITIAL_VALUES} onSubmit={handleSubmit}>
         {({ setFieldValue, values }) => (
@@ -73,7 +69,7 @@ export function EnableSignal100Modal() {
             <footer className="flex items-center justify-end gap-2 mt-5">
               <Button
                 type="reset"
-                onPress={() => closeModal(ModalIds.ManageTowCall)}
+                onPress={() => modalState.closeModal(ModalIds.ManageTowCall)}
                 variant="cancel"
               >
                 {t("Common.cancel")}

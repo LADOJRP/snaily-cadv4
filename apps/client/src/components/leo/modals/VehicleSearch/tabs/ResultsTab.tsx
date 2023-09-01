@@ -12,40 +12,48 @@ import { useRouter } from "next/router";
 import { ModalIds } from "types/modal-ids";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
 import { hasSearchResults } from "../../VehicleSearchModal";
+import { useImageUrl } from "hooks/useImageUrl";
+import { ImageWrapper } from "components/shared/image-wrapper";
 
 export function ResultsTab() {
   const currentResult = useVehicleSearch((state) => state.currentResult);
   const { INSPECTION_STATUS_LABELS, TAX_STATUS_LABELS } = useVehicleLicenses();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { BUSINESS, DMV } = useFeatureEnabled();
 
   const common = useTranslations("Common");
   const vT = useTranslations("Vehicles");
   const t = useTranslations("Leo");
   const router = useRouter();
+  const { makeImageUrl } = useImageUrl();
 
   const isLeo = router.pathname === "/officer";
 
   function handleEditVehicleFlags() {
     if (!hasSearchResults(currentResult)) return;
 
-    openModal(ModalIds.ManageVehicleFlags);
+    modalState.openModal(ModalIds.ManageVehicleFlags);
   }
 
   function handleNameClick() {
     if (!hasSearchResults(currentResult)) return;
     if (!currentResult.citizen) return;
 
-    openModal(ModalIds.NameSearch, {
+    modalState.openModal(ModalIds.NameSearch, {
       ...currentResult.citizen,
       name: `${currentResult.citizen.name} ${currentResult.citizen.surname}`,
     });
-    closeModal(ModalIds.VehicleSearchWithinName);
+    modalState.closeModal(ModalIds.VehicleSearchWithinName);
   }
 
   if (!hasSearchResults(currentResult)) {
     return null;
   }
+
+  const vehicleImageUrl = makeImageUrl(
+    "values",
+    currentResult.imageId || currentResult.model.imageId,
+  );
 
   return (
     <TabsContent className="mt-3" value="results">
@@ -158,6 +166,20 @@ export function ResultsTab() {
             {common(yesOrNoText(currentResult.impounded))}
           </Infofield>
         </li>
+        {vehicleImageUrl ? (
+          <li className="mt-3">
+            <ImageWrapper
+              quality={70}
+              alt={currentResult.plate.toUpperCase()}
+              loading="lazy"
+              src={vehicleImageUrl}
+              width={300}
+              height={150}
+              className="object-cover"
+            />
+          </li>
+        ) : null}
+
         <CustomFieldsArea currentResult={currentResult} isLeo={isLeo} />
       </ul>
 

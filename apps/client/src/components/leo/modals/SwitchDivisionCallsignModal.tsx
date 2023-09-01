@@ -13,17 +13,13 @@ import { useLeoState } from "state/leo-state";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import { isUnitCombined } from "@snailycad/utils";
 import type { PutLeoCallsignData } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 
 export function SwitchDivisionCallsignModal() {
-  const { activeOfficer, setActiveOfficer } = useLeoState(
-    (state) => ({
-      activeOfficer: state.activeOfficer,
-      setActiveOfficer: state.setActiveOfficer,
-    }),
-    shallow,
-  );
-  const { isOpen, closeModal } = useModal();
+  const { activeOfficer, setActiveOfficer } = useLeoState((state) => ({
+    activeOfficer: state.activeOfficer,
+    setActiveOfficer: state.setActiveOfficer,
+  }));
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Leo");
   const { generateCallsign } = useGenerateCallsign();
@@ -40,7 +36,7 @@ export function SwitchDivisionCallsignModal() {
     });
 
     if (json.id) {
-      closeModal(ModalIds.SwitchDivisionCallsign);
+      modalState.closeModal(ModalIds.SwitchDivisionCallsign);
       setActiveOfficer(json);
     }
   }
@@ -65,8 +61,8 @@ export function SwitchDivisionCallsignModal() {
   return (
     <Modal
       title={t("switchDivisionCallsign")}
-      onClose={() => closeModal(ModalIds.SwitchDivisionCallsign)}
-      isOpen={isOpen(ModalIds.SwitchDivisionCallsign)}
+      onClose={() => modalState.closeModal(ModalIds.SwitchDivisionCallsign)}
+      isOpen={modalState.isOpen(ModalIds.SwitchDivisionCallsign)}
       className="w-[600px]"
     >
       <Formik validate={validate} initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
@@ -93,7 +89,7 @@ export function SwitchDivisionCallsignModal() {
             <footer className="flex justify-end mt-5">
               <Button
                 type="reset"
-                onPress={() => closeModal(ModalIds.SwitchDivisionCallsign)}
+                onPress={() => modalState.closeModal(ModalIds.SwitchDivisionCallsign)}
                 variant="cancel"
               >
                 {common("cancel")}

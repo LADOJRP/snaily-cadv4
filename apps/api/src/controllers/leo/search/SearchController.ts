@@ -47,7 +47,7 @@ export const recordsInclude = (isRecordApprovalEnabled: boolean) => ({
     officer: { include: leoProperties },
     seizedItems: true,
     courtEntry: { include: { dates: true } },
-    vehicle: { include: { model: { include: { value: true } } } },
+    vehicle: { include: { model: { include: { value: true } }, registrationStatus: true } },
     incident: { include: incidentInclude },
     call911: { include: callInclude },
     violations: {
@@ -154,19 +154,28 @@ export class LeoSearchController {
       return [];
     }
 
+    if (!fromAuthUserOnly) {
+      // todo: check for LEO perms
+    }
+
+    const checkUserId = shouldCheckCitizenUserId({ cad, user });
+
     if (citizenId) {
       const citizens = await prisma.citizen.findMany({
-        where: { id: citizenId },
+        where: { id: citizenId, userId: fromAuthUserOnly && checkUserId ? user.id : undefined },
         take: 35,
         ...citizenSearchIncludeOrSelect(user, cad),
       });
 
-      return appendConfidential(
-        await appendCustomFields(citizens, CustomFieldCategory.CITIZEN),
-      ) as APITypes.PostLeoSearchCitizenData;
+      const citizensWithCustomFields = await appendCustomFields(
+        citizens,
+        CustomFieldCategory.CITIZEN,
+      );
+      const citizensWithConfidential = appendConfidential(citizensWithCustomFields);
+
+      return citizensWithConfidential as APITypes.PostLeoSearchCitizenData;
     }
 
-    const checkUserId = shouldCheckCitizenUserId({ cad, user });
     const citizens = await prisma.citizen.findMany({
       where: {
         userId: fromAuthUserOnly && checkUserId ? user.id : undefined,
@@ -190,11 +199,15 @@ export class LeoSearchController {
       ...citizenSearchIncludeOrSelect(user, cad),
     });
 
-    return appendAssignedUnitData(
-      appendConfidential(
-        await appendCustomFields(setEndedSuspendedLicenses(citizens), CustomFieldCategory.CITIZEN),
-      ),
-    ) as APITypes.PostLeoSearchCitizenData;
+    const citizensWithEndedSuspendedLicenses = await setEndedSuspendedLicenses(citizens);
+    const citizensWithCustomFields = await appendCustomFields(
+      citizensWithEndedSuspendedLicenses,
+      CustomFieldCategory.CITIZEN,
+    );
+    const citizensWithConfidential = appendConfidential(citizensWithCustomFields);
+    const citizensWithAssignedUnitData = appendAssignedUnitData(citizensWithConfidential);
+
+    return citizensWithAssignedUnitData as APITypes.PostLeoSearchCitizenData;
   }
 
   @Post("/business")

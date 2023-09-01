@@ -1,4 +1,4 @@
-import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
+import { ContentType, Delete, Description, Get, Header, Post, Put } from "@tsed/schema";
 import {
   CREATE_TICKET_SCHEMA,
   CREATE_WARRANT_SCHEMA,
@@ -31,16 +31,25 @@ import { combinedUnitProperties, leoProperties } from "utils/leo/includes";
 import { UsePermissions, Permissions } from "middlewares/use-permissions";
 import { isFeatureEnabled } from "lib/upsert-cad";
 import { sendDiscordWebhook, sendRawWebhook } from "lib/discord/webhooks";
-import { getFirstOfficerFromActiveOfficer, getInactivityFilter } from "lib/leo/utils";
+import { getUserOfficerFromActiveOfficer, getInactivityFilter } from "lib/leo/utils";
 import type * as APITypes from "@snailycad/types/api";
 import { officerOrDeputyToUnit } from "lib/leo/officerOrDeputyToUnit";
 import { Socket } from "services/socket-service";
 import { assignUnitsToWarrant } from "~/lib/leo/records/assign-units-to-warrant";
-import type { cad } from "@snailycad/types";
+import type { MiscCadSettings, cad } from "@snailycad/types";
 import { userProperties } from "lib/auth/getSessionUser";
 import { upsertRecord } from "~/lib/leo/records/upsert-record";
 import { IsFeatureEnabled } from "middlewares/is-enabled";
 import { getTranslator } from "utils/get-translator";
+import ejs from "ejs";
+import { resolve } from "node:path";
+import format from "date-fns/format";
+import differenceInYears from "date-fns/differenceInYears";
+import { recordsInclude } from "../leo/search/SearchController";
+import { citizenInclude } from "../citizen/CitizenController";
+import { generateCallsign } from "@snailycad/utils";
+import { Descendant, slateDataToString } from "@snailycad/utils/editor";
+import puppeteer from "puppeteer";
 
 export const assignedOfficersInclude = {
   combinedUnit: { include: combinedUnitProperties },
@@ -105,7 +114,11 @@ export class RecordsController {
     @Context("activeOfficer") activeOfficer: (CombinedLeoUnit & { officers: Officer[] }) | Officer,
   ): Promise<APITypes.PostCreateWarrantData> {
     const data = validateSchema(CREATE_WARRANT_SCHEMA, body);
-    const officer = getFirstOfficerFromActiveOfficer({ activeOfficer, allowDispatch: true });
+    const officer = getUserOfficerFromActiveOfficer({
+      userId: user.id,
+      activeOfficer,
+      allowDispatch: true,
+    });
 
     const citizen = await prisma.citizen.findUnique({
       where: {
@@ -170,6 +183,89 @@ export class RecordsController {
     this.socket.emitCreateActiveWarrant(normalizedWarrant);
 
     return normalizedWarrant;
+  }
+
+  @Post("/pdf/record/:id")
+  @Description("Export a record to a PDF file.")
+  @UsePermissions({
+    permissions: [Permissions.Leo],
+  })
+  @Header("Content-Type", "application/pdf")
+  async exportRecordToPDF(
+    @PathParams("id") id: string,
+    @Context("cad")
+    cad: cad & { miscCadSettings: MiscCadSettings; features: Record<Feature, boolean> },
+    @Context("user") user: User,
+  ) {
+    const isEnabled = isFeatureEnabled({
+      feature: Feature.CITIZEN_RECORD_APPROVAL,
+      features: cad.features,
+      defaultReturn: false,
+    });
+    const record = await prisma.record.findUnique({
+      where: { id },
+      include: { ...recordsInclude(isEnabled).include, citizen: { include: citizenInclude } },
+    });
+
+    if (!record) {
+      throw new NotFound("recordNotFound");
+    }
+
+    if (!record.citizen) {
+      throw new BadRequest("recordNotAssociatedWithCitizen");
+    }
+
+    const root = __dirname;
+    const templatePath = resolve(root, "../../templates/record.ejs");
+    const age = record.citizen?.dateOfBirth ? calculateAge(record.citizen.dateOfBirth) : "";
+
+    const unitName = record.officer
+      ? `${record.officer.citizen.name} ${record.officer.citizen.surname}`
+      : "";
+    const officerCallsign = record.officer
+      ? generateCallsign(record.officer, cad.miscCadSettings.callsignTemplate)
+      : "";
+
+    const officer = record.officer ? `${officerCallsign} ${unitName}` : "";
+    const formattedDescription = slateDataToString(
+      record.descriptionData as unknown[] as Descendant[],
+    );
+
+    const translator = await getTranslator({
+      type: "webhooks",
+      locale: user.locale,
+      namespace: "Records",
+    });
+
+    const template = await ejs.renderFile(templatePath, {
+      formatDate,
+      officer,
+      age,
+      record,
+      formattedDescription,
+      translator,
+    });
+
+    try {
+      const browser = await puppeteer.launch({ headless: "new" });
+      const page = await browser.newPage();
+
+      page.setContent(template, { waitUntil: "domcontentloaded" });
+
+      await page.emulateMediaType("screen");
+
+      const pdf = await page.pdf({
+        format: "letter",
+        printBackground: true,
+        scale: 0.8,
+        preferCSSPageSize: true,
+      });
+
+      return pdf;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 
   @UseBefore(ActiveOfficer)
@@ -238,9 +334,14 @@ export class RecordsController {
     @BodyParams() body: unknown,
     @Context("cad") cad: { features?: Record<Feature, boolean> },
     @Context("activeOfficer") activeOfficer: (CombinedLeoUnit & { officers: Officer[] }) | Officer,
+    @Context("sessionUserId") sessionUserId: string,
   ): Promise<APITypes.PostRecordsData> {
     const data = validateSchema(CREATE_TICKET_SCHEMA.or(CREATE_TICKET_SCHEMA_BUSINESS), body);
-    const officer = getFirstOfficerFromActiveOfficer({ activeOfficer, allowDispatch: true });
+    const officer = getUserOfficerFromActiveOfficer({
+      userId: sessionUserId,
+      activeOfficer,
+      allowDispatch: true,
+    });
 
     const recordItem = await upsertRecord({
       data,
@@ -414,4 +515,17 @@ async function createWebhookData(
 
     return String(total);
   }
+}
+
+// todo: copied from client/lib/utils.
+// lets share these somehow
+function calculateAge(dateOfBirth: string | Date): string {
+  const difference = differenceInYears(new Date(), new Date(dateOfBirth));
+  return String(difference);
+}
+
+function formatDate(date: string | Date | number, options?: { onlyDate: boolean }) {
+  const dateObj = new Date(date);
+  const hmsString = options?.onlyDate ? "" : " HH:mm:ss";
+  return format(dateObj, `yyyy-MM-dd${hmsString}`);
 }

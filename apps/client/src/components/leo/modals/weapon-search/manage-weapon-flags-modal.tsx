@@ -8,21 +8,17 @@ import useFetch from "lib/useFetch";
 import { useTranslations } from "next-intl";
 import { ModalIds } from "types/modal-ids";
 import type { PutSearchActionsWeaponFlagsData } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 import { useWeaponSearch } from "state/search/weapon-search-state";
 
 export function ManageWeaponFlagsModal() {
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Leo");
   const veh = useTranslations("Vehicles");
-  const { currentResult, setCurrentResult } = useWeaponSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const { currentResult, setCurrentResult } = useWeaponSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
   const { weaponFlag } = useValues();
   const { state, execute } = useFetch();
 
@@ -37,7 +33,7 @@ export function ManageWeaponFlagsModal() {
 
     if (json.flags) {
       setCurrentResult({ ...currentResult, ...json });
-      closeModal(ModalIds.ManageWeaponFlags);
+      modalState.closeModal(ModalIds.ManageWeaponFlags);
     }
   }
 
@@ -56,8 +52,8 @@ export function ManageWeaponFlagsModal() {
   return (
     <Modal
       title={t("manageWeaponFlags")}
-      isOpen={isOpen(ModalIds.ManageWeaponFlags)}
-      onClose={() => closeModal(ModalIds.ManageWeaponFlags)}
+      isOpen={modalState.isOpen(ModalIds.ManageWeaponFlags)}
+      onClose={() => modalState.closeModal(ModalIds.ManageWeaponFlags)}
       className="w-[600px]"
     >
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
@@ -76,7 +72,7 @@ export function ManageWeaponFlagsModal() {
               <Button
                 disabled={state === "loading"}
                 type="reset"
-                onPress={() => closeModal(ModalIds.ManageWeaponFlags)}
+                onPress={() => modalState.closeModal(ModalIds.ManageWeaponFlags)}
                 variant="cancel"
               >
                 {common("cancel")}

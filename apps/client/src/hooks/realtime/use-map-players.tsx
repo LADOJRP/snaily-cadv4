@@ -9,28 +9,36 @@ import type {
 } from "types/map";
 import useFetch from "lib/useFetch";
 import { toastMessage } from "lib/toastMessage";
-import type { GetDispatchPlayerBySteamIdData } from "@snailycad/types/api";
-import { create } from "zustand";
 import { useDispatchMapState, useSocketStore } from "state/mapState";
 import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import { makeSocketConnection } from "components/dispatch/map/modals/select-map-server-modal";
+import { ConnectionStatus } from "@snailycad/ui";
+import { createWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 
-export const useMapPlayersStore = create<{
+export const useMapPlayersStore = createWithEqualityFn<{
   players: Map<string, MapPlayer | PlayerDataEventPayload>;
   setPlayers(players: Map<string, MapPlayer | PlayerDataEventPayload>): void;
-}>((set) => ({
-  players: new Map<string, MapPlayer | PlayerDataEventPayload>(),
-  setPlayers: (players: Map<string, MapPlayer | PlayerDataEventPayload>) => set({ players }),
-}));
+}>(
+  (set) => ({
+    players: new Map<string, MapPlayer | PlayerDataEventPayload>(),
+    setPlayers: (players: Map<string, MapPlayer | PlayerDataEventPayload>) => set({ players }),
+  }),
+  shallow,
+);
 
 export function useMapPlayers() {
   const { players, setPlayers } = useMapPlayersStore();
 
-  const { openModal, isOpen } = useModal();
-  const { currentMapServerURL } = useDispatchMapState();
-  const { socket, setSocket } = useSocketStore();
+  const currentMapServerURL = useDispatchMapState((state) => state.currentMapServerURL);
+  const modalState = useModal();
   const { state, execute } = useFetch();
+  const { socket, setStatus, setSocket } = useSocketStore((state) => ({
+    socket: state.socket,
+    setStatus: state.setStatus,
+    setSocket: state.setSocket,
+  }));
 
   const getCADUsers = React.useCallback(
     async (options: {
@@ -49,7 +57,7 @@ export function useMapPlayers() {
         }));
 
       if (options.fetchMore) {
-        const { json: rawJson } = await execute<GetDispatchPlayerBySteamIdData[]>({
+        const { json: rawJson } = await execute({
           path: "/dispatch/players",
           data: filteredPlayers,
           noToast: true,
@@ -70,7 +78,7 @@ export function useMapPlayers() {
         }
       }
 
-      setPlayers(newPlayers);
+      setPlayers(options.map);
     },
     [state], // eslint-disable-line
   );
@@ -145,6 +153,7 @@ export function useMapPlayers() {
   const onError = React.useCallback(
     (reason: Error) => {
       console.log({ reason });
+      setStatus(ConnectionStatus.DISCONNECTED);
 
       toastMessage({
         message: (
@@ -164,21 +173,22 @@ export function useMapPlayers() {
         duration: 10_000,
       });
     },
-    [currentMapServerURL],
+    [currentMapServerURL], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const onConnect = React.useCallback(() => {
+    setStatus(ConnectionStatus.CONNECTED);
     toastMessage({
       icon: "success",
       message: "Successfully connected to the server",
       title: "Connection Success",
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     if (!currentMapServerURL) {
-      openModal(ModalIds.SelectMapServer, { showAlert: true });
-    } else if (!isOpen(ModalIds.SelectMapServer) && !socket?.connected) {
+      modalState.openModal(ModalIds.SelectMapServer, { showAlert: true });
+    } else if (!modalState.isOpen(ModalIds.SelectMapServer) && !socket?.connected) {
       socket?.close();
 
       const newSocket = makeSocketConnection(currentMapServerURL);

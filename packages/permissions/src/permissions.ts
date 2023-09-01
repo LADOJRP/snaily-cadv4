@@ -29,6 +29,7 @@ export enum Permissions {
   LeoManageCitizenProfile = "LeoManageCitizenProfile",
 
   Dispatch = "Dispatch",
+  ManageSmartSigns = "ManageSmartSigns",
 
   // ems-fd
   EmsFd = "EmsFd",
@@ -112,11 +113,7 @@ export enum Permissions {
   ManageValueVehicleTrimLevel = "ManageValueVehicleTrimLevel",
   ManageValueWeaponFlag = "ManageValueWeaponFlag",
 
-  // other
-  UsePersonalApiToken = "UsePersonalApiToken",
-
   // deprecated
-
   ViewDLExams = "ViewDLExams",
   ManageDLExams = "ManageDLExams",
   ViewWeaponExams = "ViewWeaponExams",

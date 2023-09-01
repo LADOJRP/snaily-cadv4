@@ -1,6 +1,5 @@
 node_modules
 .next
-yarn-error.log
 dist
 .env
 
@@ -20,14 +19,6 @@ apps/client/public/sounds/*.mp3
 # eslint
 .eslintcache
 
-# yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
 # typescript
 tsconfig.tsbuildinfo
 
@@ -36,13 +27,15 @@ tsconfig.tsbuildinfo
 .turbo
 apps/**/coverage
 packages/**/coverage
-test.mjs
+import-officers.mjs
 .data
 .dev-data
-v
 # Sentry
 .sentryclirc
 
 # storybook
 storybook-static
 build-storybook.log
+
+# Prisma generated types
+**/prisma/index.ts

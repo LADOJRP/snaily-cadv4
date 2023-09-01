@@ -2,7 +2,7 @@ import { Table, useTableState } from "components/shared/Table";
 import { useTranslations } from "next-intl";
 import { ExpungementRequestStatus } from "@snailycad/types";
 import dynamic from "next/dynamic";
-import { getTitles } from "./RequestExpungement";
+import { getTitles } from "./request-expungement-modal";
 import { useModal } from "state/modalState";
 import { Button, FullDate, Status, TabsContent } from "@snailycad/ui";
 import { ModalIds } from "types/modal-ids";
@@ -10,9 +10,10 @@ import type { GetExpungementRequestsData } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
 import useFetch from "lib/useFetch";
 import { useList } from "hooks/shared/table/use-list";
+import { CallDescription } from "components/dispatch/active-calls/CallDescription";
 
 const RequestExpungement = dynamic(
-  async () => (await import("./RequestExpungement")).RequestExpungement,
+  async () => (await import("./request-expungement-modal")).RequestExpungement,
   { ssr: false },
 );
 
@@ -31,12 +32,12 @@ export function ExpungementRequestsTab(props: Props) {
   const common = useTranslations("Common");
   const t = useTranslations("Courthouse");
   const leo = useTranslations("Leo");
-  const { closeModal, openModal } = useModal();
+  const modalState = useModal();
   const tableState = useTableState();
   const { execute, state } = useFetch();
 
   function handleCancelClick(request: GetExpungementRequestsData[number]) {
-    openModal(ModalIds.AlertCancelExpungementRequest);
+    modalState.openModal(ModalIds.AlertCancelExpungementRequest);
     requestState.setTempId(request.id);
   }
 
@@ -49,7 +50,7 @@ export function ExpungementRequestsTab(props: Props) {
     });
 
     if (json) {
-      closeModal(ModalIds.AlertCancelExpungementRequest);
+      modalState.closeModal(ModalIds.AlertCancelExpungementRequest);
       list.update(tempRequest.id, { ...tempRequest, status: ExpungementRequestStatus.CANCELED });
     }
   }
@@ -59,7 +60,7 @@ export function ExpungementRequestsTab(props: Props) {
       <header className="flex justify-between items-center">
         <h3 className="text-2xl font-semibold">{t("expungementRequests")}</h3>
 
-        <Button onPress={() => openModal(ModalIds.RequestExpungement)}>
+        <Button onPress={() => modalState.openModal(ModalIds.RequestExpungement)}>
           {t("requestExpungement")}
         </Button>
       </header>
@@ -100,6 +101,7 @@ export function ExpungementRequestsTab(props: Props) {
                 className: isDisabled ? "opacity-50 cursor-not-allowed" : "",
               },
               citizen: `${request.citizen.name} ${request.citizen.surname}`,
+              description: <CallDescription data={{ description: request.description }} />,
               warrants,
               arrestReports,
               tickets,
@@ -119,6 +121,7 @@ export function ExpungementRequestsTab(props: Props) {
           })}
           columns={[
             { header: leo("citizen"), accessorKey: "citizen" },
+            { header: common("description"), accessorKey: "description" },
             { header: leo("warrants"), accessorKey: "warrants" },
             { header: leo("arrestReports"), accessorKey: "arrestReports" },
             { header: leo("tickets"), accessorKey: "tickets" },

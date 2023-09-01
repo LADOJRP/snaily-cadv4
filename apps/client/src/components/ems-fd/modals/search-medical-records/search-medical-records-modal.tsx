@@ -38,7 +38,7 @@ interface Props {
 
 export function SearchMedicalRecordModal({ onClose }: Props) {
   const { state, execute } = useFetch();
-  const { isOpen, openModal, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations();
   const { makeImageUrl } = useImageUrl();
   const { SOCIAL_SECURITY_NUMBERS } = useFeatureEnabled();
@@ -49,7 +49,7 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
   const [results, setResults] = React.useState<SearchResult | null | undefined>(undefined);
 
   function handleClose() {
-    closeModal(ModalIds.SearchMedicalRecord);
+    modalState.closeModal(ModalIds.SearchMedicalRecord);
     onClose?.();
   }
 
@@ -93,16 +93,16 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
   };
 
   React.useEffect(() => {
-    if (!isOpen(ModalIds.SearchMedicalRecord)) {
+    if (!modalState.isOpen(ModalIds.SearchMedicalRecord)) {
       setResults(undefined);
     }
-  }, [isOpen]);
+  }, [modalState]);
 
   return (
     <Modal
       title={t("Ems.searchMedicalRecord")}
       onClose={handleClose}
-      isOpen={isOpen(ModalIds.SearchMedicalRecord)}
+      isOpen={modalState.isOpen(ModalIds.SearchMedicalRecord)}
       className="w-[850px]"
     >
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
@@ -110,7 +110,13 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
           <Form>
             <AsyncListSearchField<SearchResult>
               autoFocus
+              allowsCustomValue
               setValues={({ localValue, node }) => {
+                if (typeof node === "undefined" && typeof localValue === "undefined") {
+                  setValues({ ...values, name: values.searchValue });
+                  return;
+                }
+
                 const searchValue =
                   typeof localValue !== "undefined" ? { searchValue: localValue } : {};
                 const name = node ? { name: node.key as string } : {};
@@ -165,7 +171,7 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
             </AsyncListSearchField>
 
             {typeof results === "undefined" ? null : results === null ? (
-              <p>{t("Errors.citizenNotFound")}</p>
+              <p className="mt-5">{t("Errors.citizenNotFound")}</p>
             ) : results.isConfidential ? (
               <p className="my-5 px-2">{t("Leo.citizenIsConfidential")}</p>
             ) : (
@@ -198,12 +204,12 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                   </SpeechAlert>
                 ) : null}
 
-                <div className="flex w-full">
+                <div className="flex w-full mt-5">
                   <div className="mr-2 min-w-[100px]">
                     {results.imageId ? (
                       <button
                         type="button"
-                        onClick={() => openModal(ModalIds.CitizenImage)}
+                        onClick={() => modalState.openModal(ModalIds.CitizenImage)}
                         className="cursor-pointer"
                       >
                         <ImageWrapper
@@ -272,6 +278,7 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                     </div>
                     <div className="mt-7">
                       <TabList
+                        queryState={false}
                         tabs={[
                           {
                             name: t("Ems.medicalRecords"),
@@ -289,7 +296,7 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
                           state={state}
                           setResults={setResults as any}
                         />
-                        <DoctorVisitsTab results={results} />
+                        <DoctorVisitsTab setResults={setResults as any} results={results} />
                       </TabList>
                     </div>
                   </div>
@@ -320,7 +327,7 @@ export function SearchMedicalRecordModal({ onClose }: Props) {
               <div className="flex gap-2">
                 <Button
                   type="reset"
-                  onPress={() => closeModal(ModalIds.SearchMedicalRecord)}
+                  onPress={() => modalState.closeModal(ModalIds.SearchMedicalRecord)}
                   variant="cancel"
                 >
                   {t("Common.cancel")}

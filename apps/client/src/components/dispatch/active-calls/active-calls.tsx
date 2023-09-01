@@ -18,13 +18,12 @@ import { Droppable, FullDate, Status } from "@snailycad/ui";
 import { DndActions } from "types/dnd-actions";
 import { AssignedUnitsColumn } from "./assigned-units-column";
 import type { Get911CallsData, Post911CallAssignUnAssign } from "@snailycad/types/api";
-import { useMounted } from "@casper124578/useful";
+import { useMounted } from "@casperiv/useful";
 import { CallDescription } from "./CallDescription";
 import { ActiveCallsHeader } from "./active-calls-header";
 import { ActiveCallsActionsColumn } from "./actions-column";
 import { useCall911State } from "state/dispatch/call-911-state";
 import { useActiveCalls } from "hooks/realtime/use-active-calls";
-import { shallow } from "zustand/shallow";
 
 interface Props {
   initialData: Get911CallsData;
@@ -33,15 +32,12 @@ interface Props {
 function Active911Calls({ initialData }: Props) {
   const { hasPermissions } = usePermission();
   const draggingUnit = useDispatchState((state) => state.draggingUnit);
-  const call911State = useCall911State(
-    (state) => ({
-      calls: state.calls,
-      setCalls: state.setCalls,
-      currentlySelectedCall: state.currentlySelectedCall,
-      setCurrentlySelectedCall: state.setCurrentlySelectedCall,
-    }),
-    shallow,
-  );
+  const call911State = useCall911State((state) => ({
+    calls: state.calls,
+    setCalls: state.setCalls,
+    currentlySelectedCall: state.currentlySelectedCall,
+    setCurrentlySelectedCall: state.setCurrentlySelectedCall,
+  }));
 
   const isMounted = useMounted();
   const calls = isMounted ? call911State.calls : initialData.calls;

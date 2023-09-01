@@ -24,13 +24,6 @@ import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recapt
 import { toastMessage } from "lib/toastMessage";
 import { ApiVerification } from "components/auth/api-verification";
 
-const INITIAL_VALUES = {
-  username: "",
-  password: "",
-  confirmPassword: "",
-  registrationCode: "",
-};
-
 interface Props {
   cad: Pick<cad, "registrationCode" | "version">;
 }
@@ -47,6 +40,14 @@ function Register({ cad }: Props) {
   const validate = handleValidate(AUTH_SCHEMA);
   const common = useTranslations();
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const initialRegistrationCode = router.query.registrationCode ?? "";
+
+  const INITIAL_VALUES = {
+    username: "",
+    password: "",
+    confirmPassword: "",
+    registrationCode: initialRegistrationCode,
+  };
 
   React.useEffect(() => {
     if (!ALLOW_REGULAR_LOGIN) {
@@ -115,7 +116,12 @@ function Register({ cad }: Props) {
         <LocalhostDetector />
         <ApiVerification />
 
-        <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
+        <Formik
+          enableReinitialize
+          validate={validate}
+          onSubmit={onSubmit}
+          initialValues={INITIAL_VALUES}
+        >
           {({ setFieldValue, errors, isValid }) => (
             <Form className="w-full max-w-md p-6 bg-gray-100 rounded-lg shadow-md dark:bg-primary dark:border dark:border-secondary z-10">
               <header className="mb-3">
@@ -158,6 +164,7 @@ function Register({ cad }: Props) {
 
               {cad.registrationCode ? (
                 <TextField
+                  defaultValue={String(initialRegistrationCode)}
                   errorMessage={errors.registrationCode}
                   label={t("Auth.registrationCode")}
                   name="registrationCode"

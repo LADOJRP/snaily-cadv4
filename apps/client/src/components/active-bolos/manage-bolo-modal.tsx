@@ -14,7 +14,6 @@ import { PersonFill, ThreeDots } from "react-bootstrap-icons";
 import { useSSRSafeId } from "@react-aria/ssr";
 import type { PostBolosData, PutBolosData } from "@snailycad/types/api";
 import { CitizenSuggestionsField } from "components/shared/CitizenSuggestionsField";
-import { shallow } from "zustand/shallow";
 import { useInvalidateQuery } from "hooks/use-invalidate-query";
 
 interface Props {
@@ -26,15 +25,12 @@ export function ManageBoloModal({ onClose, bolo }: Props) {
   const { invalidateQuery } = useInvalidateQuery(["/bolos"]);
 
   const common = useTranslations("Common");
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const { state, execute } = useFetch();
-  const { bolos, setBolos } = useDispatchState(
-    (state) => ({
-      bolos: state.bolos,
-      setBolos: state.setBolos,
-    }),
-    shallow,
-  );
+  const { bolos, setBolos } = useDispatchState((state) => ({
+    bolos: state.bolos,
+    setBolos: state.setBolos,
+  }));
   const t = useTranslations("Bolos");
   const leo = useTranslations("Leo");
 
@@ -69,7 +65,7 @@ export function ManageBoloModal({ onClose, bolo }: Props) {
             return v;
           }),
         );
-        closeModal(ModalIds.ManageBolo);
+        modalState.closeModal(ModalIds.ManageBolo);
 
         await invalidateQuery();
       }
@@ -84,14 +80,14 @@ export function ManageBoloModal({ onClose, bolo }: Props) {
         await invalidateQuery();
 
         setBolos([json, ...bolos]);
-        closeModal(ModalIds.ManageBolo);
+        modalState.closeModal(ModalIds.ManageBolo);
       }
     }
   }
 
   function handleClose() {
     onClose?.();
-    closeModal(ModalIds.ManageBolo);
+    modalState.closeModal(ModalIds.ManageBolo);
   }
 
   const validate = handleValidate(CREATE_BOLO_SCHEMA);
@@ -111,7 +107,7 @@ export function ManageBoloModal({ onClose, bolo }: Props) {
 
   return (
     <Modal
-      isOpen={isOpen(ModalIds.ManageBolo)}
+      isOpen={modalState.isOpen(ModalIds.ManageBolo)}
       onClose={handleClose}
       title={bolo ? t("editBolo") : t("createBolo")}
       className="w-[600px]"

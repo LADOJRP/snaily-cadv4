@@ -11,23 +11,19 @@ import { useNameSearch } from "state/search/name-search-state";
 import type { PostSearchActionsCreateVehicle } from "@snailycad/types/api";
 import { handleValidate } from "lib/handleValidate";
 import { IMPOUND_VEHICLE_SCHEMA } from "@snailycad/schemas";
-import { shallow } from "zustand/shallow";
 import { ValueSelectField } from "components/form/inputs/value-select-field";
 import { ValueType } from "@snailycad/types";
 import { hasSearchResults } from "../VehicleSearchModal";
 
 export function ImpoundVehicleModal() {
   const common = useTranslations("Common");
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const { impoundLot } = useValues();
   const { currentResult, setCurrentResult } = useVehicleSearch();
-  const nameSearchState = useNameSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const nameSearchState = useNameSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
   const { state, execute } = useFetch();
 
   const t = useTranslations();
@@ -45,7 +41,7 @@ export function ImpoundVehicleModal() {
       const updatedVehicle = { ...currentResult, impounded: true };
 
       setCurrentResult(updatedVehicle);
-      closeModal(ModalIds.ImpoundVehicle);
+      modalState.closeModal(ModalIds.ImpoundVehicle);
 
       if (nameSearchState.currentResult && !nameSearchState.currentResult.isConfidential) {
         nameSearchState.setCurrentResult({
@@ -70,8 +66,8 @@ export function ImpoundVehicleModal() {
   return (
     <Modal
       title={t("Leo.impoundVehicle")}
-      isOpen={isOpen(ModalIds.ImpoundVehicle)}
-      onClose={() => closeModal(ModalIds.ImpoundVehicle)}
+      isOpen={modalState.isOpen(ModalIds.ImpoundVehicle)}
+      onClose={() => modalState.closeModal(ModalIds.ImpoundVehicle)}
       className="min-w-[600px]"
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
@@ -86,7 +82,7 @@ export function ImpoundVehicleModal() {
           <footer className="flex items-center justify-end gap-2 mt-5">
             <Button
               type="reset"
-              onPress={() => closeModal(ModalIds.ImpoundVehicle)}
+              onPress={() => modalState.closeModal(ModalIds.ImpoundVehicle)}
               variant="cancel"
             >
               {common("cancel")}

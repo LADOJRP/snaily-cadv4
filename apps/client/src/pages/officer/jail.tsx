@@ -12,7 +12,7 @@ import { ModalIds } from "types/modal-ids";
 import { Table, useTableState } from "components/shared/Table";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import compareDesc from "date-fns/compareDesc";
-import { ReleaseCitizenModal } from "components/leo/jail/ReleaseCitizenModal";
+import { ReleaseCitizenModal } from "components/leo/jail/release-citizen-modal";
 import { Title } from "components/shared/Title";
 import { usePermission, Permissions } from "hooks/usePermission";
 import { useFeatureEnabled } from "hooks/useFeatureEnabled";
@@ -49,7 +49,7 @@ export default function Jail({ data }: Props) {
 
   const t = useTranslations("Leo");
   const common = useTranslations("Common");
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { generateCallsign } = useGenerateCallsign();
   const { hasPermissions } = usePermission();
   const { SOCIAL_SECURITY_NUMBERS } = useFeatureEnabled();
@@ -62,16 +62,16 @@ export default function Jail({ data }: Props) {
     asyncTable.update(releasedCitizenData.id, releasedCitizenData);
 
     setTempCitizen(null);
-    closeModal(ModalIds.AlertReleaseCitizen);
+    modalState.closeModal(ModalIds.AlertReleaseCitizen);
   }
 
   function handleCheckoutClick(item: BaseCitizen & { record: Record }, recordId: string) {
     setTempCitizen({ ...item, recordId });
-    openModal(ModalIds.AlertReleaseCitizen);
+    modalState.openModal(ModalIds.AlertReleaseCitizen);
   }
 
   function handleNameClick(item: BaseCitizen & { Record: Record[]; record: Record }) {
-    openModal(ModalIds.NameSearch, { ...item, name: `${item.name} ${item.surname}` });
+    modalState.openModal(ModalIds.NameSearch, { ...item, name: `${item.name} ${item.surname}` });
   }
 
   const _itemsWithArrestReportSortedByCreatedAt = React.useMemo(() => {

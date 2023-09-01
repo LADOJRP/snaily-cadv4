@@ -13,7 +13,7 @@ export function NameSearchWeaponsTab() {
   const t = useTranslations();
   const common = useTranslations("Common");
   const currentResult = useNameSearch((state) => state.currentResult);
-  const { openModal } = useModal();
+  const modalState = useModal();
   const setWeaponResult = useWeaponSearch((state) => state.setCurrentResult);
   const tableState = useTableState();
   const { BUREAU_OF_FIREARMS } = useFeatureEnabled();
@@ -22,8 +22,8 @@ export function NameSearchWeaponsTab() {
     if (!currentResult || currentResult.isConfidential) return;
 
     // todo: set correct data for `allCustomFields` and `customFields`
-    setWeaponResult({ allCustomFields: [], customFields: [], ...weapon, citizen: currentResult });
-    openModal(ModalIds.WeaponSearchWithinName);
+    setWeaponResult({ ...weapon, allCustomFields: [], customFields: [], citizen: currentResult });
+    modalState.openModal(ModalIds.WeaponSearchWithinName);
   }
 
   if (!currentResult || currentResult.isConfidential) {

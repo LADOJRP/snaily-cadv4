@@ -1,4 +1,4 @@
-import { Citizen, MedicalRecord, Value } from "@snailycad/types";
+import { MedicalRecord, Value } from "@snailycad/types";
 import {
   DeleteCitizenMedicalRecordsData,
   PostEmsFdMedicalRecordsSearchData,
@@ -20,7 +20,7 @@ interface MedicalRecordsTabProps {
   handleDeclare(): void;
   state: "loading" | "error" | null;
   setResults: React.Dispatch<
-    React.SetStateAction<(Citizen & { medicalRecords?: MedicalRecord[] }) | null | undefined>
+    React.SetStateAction<PostEmsFdMedicalRecordsSearchData | null | undefined>
   >;
 }
 const ManageMedicalRecordsModal = dynamic(
@@ -34,17 +34,17 @@ export function MedicalRecordsTab(props: MedicalRecordsTabProps) {
   const { hasPermissions } = usePermission();
   const hasDeclarePermissions = hasPermissions([Permissions.DeclareCitizenDead]);
   const t = useTranslations();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { execute, state } = useFetch();
 
   function handleDeleteClick(record: MedicalRecord) {
     recordState.setTempId(record.id);
-    openModal(ModalIds.AlertDeleteMedicalRecord);
+    modalState.openModal(ModalIds.AlertDeleteMedicalRecord);
   }
 
   function handleEditClick(record: MedicalRecord) {
     recordState.setTempId(record.id);
-    openModal(ModalIds.ManageMedicalRecords);
+    modalState.openModal(ModalIds.ManageMedicalRecords);
   }
 
   function handleBloodgroupStateChange(prevState: MedicalRecord[], bloodGroup: Value | null) {
@@ -65,7 +65,7 @@ export function MedicalRecordsTab(props: MedicalRecordsTabProps) {
         medicalRecords: medicalRecords.filter((v) => v.id !== tempRecord.id),
       });
 
-      closeModal(ModalIds.AlertDeleteMedicalRecord);
+      modalState.closeModal(ModalIds.AlertDeleteMedicalRecord);
       recordState.setTempId(null);
     }
   }
@@ -78,7 +78,15 @@ export function MedicalRecordsTab(props: MedicalRecordsTabProps) {
   }
 
   return (
-    <TabsContent className="mt-7" value="medical-records">
+    <TabsContent value="medical-records">
+      <header className="flex items-center justify-between my-3">
+        <h1 className="text-xl font-semibold">{t("Ems.medicalRecords")}</h1>
+
+        <Button size="xs" onClick={() => modalState.openModal(ModalIds.ManageMedicalRecords)}>
+          {t("Ems.add")}
+        </Button>
+      </header>
+
       {props.results.medicalRecords.length <= 0 ? (
         <p>No medical records</p>
       ) : (
@@ -134,7 +142,7 @@ export function MedicalRecordsTab(props: MedicalRecordsTabProps) {
             ],
           });
 
-          closeModal(ModalIds.ManageMedicalRecords);
+          modalState.closeModal(ModalIds.ManageMedicalRecords);
         }}
         onUpdate={(old, newR) => {
           if (!("dead" in props.results)) return;
@@ -147,7 +155,7 @@ export function MedicalRecordsTab(props: MedicalRecordsTabProps) {
             ...props.results,
             medicalRecords: handleBloodgroupStateChange(copy, newR.bloodGroup),
           });
-          closeModal(ModalIds.ManageMedicalRecords);
+          modalState.closeModal(ModalIds.ManageMedicalRecords);
         }}
         medicalRecord={tempRecord}
         onClose={() => recordState.setTempId(null)}

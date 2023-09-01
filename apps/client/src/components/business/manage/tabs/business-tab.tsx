@@ -5,30 +5,26 @@ import { ModalIds } from "types/modal-ids";
 import { AlertModal } from "components/modal/AlertModal";
 import useFetch from "lib/useFetch";
 import { Form, Formik } from "formik";
-import { CREATE_COMPANY_SCHEMA } from "@snailycad/schemas";
+import { EDIT_COMPANY_SCHEMA } from "@snailycad/schemas";
 import { Button, Loader, Input, TabsContent, SwitchField } from "@snailycad/ui";
 import { handleValidate } from "lib/handleValidate";
 import { useRouter } from "next/router";
 import { SettingsFormField } from "components/form/SettingsFormField";
 import type { DeleteBusinessByIdData, PutBusinessByIdData } from "@snailycad/types/api";
 import { AddressPostalSelect } from "components/form/select/PostalSelect";
-import { shallow } from "zustand/shallow";
 
 export function ManageBusinessTab() {
   const { state, execute } = useFetch();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Business");
   const router = useRouter();
 
-  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-      setCurrentBusiness: state.setCurrentBusiness,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+    setCurrentBusiness: state.setCurrentBusiness,
+  }));
 
   if (!currentBusiness) {
     return null;
@@ -63,7 +59,7 @@ export function ManageBusinessTab() {
     }
   }
 
-  const validate = handleValidate(CREATE_COMPANY_SCHEMA);
+  const validate = handleValidate(EDIT_COMPANY_SCHEMA);
   const INITIAL_VALUES = {
     name: currentBusiness.name,
     address: currentBusiness.address,
@@ -109,7 +105,7 @@ export function ManageBusinessTab() {
 
             <footer className="flex justify-between mt-5">
               <Button
-                onPress={() => openModal(ModalIds.AlertDeleteBusiness)}
+                onPress={() => modalState.openModal(ModalIds.AlertDeleteBusiness)}
                 type="reset"
                 variant="danger"
               >

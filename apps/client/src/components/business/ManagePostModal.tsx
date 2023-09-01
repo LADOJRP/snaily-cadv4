@@ -12,7 +12,6 @@ import { handleValidate } from "lib/handleValidate";
 import type { BusinessPost } from "@snailycad/types";
 import { dataToSlate, Editor } from "components/editor/editor";
 import type { PostBusinessPostsData, PutBusinessPostsData } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 
 interface Props {
   onCreate(post: BusinessPost): void;
@@ -22,14 +21,11 @@ interface Props {
 }
 
 export function ManageBusinessPostModal({ onClose, onCreate, onUpdate, post }: Props) {
-  const { currentBusiness, currentEmployee } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-    }),
-    shallow,
-  );
-  const { isOpen, closeModal } = useModal();
+  const { currentBusiness, currentEmployee } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+  }));
+  const modalState = useModal();
   const { state, execute } = useFetch();
   const common = useTranslations("Common");
   const t = useTranslations("Business");
@@ -39,7 +35,7 @@ export function ManageBusinessPostModal({ onClose, onCreate, onUpdate, post }: P
   }
 
   function handleClose() {
-    closeModal(ModalIds.ManageBusinessPost);
+    modalState.closeModal(ModalIds.ManageBusinessPost);
     onClose?.();
   }
 
@@ -54,7 +50,7 @@ export function ManageBusinessPostModal({ onClose, onCreate, onUpdate, post }: P
       });
 
       if (json.id) {
-        closeModal(ModalIds.ManageBusinessPost);
+        modalState.closeModal(ModalIds.ManageBusinessPost);
         onUpdate(post, json);
       }
     } else {
@@ -65,7 +61,7 @@ export function ManageBusinessPostModal({ onClose, onCreate, onUpdate, post }: P
       });
 
       if (json.id) {
-        closeModal(ModalIds.ManageBusinessPost);
+        modalState.closeModal(ModalIds.ManageBusinessPost);
         onCreate(json);
       }
     }
@@ -83,7 +79,7 @@ export function ManageBusinessPostModal({ onClose, onCreate, onUpdate, post }: P
     <Modal
       className="w-[600px]"
       title={post ? t("editPost") : t("createPost")}
-      isOpen={isOpen(ModalIds.ManageBusinessPost)}
+      isOpen={modalState.isOpen(ModalIds.ManageBusinessPost)}
       onClose={handleClose}
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>

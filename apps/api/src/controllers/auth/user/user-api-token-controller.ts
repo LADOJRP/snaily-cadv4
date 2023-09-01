@@ -1,27 +1,23 @@
-import { Feature, User } from "@snailycad/types";
+import { User } from "@snailycad/types";
 import { BodyParams, Context } from "@tsed/common";
 import { Controller } from "@tsed/di";
 import { BadRequest } from "@tsed/exceptions";
 import { UseBefore } from "@tsed/platform-middlewares";
-import { ContentType, Delete, Description, Put } from "@tsed/schema";
+import { ContentType, Delete, Description, Post, Put } from "@tsed/schema";
 import { userProperties } from "lib/auth/getSessionUser";
 import { prisma } from "lib/data/prisma";
 import { IsAuth } from "middlewares/auth/is-auth";
-import { UsePermissions, Permissions } from "middlewares/use-permissions";
 import { nanoid } from "nanoid";
 import type * as APITypes from "@snailycad/types/api";
-import { IsFeatureEnabled } from "middlewares/is-enabled";
+import { validateSchema } from "~/lib/data/validate-schema";
+import { z } from "zod";
 
 @Controller("/user/api-token")
-@UseBefore(IsAuth)
 @ContentType("application/json")
-@IsFeatureEnabled({ feature: Feature.USER_API_TOKENS })
 export class AccountController {
   @Put("/")
   @Description("Enable or disable the authenticated user's API Token.")
-  @UsePermissions({
-    permissions: [Permissions.UsePersonalApiToken],
-  })
+  @UseBefore(IsAuth)
   async enableDisableUserAPIToken(
     @Context("user") user: User,
     @BodyParams() body: any,
@@ -43,7 +39,7 @@ export class AccountController {
     const apiToken = await prisma.apiToken.create({
       data: {
         enabled: true,
-        token: nanoid(56),
+        token: `snp_${nanoid(56)}`,
       },
     });
 
@@ -58,11 +54,40 @@ export class AccountController {
     return updatedUser;
   }
 
+  @Post("/validate")
+  @Description("Validate an API token")
+  async validateApiToken(@BodyParams() body: unknown) {
+    const schema = z.object({ token: z.string() });
+
+    const data = validateSchema(schema, body);
+
+    const dbToken = await prisma.apiToken.findFirst({
+      where: { token: data.token },
+      include: {
+        User: {
+          select: {
+            username: true,
+            id: true,
+            steamId: true,
+            discordId: true,
+            permissions: true,
+          },
+        },
+      },
+    });
+
+    const user = dbToken?.User[0];
+
+    if (!dbToken || !user) {
+      throw new BadRequest("invalidToken");
+    }
+
+    return { ...user, token: dbToken.token };
+  }
+
   @Delete("/")
   @Description("Re-generate a token")
-  @UsePermissions({
-    permissions: [Permissions.UsePersonalApiToken],
-  })
+  @UseBefore(IsAuth)
   async generateNewApiToken(
     @Context("user") user: User,
   ): Promise<APITypes.DeleteUserRegenerateApiTokenData> {
@@ -73,7 +98,7 @@ export class AccountController {
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: {
-        apiToken: { update: { token: nanoid(56) } },
+        apiToken: { update: { token: `snp_${nanoid(56)}` } },
       },
       select: userProperties,
     });

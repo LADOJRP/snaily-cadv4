@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useRouter } from "next/router";
-import { type cad as CAD, type User, WhitelistStatus } from "@snailycad/types";
+import { type cad as CAD, type User, WhitelistStatus, Rank } from "@snailycad/types";
 import { useIsRouteFeatureEnabled } from "../hooks/auth/useIsRouteFeatureEnabled";
-import { useListener } from "@casper124578/use-socket.io";
+import { useListener } from "@casperiv/use-socket.io";
 import { SocketEvents } from "@snailycad/config";
 
 interface Context {
@@ -53,6 +53,7 @@ export function AuthProvider({ initialData, children }: ProviderProps) {
     const user = await getSessionUser();
 
     if (
+      user?.rank !== Rank.OWNER &&
       user?.whitelistStatus === WhitelistStatus.PENDING &&
       !NO_LOADING_ROUTES.includes(router.pathname)
     ) {

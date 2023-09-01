@@ -24,7 +24,8 @@ import { ImageWrapper } from "components/shared/image-wrapper";
 
 const AlertModal = dynamic(async () => (await import("components/modal/AlertModal")).AlertModal);
 const ManageDeputyModal = dynamic(
-  async () => (await import("components/ems-fd/modals/ManageDeputyModal")).ManageDeputyModal,
+  async () =>
+    (await import("components/ems-fd/modals/deputy/manage-deputy-modal")).ManageDeputyModal,
 );
 
 interface Props {
@@ -34,7 +35,7 @@ interface Props {
 export default function MyDeputies({ deputies: data }: Props) {
   const common = useTranslations("Common");
   const t = useTranslations();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { state, execute } = useFetch();
   const { generateCallsign } = useGenerateCallsign();
   const { makeImageUrl } = useImageUrl();
@@ -53,19 +54,19 @@ export default function MyDeputies({ deputies: data }: Props) {
     });
 
     if (json) {
-      closeModal(ModalIds.AlertDeleteDeputy);
+      modalState.closeModal(ModalIds.AlertDeleteDeputy);
       setDeputies((p) => p.filter((v) => v.id !== tempDeputy.id));
     }
   }
 
   function handleEditClick(deputy: GetMyDeputiesData["deputies"][number]) {
     deputyState.setTempId(deputy.id);
-    openModal(ModalIds.ManageDeputy);
+    modalState.openModal(ModalIds.ManageDeputy);
   }
 
   function handleDeleteClick(deputy: GetMyDeputiesData["deputies"][number]) {
     deputyState.setTempId(deputy.id);
-    openModal(ModalIds.AlertDeleteDeputy);
+    modalState.openModal(ModalIds.AlertDeleteDeputy);
   }
 
   return (
@@ -73,7 +74,9 @@ export default function MyDeputies({ deputies: data }: Props) {
       <header className="flex items-center justify-between">
         <Title className="!mb-0">{t("Ems.myDeputies")}</Title>
 
-        <Button onPress={() => openModal(ModalIds.ManageDeputy)}>{t("Ems.createDeputy")}</Button>
+        <Button onPress={() => modalState.openModal(ModalIds.ManageDeputy)}>
+          {t("Ems.createDeputy")}
+        </Button>
       </header>
 
       {deputies.length <= 0 ? (

@@ -1,20 +1,24 @@
 import * as React from "react";
 import { useAuth } from "context/AuthContext";
-import { useListener } from "@casper124578/use-socket.io";
+import { useListener } from "@casperiv/use-socket.io";
 import { SocketEvents } from "@snailycad/config";
 import { useTranslations } from "use-intl";
 import { useAudio } from "react-use";
 import { useCall911State } from "state/dispatch/call-911-state";
 import { Alert } from "@snailycad/ui";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 
-const useSignal100Store = create<{
+const useSignal100Store = createWithEqualityFn<{
   playCount: number;
   setPlayCount(value: number): void;
-}>()((set) => ({
-  playCount: 0,
-  setPlayCount: (value: number) => set({ playCount: value }),
-}));
+}>()(
+  (set) => ({
+    playCount: 0,
+    setPlayCount: (value: number) => set({ playCount: value }),
+  }),
+  shallow,
+);
 
 const SIGNAL_100_SRC = "/sounds/signal100.mp3";
 export function useSignal100() {

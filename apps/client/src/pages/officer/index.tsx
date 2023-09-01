@@ -15,7 +15,7 @@ import { ActiveBolos } from "components/active-bolos/active-bolos";
 import { requestAll } from "lib/utils";
 import { ActiveOfficers } from "components/dispatch/active-officers";
 import { ActiveDeputies } from "components/dispatch/active-deputies";
-import { ActiveWarrants } from "components/leo/active-warrants/ActiveWarrants";
+import { ActiveWarrants } from "components/leo/active-warrants/active-warrants";
 import { useSignal100 } from "hooks/shared/useSignal100";
 import { usePanicButton } from "hooks/shared/usePanicButton";
 import { Title } from "components/shared/Title";
@@ -37,7 +37,6 @@ import type {
 import { CreateWarrantModal } from "components/leo/modals/CreateWarrantModal";
 import { useCall911State } from "state/dispatch/call-911-state";
 import { usePermission } from "hooks/usePermission";
-import { shallow } from "zustand/shallow";
 
 const Modals = {
   CreateWarrantModal: dynamic(
@@ -141,18 +140,15 @@ export default function OfficerDashboard({
   const signal100 = useSignal100();
   const tones = useTones(ActiveToneType.LEO);
   const panic = usePanicButton();
-  const { isOpen } = useModal();
+  const modalState = useModal();
   const { LEO_TICKETS, ACTIVE_WARRANTS, CALLS_911 } = useFeatureEnabled();
   const { hasPermissions } = usePermission();
   const isAdmin = hasPermissions(defaultPermissions.allDefaultAdminPermissions);
 
-  const { currentResult, setCurrentResult } = useNameSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const { currentResult, setCurrentResult } = useNameSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
 
   function handleRecordCreate(data: Record) {
     if (!currentResult || currentResult.isConfidential) return;
@@ -213,7 +209,7 @@ export default function OfficerDashboard({
           <Modals.NotepadModal />
 
           {/* name search have their own vehicle/weapon search modal */}
-          {isOpen(ModalIds.NameSearch) ? null : (
+          {modalState.isOpen(ModalIds.NameSearch) ? null : (
             <>
               <Modals.WeaponSearchModal />
               <Modals.VehicleSearchModal id={ModalIds.VehicleSearch} />

@@ -10,7 +10,7 @@ import { Prisma, WhitelistStatus } from "@prisma/client";
 import { UsePermissions } from "middlewares/use-permissions";
 import { defaultPermissions, Permissions } from "@snailycad/permissions";
 import type { GetAdminDashboardData } from "@snailycad/types/api";
-import axios from "axios";
+import { request } from "undici";
 import { getCADVersion } from "@snailycad/utils/version";
 
 export const ONE_DAY = 60 * 60 * 24;
@@ -18,6 +18,8 @@ export const ONE_DAY = 60 * 60 * 24;
 @Controller("/admin")
 @ContentType("application/json")
 export class AdminController {
+  private changelogBody: string | null = null;
+
   @Get("/")
   @UseBefore(IsAuth)
   @Description("Get simple CAD stats")
@@ -110,17 +112,26 @@ export class AdminController {
   async getChangelog(@Res() res: Res) {
     try {
       const version = await getCADVersion();
-      const response = await axios({
-        url: `https://api.github.com/repos/SnailyCAD/snaily-cadv4/releases/tags/${version?.currentVersion}`,
-        headers: { accept: "application/vnd.github+json" },
-      });
+      const response = await request(
+        `https://api.github.com/repos/SnailyCAD/snaily-cadv4/releases/tags/${version?.currentVersion}`,
+        {
+          headers: { accept: "application/vnd.github+json" },
+        },
+      );
 
       res.setHeader(
         "Cache-Control",
         `private, max-age=${ONE_DAY} stale-while-revalidate=${ONE_DAY / 2}`,
       );
 
-      const json = response.data as { body: string };
+      if (this.changelogBody) {
+        return this.changelogBody;
+      }
+
+      const body = (await response.body.json()) as { body: string };
+
+      this.changelogBody = body.body;
+      const json = body.body;
       return json;
     } catch (e) {
       return null;

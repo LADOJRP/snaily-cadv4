@@ -17,17 +17,21 @@ import { ModalIds } from "types/modal-ids";
 import { useModal } from "state/modalState";
 import dynamic from "next/dynamic";
 
-const ChangelogModal = dynamic(async () => (await import("../ChangelogModal")).ChangelogModal, {
+const ChangelogModal = dynamic(async () => (await import("../changelog-modal")).ChangelogModal, {
   ssr: false,
 });
 
-export function AccountDropdown() {
+interface AccountDropdownProps {
+  isAccountPending?: boolean;
+}
+
+export function AccountDropdown(props: AccountDropdownProps) {
   const [isOpen, setOpen] = React.useState(false);
 
   const { user, setUser, cad } = useAuth();
   const router = useRouter();
   const t = useTranslations("Nav");
-  const { openModal } = useModal();
+  const modalState = useModal();
 
   async function handleLogout() {
     const success = await logout();
@@ -55,8 +59,12 @@ export function AccountDropdown() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent className="mt-2.5" side="left">
-          <DropdownMenuLinkItem href="/account">{t("account")}</DropdownMenuLinkItem>
-          <hr className="my-2 mx-2 border-t border-secondary dark:border-quinary" />
+          {props.isAccountPending ? null : (
+            <>
+              <DropdownMenuLinkItem href="/account">{t("account")}</DropdownMenuLinkItem>
+              <hr className="my-2 mx-2 border-t border-secondary dark:border-quinary" />
+            </>
+          )}
           <DropdownMenuItem onClick={handleLogout}>{t("logout")}</DropdownMenuItem>
           <hr className="my-2 mx-2 border-t border-secondary dark:border-quinary" />
 
@@ -73,7 +81,7 @@ export function AccountDropdown() {
 
               <DropdownMenuItem
                 className="flex items-center gap-2"
-                onClick={() => openModal(ModalIds.Changelog)}
+                onClick={() => modalState.openModal(ModalIds.Changelog)}
               >
                 {t("whatsNew")}
               </DropdownMenuItem>

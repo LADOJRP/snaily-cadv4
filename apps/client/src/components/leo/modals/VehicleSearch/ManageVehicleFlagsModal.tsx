@@ -10,22 +10,18 @@ import { useVehicleSearch } from "state/search/vehicle-search-state";
 import { ModalIds } from "types/modal-ids";
 import { useNameSearch } from "state/search/name-search-state";
 import type { PutSearchActionsVehicleFlagsData } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 import { hasSearchResults } from "../VehicleSearchModal";
 
 export function ManageVehicleFlagsModal() {
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Leo");
   const veh = useTranslations("Vehicles");
   const { currentResult, setCurrentResult } = useVehicleSearch();
-  const nameSearchState = useNameSearch(
-    (state) => ({
-      currentResult: state.currentResult,
-      setCurrentResult: state.setCurrentResult,
-    }),
-    shallow,
-  );
+  const nameSearchState = useNameSearch((state) => ({
+    currentResult: state.currentResult,
+    setCurrentResult: state.setCurrentResult,
+  }));
   const { vehicleFlag } = useValues();
   const { state, execute } = useFetch();
 
@@ -41,7 +37,7 @@ export function ManageVehicleFlagsModal() {
     if (json.flags) {
       const updatedVehicle = { ...currentResult, ...json };
       setCurrentResult(updatedVehicle);
-      closeModal(ModalIds.ManageVehicleFlags);
+      modalState.closeModal(ModalIds.ManageVehicleFlags);
 
       if (nameSearchState.currentResult && !nameSearchState.currentResult.isConfidential) {
         nameSearchState.setCurrentResult({
@@ -69,8 +65,8 @@ export function ManageVehicleFlagsModal() {
   return (
     <Modal
       title={t("manageVehicleFlags")}
-      isOpen={isOpen(ModalIds.ManageVehicleFlags)}
-      onClose={() => closeModal(ModalIds.ManageVehicleFlags)}
+      isOpen={modalState.isOpen(ModalIds.ManageVehicleFlags)}
+      onClose={() => modalState.closeModal(ModalIds.ManageVehicleFlags)}
       className="w-[600px]"
     >
       <Formik onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
@@ -89,7 +85,7 @@ export function ManageVehicleFlagsModal() {
               <Button
                 disabled={state === "loading"}
                 type="reset"
-                onPress={() => closeModal(ModalIds.ManageVehicleFlags)}
+                onPress={() => modalState.closeModal(ModalIds.ManageVehicleFlags)}
                 variant="cancel"
               >
                 {common("cancel")}

@@ -40,7 +40,7 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
   });
 
   const { hasPermissions } = usePermission();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const t = useTranslations();
   const common = useTranslations("Common");
   const { generateCallsign } = useGenerateCallsign();
@@ -65,7 +65,7 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
     });
 
     if (json?.id) {
-      closeModal(ModalIds.AlertDeclineOfficer);
+      modalState.closeModal(ModalIds.AlertDeclineOfficer);
 
       if (json.deleted) {
         asyncTable.remove(unit.id);
@@ -87,6 +87,7 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
         <p className="mt-2">{t("Management.noPendingOfficers")}</p>
       ) : (
         <Table
+          isLoading={asyncTable.isInitialLoading}
           tableState={tableState}
           data={asyncTable.items.map((officer) => {
             const isPending = officer.whitelistStatus?.status === WhitelistStatus.PENDING;
@@ -118,7 +119,7 @@ export function DepartmentWhitelistingTab({ pendingUnits }: Props) {
                   </Button>
 
                   <Button
-                    onPress={() => openModal(ModalIds.AlertDeclineOfficer, officer)}
+                    onPress={() => modalState.openModal(ModalIds.AlertDeclineOfficer, officer)}
                     disabled={!isPending || state === "loading"}
                     className="ml-2"
                     size="xs"

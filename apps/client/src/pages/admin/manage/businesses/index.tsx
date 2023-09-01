@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useTranslations } from "use-intl";
 import { TabsContent, TabList, Loader, Button, buttonVariants, Status } from "@snailycad/ui";
 import { Modal } from "components/modal/Modal";
@@ -5,7 +6,6 @@ import { getSessionUser } from "lib/auth";
 import { getTranslations } from "lib/getTranslation";
 import type { GetServerSideProps } from "next";
 import { useModal } from "state/modalState";
-
 import useFetch from "lib/useFetch";
 import { AdminLayout } from "components/admin/AdminLayout";
 import { ModalIds } from "types/modal-ids";
@@ -18,6 +18,7 @@ import { usePermission, Permissions } from "hooks/usePermission";
 import type { DeleteBusinessByIdData, GetManageBusinessesData } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
 import Link from "next/link";
+import { SearchArea } from "components/shared/search/search-area";
 
 interface Props {
   businesses: GetManageBusinessesData;
@@ -27,15 +28,16 @@ export default function ManageBusinesses({ businesses: data }: Props) {
   const { cad } = useAuth();
 
   const { state, execute } = useFetch();
-  const { isOpen, openModal, closeModal } = useModal();
+  const modalState = useModal();
   const { hasPermissions } = usePermission();
-  const tableState = useTableState();
+  const [search, setSearch] = React.useState("");
 
   const t = useTranslations("Management");
   const common = useTranslations("Common");
   const businessWhitelisted = cad?.businessWhitelisted ?? false;
 
   const asyncTable = useAsyncTable<GetManageBusinessesData["businesses"][number]>({
+    search,
     totalCount: data.totalCount,
     initialData: data.businesses,
     fetchOptions: {
@@ -46,6 +48,7 @@ export default function ManageBusinesses({ businesses: data }: Props) {
       }),
     },
   });
+  const tableState = useTableState(asyncTable);
   const [tempValue, valueState] = useTemporaryItem(asyncTable.items);
 
   const TABS = [
@@ -64,7 +67,7 @@ export default function ManageBusinesses({ businesses: data }: Props) {
 
   function handleDeleteClick(value: GetManageBusinessesData["businesses"][number]) {
     valueState.setTempId(value.id);
-    openModal(ModalIds.AlertDeleteBusiness);
+    modalState.openModal(ModalIds.AlertDeleteBusiness);
   }
 
   async function handleDelete() {
@@ -79,7 +82,7 @@ export default function ManageBusinesses({ businesses: data }: Props) {
       asyncTable.remove(tempValue.id);
 
       valueState.setTempId(null);
-      closeModal(ModalIds.AlertDeleteBusiness);
+      modalState.closeModal(ModalIds.AlertDeleteBusiness);
     }
   }
 
@@ -102,6 +105,12 @@ export default function ManageBusinesses({ businesses: data }: Props) {
           value="allBusinesses"
         >
           <h2 className="text-2xl font-semibold mb-2">{t("allBusinesses")}</h2>
+
+          <SearchArea
+            search={{ search, setSearch }}
+            asyncTable={asyncTable}
+            totalCount={data.totalCount}
+          />
 
           {asyncTable.noItemsAvailable ? (
             <p className="mt-5">{t("noBusinesses")}</p>
@@ -162,15 +171,15 @@ export default function ManageBusinesses({ businesses: data }: Props) {
 
       <Modal
         title={t("deleteBusiness")}
-        onClose={() => closeModal(ModalIds.AlertDeleteBusiness)}
-        isOpen={isOpen(ModalIds.AlertDeleteBusiness)}
+        onClose={() => modalState.closeModal(ModalIds.AlertDeleteBusiness)}
+        isOpen={modalState.isOpen(ModalIds.AlertDeleteBusiness)}
         className="max-w-2xl"
       >
         <div className="flex items-center justify-end gap-2 mt-2">
           <Button
             variant="cancel"
             disabled={state === "loading"}
-            onPress={() => closeModal(ModalIds.AlertDeleteBusiness)}
+            onPress={() => modalState.closeModal(ModalIds.AlertDeleteBusiness)}
           >
             {common("cancel")}
           </Button>

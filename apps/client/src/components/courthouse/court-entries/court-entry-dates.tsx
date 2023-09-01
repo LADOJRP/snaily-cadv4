@@ -2,7 +2,7 @@ import type { CourtDate } from "@snailycad/types";
 import { Button, FullDate } from "@snailycad/ui";
 import { Table, useTableState } from "components/shared/Table";
 import { useTranslations } from "next-intl";
-import { ManageCourtDateModal } from "./ManageCourtDateModal";
+import { ManageCourtDateModal } from "./manage-court-entry-date-modal";
 import { useModal } from "state/modalState";
 import { ModalIds } from "types/modal-ids";
 import { AlertModal } from "components/modal/AlertModal";
@@ -19,25 +19,25 @@ export function CourtEntryDates({ onUpdate, onDelete, onCreate, dates }: Props) 
   const [tempDate, dateState] = useTemporaryItem(dates);
   const common = useTranslations("Common");
   const t = useTranslations("Courthouse");
-  const { closeModal, openModal } = useModal();
+  const modalState = useModal();
   const tableState = useTableState();
 
   function deleteCourtDate() {
     if (!tempDate) return;
 
-    closeModal(ModalIds.AlertDeleteCourtDate);
+    modalState.closeModal(ModalIds.AlertDeleteCourtDate);
     onDelete(tempDate);
     dateState.setTempId(null);
   }
 
   function handleDeleteClick(entry: CourtDate) {
     dateState.setTempId(entry.id);
-    openModal(ModalIds.AlertDeleteCourtDate, entry);
+    modalState.openModal(ModalIds.AlertDeleteCourtDate, entry);
   }
 
   function handleManageClick(entry: CourtDate) {
     dateState.setTempId(entry.id);
-    openModal(ModalIds.ManageCourtDate);
+    modalState.openModal(ModalIds.ManageCourtDate);
   }
 
   return (
@@ -46,7 +46,7 @@ export function CourtEntryDates({ onUpdate, onDelete, onCreate, dates }: Props) 
         <h3 className="text-2xl font-semibold">{t("dates")}</h3>
 
         <div>
-          <Button onPress={() => openModal(ModalIds.ManageCourtDate)} type="button">
+          <Button onPress={() => modalState.openModal(ModalIds.ManageCourtDate)} type="button">
             {t("addDate")}
           </Button>
         </div>

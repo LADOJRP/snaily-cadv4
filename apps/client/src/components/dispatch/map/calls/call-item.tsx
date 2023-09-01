@@ -24,12 +24,13 @@ interface CallItemProps extends Omit<MapCallProps, "toggledId" | "openItems" | "
 export function CallItem({ call, hasMarker, setMarker }: CallItemProps) {
   const t = useTranslations("Calls");
   const common = useTranslations("Common");
-  const { generateCallsign } = useGenerateCallsign();
-  const { openModal } = useModal();
   const setCurrentlySelectedCall = useCall911State((state) => state.setCurrentlySelectedCall);
 
+  const { generateCallsign } = useGenerateCallsign();
+  const modalState = useModal();
+
   function handleEdit(call: Full911Call) {
-    openModal(ModalIds.Manage911Call);
+    modalState.openModal(ModalIds.Manage911Call);
     setCurrentlySelectedCall(call);
   }
 

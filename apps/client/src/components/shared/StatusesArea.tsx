@@ -1,4 +1,5 @@
-import { useListener } from "@casper124578/use-socket.io";
+/* eslint-disable quotes */
+import { useListener } from "@casperiv/use-socket.io";
 import { SocketEvents } from "@snailycad/config";
 import { Button } from "@snailycad/ui";
 import { useModal } from "state/modalState";
@@ -22,7 +23,7 @@ import {
 import { useAudio } from "react-use";
 import { useAuth } from "context/AuthContext";
 import type { PutDispatchStatusByUnitId } from "@snailycad/types/api";
-import { useMounted } from "@casper124578/useful";
+import { useMounted } from "@casperiv/useful";
 import Link from "next/link";
 import { createValueDocumentationURL } from "src/pages/admin/values/[path]";
 
@@ -44,7 +45,7 @@ export function StatusesArea<T extends ActiveOfficer | ActiveDeputy>({
 }: Props<T>) {
   const isMounted = useMounted();
   const { codes10 } = useValues();
-  const { openModal } = useModal();
+  const modalState = useModal();
   const { execute } = useFetch();
   const { user } = useAuth();
   const router = useRouter();
@@ -70,7 +71,7 @@ export function StatusesArea<T extends ActiveOfficer | ActiveDeputy>({
 
   function handleOnDuty(onDutyCode: StatusValue | undefined) {
     if (isUnitOffDuty) {
-      return openModal(modalId);
+      return modalState.openModal(modalId);
     }
 
     onDutyCode && handleStatusUpdate(onDutyCode);
@@ -140,17 +141,29 @@ export function StatusesArea<T extends ActiveOfficer | ActiveDeputy>({
   const filteredCodes = codes10.values.filter((v) => handleWhatPagesFilter(v, whatPagesType));
   const onDutyCode = filteredCodes.find((v) => v.shouldDo === ShouldDoType.SET_ON_DUTY);
   const isOnDutyActive = !isUnitOffDuty && onDutyCode?.id === activeUnit.status?.id;
+  const documentationUrl = createValueDocumentationURL(ValueType.CODES_10);
 
-  if (!onDutyCode && filteredCodes.length <= 0) {
-    const documentationUrl = createValueDocumentationURL(ValueType.CODES_10);
-
+  if (!onDutyCode) {
     return (
       <Link
         target="_blank"
         href={documentationUrl}
         className="block mt-2 px-4 py-3 bg-gray-300/50 dark:bg-tertiary dark:border-t-[1.5px] dark:border-secondary text-blue-500 dark:text-blue-400 underline"
       >
-        This CAD does not have any 10 codes. Please ask an admin to add some.
+        This SnailyCAD instance does not have a 10-code for setting a unit on duty. Please ask an
+        admin to add one with the {`"Should Do"`} set to {`"Set On Duty"`}.
+      </Link>
+    );
+  }
+
+  if (filteredCodes.length <= 0) {
+    return (
+      <Link
+        target="_blank"
+        href={documentationUrl}
+        className="block mt-2 px-4 py-3 bg-gray-300/50 dark:bg-tertiary dark:border-t-[1.5px] dark:border-secondary text-blue-500 dark:text-blue-400 underline"
+      >
+        This SnailyCAD instance does not have any 10 codes. Please ask an admin to add some.
       </Link>
     );
   }

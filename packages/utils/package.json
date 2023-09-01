@@ -1,35 +1,42 @@
 {
   "name": "@snailycad/utils",
-  "version": "1.66.0",
+  "version": "1.70.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
       "import": "./dist/index.mjs"
     },
     "./callsign": {
+      "types": "./dist/callsign.d.ts",
       "require": "./dist/callsign.js",
       "import": "./dist/callsign.mjs"
     },
     "./typeguards": {
+      "types": "./dist/typeguards.d.ts",
       "require": "./dist/typeguards.js",
       "import": "./dist/typeguards.mjs"
     },
     "./version": {
+      "types": "./dist/version.d.ts",
       "require": "./dist/version.js",
       "import": "./dist/version.mjs"
     },
     "./api-url": {
+      "types": "./dist/api-url.d.ts",
       "require": "./dist/api-url.js",
       "import": "./dist/api-url.mjs"
     },
     "./case-number": {
+      "types": "./dist/case-number.d.ts",
       "require": "./dist/case-number.js",
       "import": "./dist/case-number.mjs"
     },
     "./editor": {
+      "types": "./dist/editor/index.d.ts",
       "require": "./dist/editor/index.js",
       "import": "./dist/editor/index.mjs"
     },
@@ -61,20 +68,23 @@
     }
   },
   "scripts": {
-    "build": "yarn tsup",
-    "watch": "yarn tsup --watch --silent=false",
-    "typecheck": "yarn tsc --noEmit",
-    "test:watch": "yarn vitest --watch",
-    "test": "yarn vitest run"
+    "build": "pnpm tsup",
+    "watch": "pnpm tsup --watch --silent=false",
+    "typecheck": "pnpm tsc --noEmit",
+    "test:watch": "pnpm vitest --watch",
+    "test": "pnpm vitest run"
   },
   "devDependencies": {
-    "@snailycad/types": "workspace:*",
-    "c8": "^8.0.0",
-    "tslib": "^2.6.0",
+    "@snailycad/types": "^1.70.0",
+    "@types/node": "^20.4.9",
+    "c8": "^8.0.1",
+    "slate-history": "^0.93.0",
+    "slate-react": "^0.98.1",
+    "tslib": "^2.6.1",
     "tsup": "6.6.2",
     "typescript": "^5.1.6",
-    "vite": "^4.4.2",
-    "vitest": "^0.33.0"
+    "vite": "^4.4.8",
+    "vitest": "^0.34.0"
   },
   "tsup": {
     "entry": [
@@ -91,5 +101,10 @@
       "esm"
     ]
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "date-fns": "^2.30.0",
+    "undici": "5.23.0",
+    "slate": "0.94.1"
+  }
 }

@@ -39,7 +39,7 @@ interface Props {
 export function OfficerColumn({ officer, nameAndCallsign, setTempUnit }: Props) {
   const { activeOfficers, setActiveOfficers } = useActiveOfficers();
 
-  const { openModal } = useModal();
+  const modalState = useModal();
   const { setStatus } = useUnitStatusChange({ units: activeOfficers, setUnits: setActiveOfficers });
   const activeOfficer = useLeoState((state) => state.activeOfficer);
   const { makeImageUrl } = useImageUrl();
@@ -82,7 +82,7 @@ export function OfficerColumn({ officer, nameAndCallsign, setTempUnit }: Props) 
 
   function handleMerge(officer: ActiveOfficer | CombinedLeoUnit) {
     setTempUnit(officer.id);
-    openModal(ModalIds.MergeUnit);
+    modalState.openModal(ModalIds.MergeUnit);
   }
 
   async function handleunMerge(id: string) {
@@ -109,11 +109,15 @@ export function OfficerColumn({ officer, nameAndCallsign, setTempUnit }: Props) 
         shouldShowSplit ? void handleunMerge(officer.id) : handleMerge(officer);
       },
     },
-    {
-      name: t("privateMessage"),
-      onClick: () => openModal(ModalIds.PrivateMessage, officer),
-    },
-    ...dispatchCodes,
+    ...(isDispatch
+      ? [
+          {
+            name: t("privateMessage"),
+            onClick: () => modalState.openModal(ModalIds.PrivateMessage, officer),
+          },
+          ...dispatchCodes,
+        ]
+      : dispatchCodes),
   ];
 
   const canContextMenuBeOpened = isEligiblePage ? canBeOpened ?? false : false;

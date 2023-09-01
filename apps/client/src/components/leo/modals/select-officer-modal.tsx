@@ -15,7 +15,6 @@ import { EmergencyVehicleValue, Officer, ShouldDoType } from "@snailycad/types";
 import { useGenerateCallsign } from "hooks/useGenerateCallsign";
 import { isUnitDisabled, makeUnitName } from "lib/utils";
 import type { PutDispatchStatusByUnitId } from "@snailycad/types/api";
-import { shallow } from "zustand/shallow";
 import { useDispatchState } from "state/dispatch/dispatch-state";
 import { useUserOfficers } from "hooks/leo/use-get-user-officers";
 import { Permissions, usePermission } from "hooks/usePermission";
@@ -24,21 +23,18 @@ export function SelectOfficerModal() {
   const setActiveOfficer = useLeoState((state) => state.setActiveOfficer);
   const { userOfficers, isLoading } = useUserOfficers();
 
-  const { activeOfficers, setActiveOfficers } = useDispatchState(
-    (state) => ({
-      activeOfficers: state.activeOfficers,
-      setActiveOfficers: state.setActiveOfficers,
-    }),
-    shallow,
-  );
+  const { activeOfficers, setActiveOfficers } = useDispatchState((state) => ({
+    activeOfficers: state.activeOfficers,
+    setActiveOfficers: state.setActiveOfficers,
+  }));
 
-  const { isOpen, closeModal, getPayload } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const error = useTranslations("Errors");
   const t = useTranslations("Leo");
   const { generateCallsign } = useGenerateCallsign();
 
-  const payload = getPayload<{ includeStatuses: boolean }>(ModalIds.SelectOfficer);
+  const payload = modalState.getPayload<{ includeStatuses: boolean }>(ModalIds.SelectOfficer);
   const includeStatuses = payload?.includeStatuses ?? false;
 
   const { codes10 } = useValues();
@@ -67,7 +63,7 @@ export function SelectOfficerModal() {
     });
 
     if (json.id) {
-      closeModal(ModalIds.SelectOfficer);
+      modalState.closeModal(ModalIds.SelectOfficer);
       setActiveOfficer(json as Officer);
 
       const isUnitInActiveUnits = activeOfficers.some((o) => o.id === json.id);
@@ -91,8 +87,8 @@ export function SelectOfficerModal() {
   return (
     <Modal
       title={t("selectOfficer")}
-      onClose={() => closeModal(ModalIds.SelectOfficer)}
-      isOpen={isOpen(ModalIds.SelectOfficer)}
+      onClose={() => modalState.closeModal(ModalIds.SelectOfficer)}
+      isOpen={modalState.isOpen(ModalIds.SelectOfficer)}
       className="w-[600px]"
     >
       <Formik validate={validate} initialValues={INITIAL_VALUES} onSubmit={onSubmit}>
@@ -173,7 +169,7 @@ export function SelectOfficerModal() {
             <footer className="flex justify-end mt-5">
               <Button
                 type="reset"
-                onPress={() => closeModal(ModalIds.SelectOfficer)}
+                onPress={() => modalState.closeModal(ModalIds.SelectOfficer)}
                 variant="cancel"
               >
                 {common("cancel")}

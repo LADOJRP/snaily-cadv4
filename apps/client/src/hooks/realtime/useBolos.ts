@@ -1,18 +1,14 @@
 import * as React from "react";
-import { useListener } from "@casper124578/use-socket.io";
+import { useListener } from "@casperiv/use-socket.io";
 import { SocketEvents } from "@snailycad/config";
 import { useDispatchState } from "state/dispatch/dispatch-state";
 import type { Bolo } from "@snailycad/types";
-import { shallow } from "zustand/shallow";
 
 export function useBolos() {
-  const { bolos, setBolos } = useDispatchState(
-    (s) => ({
-      bolos: s.bolos,
-      setBolos: s.setBolos,
-    }),
-    shallow,
-  );
+  const { bolos, setBolos } = useDispatchState((s) => ({
+    bolos: s.bolos,
+    setBolos: s.setBolos,
+  }));
 
   useListener(
     { eventName: SocketEvents.CreateBolo, checkHasListeners: true },

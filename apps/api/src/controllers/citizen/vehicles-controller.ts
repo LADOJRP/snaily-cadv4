@@ -9,9 +9,18 @@ import {
   cad,
   Prisma,
   Value,
+  EmployeeAsEnum,
 } from "@prisma/client";
 import { VEHICLE_SCHEMA, DELETE_VEHICLE_SCHEMA, TRANSFER_VEHICLE_SCHEMA } from "@snailycad/schemas";
-import { UseBeforeEach, Context, BodyParams, PathParams, QueryParams } from "@tsed/common";
+import {
+  UseBeforeEach,
+  Context,
+  BodyParams,
+  PathParams,
+  QueryParams,
+  MultipartFile,
+  PlatformMulterFile,
+} from "@tsed/common";
 import { Controller } from "@tsed/di";
 import { BadRequest, NotFound } from "@tsed/exceptions";
 import { ContentType, Delete, Description, Get, Post, Put } from "@tsed/schema";
@@ -27,6 +36,9 @@ import { citizenInclude } from "./CitizenController";
 import type * as APITypes from "@snailycad/types/api";
 import type { RegisteredVehicle } from "@snailycad/types";
 import { getLastOfArray, manyToManyHelper } from "lib/data/many-to-many";
+import { AllowedFileExtension, allowedFileExtensions } from "@snailycad/config";
+import { getImageWebPPath } from "~/lib/images/get-image-webp-path";
+import fs from "node:fs/promises";
 
 @Controller("/vehicles")
 @UseBeforeEach(IsAuth)
@@ -254,8 +266,10 @@ export class VehiclesController {
         },
       });
 
-      const isOwner = employee?.role?.as === "OWNER";
-      if (!employee || !isOwner || !employee.canManageVehicles) {
+      const isOwner = employee?.role?.as === EmployeeAsEnum.OWNER;
+      const canManageEmployees = isOwner ? true : employee?.canManageEmployees;
+
+      if (!canManageEmployees) {
         throw new NotFound("employeeNotFoundOrInvalidPermissions");
       }
 
@@ -537,6 +551,61 @@ export class VehiclesController {
     });
 
     return true;
+  }
+
+  @Post("/:id")
+  async uploadImageToVehicle(
+    @Context("user") user: User,
+    @PathParams("id") vehicleId: string,
+    @MultipartFile("image") file?: PlatformMulterFile,
+  ): Promise<APITypes.PostCitizenImageByIdData> {
+    try {
+      const vehicle = await prisma.registeredVehicle.findUnique({
+        where: {
+          id: vehicleId,
+          userId: user.id,
+        },
+      });
+
+      if (!vehicle) {
+        throw new NotFound("vehicleNotFound");
+      }
+
+      if (!file) {
+        throw new ExtendedBadRequest({ file: "No file provided." }, "invalidImageType");
+      }
+
+      if (!allowedFileExtensions.includes(file.mimetype as AllowedFileExtension)) {
+        throw new ExtendedBadRequest({ image: "invalidImageType" }, "invalidImageType");
+      }
+
+      const image = await getImageWebPPath({
+        buffer: file.buffer,
+        pathType: "values",
+        id: `${vehicle.id}-${file.originalname.split(".")[0]}`,
+      });
+
+      const previousImage = vehicle.imageId
+        ? `${process.cwd()}/public/values/${vehicle.imageId}`
+        : undefined;
+
+      if (previousImage) {
+        await fs.rm(previousImage, { force: true });
+      }
+
+      const [data] = await Promise.all([
+        prisma.registeredVehicle.update({
+          where: { id: vehicle.id },
+          data: { imageId: image.fileName },
+          select: { imageId: true },
+        }),
+        fs.writeFile(image.path, image.buffer),
+      ]);
+
+      return data;
+    } catch {
+      throw new BadRequest("errorUploadingImage");
+    }
   }
 
   private async generateOrValidateVINNumber(options: {

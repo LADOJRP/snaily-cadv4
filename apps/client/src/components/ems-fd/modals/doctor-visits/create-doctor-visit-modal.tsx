@@ -8,24 +8,25 @@ import { useModal } from "state/modalState";
 import { ModalIds } from "types/modal-ids";
 import type { DoctorVisit } from "@snailycad/types";
 import { handleValidate } from "lib/handleValidate";
-import type { PostEmsFdDoctorVisit } from "@snailycad/types/api";
+import type { PostEmsFdDoctorVisit, PostEmsFdMedicalRecordsSearchData } from "@snailycad/types/api";
 import { CitizenSuggestionsField } from "components/shared/CitizenSuggestionsField";
 
 interface Props {
   onCreate?(newV: DoctorVisit): void;
   onClose?(): void;
+  citizen?: PostEmsFdMedicalRecordsSearchData;
 }
 
-export function CreateDoctorVisitModal({ onClose, onCreate }: Props) {
+export function CreateDoctorVisitModal({ citizen, onClose, onCreate }: Props) {
   const { state, execute } = useFetch();
-  const { isOpen, closeModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Ems");
 
   const validate = handleValidate(DOCTOR_VISIT_SCHEMA);
 
   function handleClose() {
-    closeModal(ModalIds.CreateDoctorVisit);
+    modalState.closeModal(ModalIds.CreateDoctorVisit);
     onClose?.();
   }
 
@@ -38,13 +39,13 @@ export function CreateDoctorVisitModal({ onClose, onCreate }: Props) {
 
     if (json?.id) {
       onCreate?.(json);
-      closeModal(ModalIds.CreateDoctorVisit);
+      modalState.closeModal(ModalIds.CreateDoctorVisit);
     }
   }
 
   const INITIAL_VALUES = {
-    citizenId: "",
-    citizenName: "",
+    citizenId: citizen?.id ?? "",
+    citizenName: citizen?.name ? `${citizen.name} ${citizen.surname}` : "",
 
     description: "",
     diagnosis: "",
@@ -56,13 +57,14 @@ export function CreateDoctorVisitModal({ onClose, onCreate }: Props) {
     <Modal
       title={t("createDoctorVisit")}
       onClose={handleClose}
-      isOpen={isOpen(ModalIds.CreateDoctorVisit)}
+      isOpen={modalState.isOpen(ModalIds.CreateDoctorVisit)}
       className="w-[600px]"
     >
       <Formik validate={validate} onSubmit={onSubmit} initialValues={INITIAL_VALUES}>
         {({ setFieldValue, errors, values, isValid }) => (
           <Form>
             <CitizenSuggestionsField
+              isDisabled={!!citizen}
               autoFocus
               fromAuthUserOnly={false}
               label={common("citizen")}
@@ -109,7 +111,7 @@ export function CreateDoctorVisitModal({ onClose, onCreate }: Props) {
             <footer className="flex justify-end mt-5">
               <Button
                 type="reset"
-                onPress={() => closeModal(ModalIds.CreateDoctorVisit)}
+                onPress={() => modalState.closeModal(ModalIds.CreateDoctorVisit)}
                 variant="cancel"
               >
                 {common("cancel")}

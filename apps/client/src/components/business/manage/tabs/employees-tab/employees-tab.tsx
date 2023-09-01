@@ -11,22 +11,18 @@ import { Table, useTableState } from "components/shared/Table";
 import { yesOrNoText } from "lib/utils";
 import type { DeleteBusinessFireEmployeeData } from "@snailycad/types/api";
 import { useTemporaryItem } from "hooks/shared/useTemporaryItem";
-import { shallow } from "zustand/shallow";
 
 export function EmployeesTab() {
   const { state, execute } = useFetch();
-  const { openModal, closeModal } = useModal();
+  const modalState = useModal();
   const common = useTranslations("Common");
   const t = useTranslations("Business");
 
-  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState(
-    (state) => ({
-      currentBusiness: state.currentBusiness,
-      currentEmployee: state.currentEmployee,
-      setCurrentBusiness: state.setCurrentBusiness,
-    }),
-    shallow,
-  );
+  const { currentBusiness, currentEmployee, setCurrentBusiness } = useBusinessState((state) => ({
+    currentBusiness: state.currentBusiness,
+    currentEmployee: state.currentEmployee,
+    setCurrentBusiness: state.setCurrentBusiness,
+  }));
 
   const employees = currentBusiness?.employees ?? [];
   const [tempEmployee, employeeState] = useTemporaryItem(employees);
@@ -65,23 +61,21 @@ export function EmployeesTab() {
         employees: currentBusiness.employees.filter((v) => v.id !== tempEmployee.id),
       });
       employeeState.setTempId(null);
-      closeModal(ModalIds.AlertFireEmployee);
+      modalState.closeModal(ModalIds.AlertFireEmployee);
     }
   }
 
   function handleManageClick(employee: Employee) {
     if (employee.role?.as === EmployeeAsEnum.OWNER) return;
     employeeState.setTempId(employee.id);
-    openModal(ModalIds.ManageEmployee);
+    modalState.openModal(ModalIds.ManageEmployee);
   }
 
   function handleFireClick(employee: Employee) {
     if (employee.role?.as === EmployeeAsEnum.OWNER) return;
     employeeState.setTempId(employee.id);
-    openModal(ModalIds.AlertFireEmployee);
+    modalState.openModal(ModalIds.AlertFireEmployee);
   }
-
-  console.log({ test: tableState.pagination });
 
   return (
     <TabsContent aria-label={t("allEmployees")} value="allEmployees">

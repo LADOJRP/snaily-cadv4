@@ -17,7 +17,7 @@
 this is a web based integration for communities who love police roleplaying and dispatching. Optional Discord and FiveM integrations included.
 
 <a href="https://discord.gg/eGnrPqEH7U">
-  <img src="https://invite.caspertheghost.me?inviteCode=eGnrPqEH7U&locale=en" />
+  <img src="https://invite.casperiv.dev?inviteCode=eGnrPqEH7U&locale=en" />
 </a>
 
 ## Links
@@ -49,9 +49,9 @@ this is a web based integration for communities who love police roleplaying and 
 
 _A list of previous (archived) versions of SnailyCAD. This list is here so people can view older versions if needed._
 
-- [SnailyCADv3](https://github.com/Dev-CasperTheGhost/snaily-cadv3)
-- [SnailyCADv2](https://github.com/Dev-CasperTheGhost/snaily-cadv2)
-- [SnailyCAD](https://github.com/Dev-CasperTheGhost/snaily-cad)
+- [SnailyCADv3](https://github.com/casperiv0/snaily-cadv3)
+- [SnailyCADv2](https://github.com/casperiv0/snaily-cadv2)
+- [SnailyCAD](https://github.com/casperiv0/snaily-cad)
 
 ---
 
